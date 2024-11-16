@@ -1,0 +1,20 @@
+[package]
+name = "controller"
+version.workspace = true
+edition.workspace = true
+default-run = "RunApp"
+
+
+[dependencies]
+common = { path = "../common" }
+repository = { path = "../repository" }
+actix-web.workspace = true
+log = "0.4.22"
+
+
+
+
+[[bin]]
+name = "RunApp"
+path = "src/bin/RunApp.rs"
+

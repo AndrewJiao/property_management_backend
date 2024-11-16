@@ -1,0 +1,9 @@
+[package]
+name = "repository"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+common = { path = "../common" }
+diesel.workspace = true
+log.workspace = true

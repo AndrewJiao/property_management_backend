@@ -1,0 +1,10 @@
+# For documentation on how to configure this file,
+# see https://diesel.rs/guides/configuring-diesel-cli
+
+[print_schema]
+file = "repository/src/schema.rs"
+custom_type_derives = ["diesel::query_builder::QueryId", "Clone"]
+schema = "basic"
+
+[migrations_directory]
+dir = "repository/migrations"
