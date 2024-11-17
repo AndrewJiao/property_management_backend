@@ -8,8 +8,15 @@ default-run = "RunApp"
 [dependencies]
 common = { path = "../common" }
 repository = { path = "../repository" }
+management_macro = { path = "../management_macro" }
 actix-web.workspace = true
-log = "0.4.22"
+log.workspace = true
+diesel.workspace = true
+chrono.workspace = true
+bigdecimal.workspace = true
+serde.workspace = true
+
+
 
 
 

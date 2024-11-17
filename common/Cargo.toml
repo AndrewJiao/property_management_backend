@@ -20,3 +20,5 @@ derive_more.workspace = true
 
 diesel.workspace = true
 pq-sys.workspace = true
+
+validator.workspace = true

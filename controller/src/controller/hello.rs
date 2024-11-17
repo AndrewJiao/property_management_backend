@@ -1,5 +1,5 @@
 use actix_web::{get, web, HttpResponse};
-use common::error::AppResult;
+use common::data_result::AppResult;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(hello);

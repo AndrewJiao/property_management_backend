@@ -1,22 +1,23 @@
+
 pub mod models;
 pub mod schema;
-
+pub mod price_basic;
 
 #[cfg(test)]
 mod test {
     use common::db_config::establish_connection_str;
 
     use crate::models::{NewPost, Post};
-    use crate::schema::posts::dsl::posts;
-    use crate::schema::posts::published;
-    use common::error::AppResult;
+    use crate::schema::basic::posts::dsl::posts;
+    use crate::schema::basic::posts::published;
+    use common::data_result::AppResult;
     use diesel::associations::HasTable;
     use diesel::r2d2::{ConnectionManager, PooledConnection};
     use diesel::{ExpressionMethods, OptionalExtension, PgConnection, QueryDsl, RunQueryDsl, SelectableHelper, TextExpressionMethods};
 
     #[test]
     fn get_all_true() -> AppResult<()> {
-        let connect = &mut get_connection();
+        let connect = &mut db_get_connection();
         let results = posts
             .filter(published.eq(true))
             .limit(5)
@@ -33,9 +34,9 @@ mod test {
         Ok(())
     }
 
-    fn get_connection() -> PooledConnection<ConnectionManager<PgConnection>> {
+    pub fn db_get_connection() -> PooledConnection<ConnectionManager<PgConnection>> {
         let connection = &mut establish_connection_str("postgres://postgres:postgres@localhost:5432/property_management?options=-c%20search_path%3Dbasic");
-        connection.get().expect("")
+        connection.get().expect("connection get error")
     }
     #[test]
     fn add_row() {
@@ -50,7 +51,7 @@ mod test {
 
 
     pub fn create_post(title: &str, body: &str) -> Post {
-        let connection = &mut get_connection();
+        let connection = &mut db_get_connection();
 
 
         let new_post = NewPost { title, body };
@@ -64,7 +65,7 @@ mod test {
 
     #[test]
     fn update_row() {
-        let connection = &mut get_connection();
+        let connection = &mut db_get_connection();
 
         let post = diesel::update(posts.find(5))
             .set(published.eq(true))
@@ -76,7 +77,7 @@ mod test {
 
     #[test]
     fn get_post() {
-        let connect = &mut get_connection();
+        let connect = &mut db_get_connection();
         let post_id = 5;
         let post = posts
             .find(post_id)
@@ -92,11 +93,11 @@ mod test {
     }
     #[test]
     fn delete_post() {
-        use crate::schema::posts::title;
+        use crate::schema::basic::posts::title;
 
         let pattern = format!("%{}%", "test");
 
-        let connection = &mut get_connection();
+        let connection = &mut db_get_connection();
         let num_deleted = diesel::delete(posts.filter(title.like(pattern)))
             .execute(connection)
             .expect("Error deleting posts");
@@ -104,6 +105,3 @@ mod test {
         println!("Deleted {} posts", num_deleted);
     }
 }
-
-
-

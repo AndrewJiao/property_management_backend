@@ -1,8 +1,9 @@
+use crate::data_result::AppBusinessError;
 use crate::error::BaseError::BusinessError;
 use actix_web::body::BoxBody;
 use actix_web::{error, HttpResponse};
-use derive_more::Display;
-use serde::Serialize;
+use diesel::r2d2::Error as R2d2Error;
+use log::error;
 use std::env::VarError;
 use thiserror::Error;
 
@@ -22,19 +23,22 @@ pub enum BaseError {
     #[error("configure error : {0}")]
     ConfigError(#[from] config::ConfigError),
 
+    #[error("database r2d2 error")]
+    DatabaseR2D2Error(#[from] R2d2Error),
+
+    #[error("database result error")]
+    DatabaseError(#[from] diesel::result::Error),
+
     #[error("business error")]
     BusinessError(#[from] AppBusinessError),
 }
 
-#[derive(Error, Debug, Display, Serialize)]
-#[display("{error_msg:?}, code: {error_code:?}")]
-pub struct AppBusinessError {
-    error_msg: &'static str,
-    error_code: u32,
-}
 
 impl error::ResponseError for BaseError {
     fn error_response(&self) -> HttpResponse<BoxBody> {
+        //打印堆栈
+        let backtrace = std::backtrace::Backtrace::capture();
+        error!("error: {:?}, backtrace: {:?}", self, backtrace);
         match self {
             BusinessError(e) => {
                 HttpResponse::InternalServerError().json(e)
@@ -48,3 +52,4 @@ impl error::ResponseError for BaseError {
 
 
 pub const DATA_NOT_FOUND: BaseError = BusinessError(AppBusinessError { error_msg: "data not found", error_code: 10001 });
+

@@ -1,4 +1,4 @@
-use crate::schema::posts;
+use crate::schema::basic::posts;
 use diesel::prelude::*;
 
 

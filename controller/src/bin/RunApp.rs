@@ -5,13 +5,19 @@ use common::web_config::build_service;
 
 #[path = "../controller/mod.rs"]
 mod controller;
+#[path = "../dto/mod.rs"]
+mod dto;
 
 #[actix_web::main]
 async fn main() -> AppResult<()> {
+    before_init();
+
+    let configs = &[
+        controller::price_basic::config,
+        controller::hello::config
+    ];
     Ok(build_service(
-        &[
-            controller::hello::config,
-        ],
+        configs,
     )?.await?)
 }
 

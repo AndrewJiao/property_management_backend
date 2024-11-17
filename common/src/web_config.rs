@@ -1,12 +1,11 @@
 use crate::const_value::SETTINGS;
-use crate::error::AppResult;
 use actix_web::dev::Server;
 use actix_web::web::ServiceConfig;
 use actix_web::{web, App, HttpServer};
 use std::time::Duration;
+use crate::data_result::AppResult;
 
-
-pub fn build_service<F>(service_config: &'static [F]) -> AppResult<Server>
+pub fn build_service<F>(service_config: &'static [F;2]) -> AppResult<Server>
 where
     F: FnOnce(&mut ServiceConfig) + Sync + Clone + Send,
 {

@@ -7,3 +7,8 @@ edition.workspace = true
 common = { path = "../common" }
 diesel.workspace = true
 log.workspace = true
+chrono.workspace = true
+bigdecimal.workspace = true
+pg_bigdecimal.workspace = true
+serde.workspace = true
+

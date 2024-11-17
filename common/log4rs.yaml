@@ -29,5 +29,5 @@ root:
   level: info
   appenders:
     - stdout
-    - file
-    - rollingfile
+#    - file
+#    - rollingfile
