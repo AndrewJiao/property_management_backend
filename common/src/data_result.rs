@@ -1,9 +1,6 @@
-use crate::db_config::db_get_connection;
-use crate::error::BaseError;
 use chrono::Utc;
+use crate::error::BaseError;
 use derive_more::Display;
-use diesel::backend::Backend;
-use diesel::{QueryDsl, RunQueryDsl, SelectableHelper};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use validator::Validate;
@@ -26,28 +23,11 @@ impl PaginateSearch {
         self.page_size
     }
 
-
-    pub fn execute_search<QDsl, Po, DB, Fun>(&self, queryDsl: QDsl, fun: Fun) -> AppResult<(Vec<Po>, PaginateResult)>
-    where
-        QDsl: QueryDsl,
-        Po: SelectableHelper<DB>,
-        DB: Backend,
-        Fun: Fn(QDsl) -> QDsl,
-    {
-        let mut connection = db_get_connection();
-        let result: Vec<Po> =
-            fun(queryDsl.clone())
-                .select(Po::as_select())
-                .offset(self.off_set())
-                .limit(self.limit())
-                .load(&mut connection)?;
-        (
-            result,
-            PaginateResult {
-                page_size: 0,
-                total_size: 0,
-            }
-        )
+    pub fn produce_page_result(&self, total: i32) -> Option<PaginateResult> {
+        Some(PaginateResult {
+            page_size: self.page_size as i32,
+            total_size: total,
+        })
     }
 }
 
@@ -57,8 +37,8 @@ pub enum OrderType { DESC, ASC }
 
 #[derive(Serialize)]
 pub struct PaginateResult {
-    pub page_size: u32,
-    pub total_size: u32,
+    pub page_size: i32,
+    pub total_size: i32,
 }
 //endregion
 

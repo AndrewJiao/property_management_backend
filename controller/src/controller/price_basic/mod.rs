@@ -5,7 +5,7 @@ use actix_web::{get, put, web, HttpResponse};
 use common::data_result::{AppResult, PaginateSearch};
 use common::db_config::db_get_connection;
 use common::result_success;
-use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SaveChangesDsl, SelectableHelper};
+use diesel::{QueryDsl, RunQueryDsl, SaveChangesDsl, SelectableHelper};
 use repository::price_basic::PriceBasicPo;
 use repository::schema::basic::t_price_basic;
 
@@ -19,14 +19,17 @@ pub fn config(cfg: &mut web::ServiceConfig) {
 
 #[get("/data")]
 async fn get_data(param: web::Query<PaginateSearch>) -> AppResult<HttpResponse> {
-
     let result = t_price_basic::table
-        .filter(t_price_basic::name.eq("水费分摊"))
         .select(PriceBasicPo::as_select())
-        // .offset(param.off_set())
-        // .limit(param.limit())
+        .offset(param.off_set())
+        .limit(param.limit())
         .load(&mut db_get_connection())?;
-    result_success!(result)
+
+    let total: i64 = t_price_basic::table
+        .select(diesel::dsl::count_star())
+        .first(&mut db_get_connection())?;
+
+    result_success!(result,param.produce_page_result(total as i32))
 }
 
 
