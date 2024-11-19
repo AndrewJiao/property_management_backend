@@ -9,8 +9,8 @@ create table if not exists t_owner_basic_info
     room_square varchar,
     create_by   varchar,
     update_by   varchar,
-    create_time timestamp,
-    update_time timestamp,
+    create_time    timestamp not null,
+    update_time    timestamp not null,
     is_delete   boolean default false not null,
     comment     text,
     other_basic json

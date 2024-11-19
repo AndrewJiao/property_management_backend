@@ -8,8 +8,8 @@ create table if not exists t_price_basic
     basic_number   numeric,
     create_by      varchar,
     update_by      varchar,
-    create_time    timestamp,
-    update_time    timestamp,
+    create_time    timestamp not null,
+    update_time    timestamp not null,
     is_delete      boolean,
     operation_type calculate_operation,
     comment        text

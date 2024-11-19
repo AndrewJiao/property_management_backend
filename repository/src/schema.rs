@@ -24,8 +24,8 @@ pub mod basic {
             room_square -> Nullable<Numeric>,
             create_by -> Nullable<Varchar>,
             update_by -> Nullable<Varchar>,
-            create_time -> Nullable<Timestamp>,
-            update_time -> Nullable<Timestamp>,
+            create_time -> Timestamp,
+            update_time -> Timestamp,
             is_delete -> Bool,
             comment -> Nullable<Text>,
             other_basic -> Nullable<Json>,
@@ -42,8 +42,8 @@ pub mod basic {
             basic_number -> Nullable<Numeric>,
             create_by -> Nullable<Varchar>,
             update_by -> Nullable<Varchar>,
-            create_time -> Nullable<Timestamp>,
-            update_time -> Nullable<Timestamp>,
+            create_time -> Timestamp,
+            update_time -> Timestamp,
             is_delete -> Nullable<Bool>,
             operation_type -> Nullable<CalculateOperation>,
             comment -> Nullable<Text>,
@@ -67,12 +67,32 @@ pub mod basic {
             recode_version -> Nullable<Varchar>,
             create_by -> Nullable<Numeric>,
             update_by -> Nullable<Varchar>,
-            create_time -> Nullable<Timestamp>,
-            update_time -> Nullable<Timestamp>,
+            create_time -> Timestamp,
+            update_time -> Timestamp,
             is_delete -> Nullable<Bool>,
             delete_at -> Nullable<Timestamp>,
             comment -> Nullable<Text>,
             total_fee -> Nullable<Numeric>,
+        }
+    }
+
+    diesel::table! {
+        basic.t_room_info_detail (id) {
+            id -> Int8,
+            room_number -> Nullable<Varchar>,
+            water_meter_num_before -> Nullable<Int8>,
+            water_meter_num -> Nullable<Int8>,
+            water_meter_sub -> Nullable<Int8>,
+            electricity_meter_num_before -> Nullable<Int8>,
+            electricity_meter_num -> Nullable<Int8>,
+            electricity_meter_sub -> Nullable<Int8>,
+            month_version -> Nullable<Varchar>,
+            comment -> Nullable<Varchar>,
+            create_by -> Nullable<Varchar>,
+            update_by -> Nullable<Varchar>,
+            create_time -> Timestamp,
+            update_time -> Timestamp,
+            is_delete -> Nullable<Bool>,
         }
     }
 
@@ -81,5 +101,6 @@ pub mod basic {
         t_owner_basic_info,
         t_price_basic,
         t_property_fee_detail,
+        t_room_info_detail,
     );
 }
