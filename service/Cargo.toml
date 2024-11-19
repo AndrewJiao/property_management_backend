@@ -6,6 +6,7 @@ edition.workspace = true
 [dependencies]
 common = { path = "../common" }
 management_macro = { path = "../management_macro" }
+repository = { path = "../repository" }
 diesel.workspace = true
 log.workspace = true
 chrono.workspace = true

@@ -12,6 +12,7 @@ pub struct PaginateSearch<T = ()> {
     current_page: i64,
     #[validate(range(min = 1, max = 10))]
     page_size: i64,
+    #[allow(dead_code)]
     order_type: Option<OrderType>,
     param: Option<T>,
 }

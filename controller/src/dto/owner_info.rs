@@ -1,10 +1,10 @@
-use crate::dto::ToUpdatePO;
 use chrono::NaiveDateTime;
 use common::tools::serde::empty_string_or_null_as_none;
 use common::tools::serde::json_verify;
-use repository::owner_info::{AppJson, UpdateOwnerBasicInfoPo};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
+use repository::owner_info::UpdateOwnerBasicInfoPo;
+use crate::dto::ToUpdatePO;
 
 ///
 /// 作为业主表分页查询条件
@@ -36,24 +36,26 @@ pub struct OwnerInfoUpdateDto {
     #[serde(deserialize_with = "json_verify")]
     pub other_basic: Option<serde_json::Value>,
 }
-// impl ToUpdatePO for OwnerInfoUpdateDto {
-//     type PO<'a> = UpdateOwnerBasicInfoPo<'a>;
-//
-//     fn to_update_po(&self, id: i32) -> Self::PO<'_> {
-//         let other_basic = match self.other_basic {
-//             None => { None }
-//             Some(ref value) => { Some(AppJson(value.clone())) }
-//         };
-//         UpdateOwnerBasicInfoPo {
-//             id,
-//             room_number: self.room_number.as_deref(),
-//             owner_name: self.owner_name.as_deref(),
-//             is_delete: None,
-//             comment: self.comment.as_deref(),
-//             other_basic,
-//         }
-//     }
-// }
+
+impl ToUpdatePO for OwnerInfoUpdateDto {
+    type PO<'a> = UpdateOwnerBasicInfoPo<'a>;
+
+    fn to_update_po(&self, id: i32) -> Self::PO<'_> {
+        let other_basic = match self.other_basic {
+            None => { None }
+            Some(ref value) => { Some(value.clone()) }
+        };
+        UpdateOwnerBasicInfoPo {
+            id,
+            room_number: self.room_number.as_deref(),
+            owner_name: self.owner_name.as_deref(),
+            is_delete: None,
+            comment: self.comment.as_deref(),
+            other_basic,
+            update_time: None,
+        }
+    }
+}
 
 #[derive(Deserialize, Serialize)]
 pub struct OwnerInfoResultDto {

@@ -10,6 +10,7 @@ use common::{result_success, validate};
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SaveChangesDsl, SelectableHelper};
 use repository::price_basic::PriceBasicPo;
 use repository::schema::basic::t_price_basic;
+use repository::schema::basic::t_price_basic::*;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(scope("/price_basic")
@@ -22,11 +23,13 @@ pub fn config(cfg: &mut web::ServiceConfig) {
 #[get("/data")]
 async fn get_data(param: web::Query<PaginateSearch>) -> AppResult<HttpResponse> {
     validate!(param);
-    let result = t_price_basic::table
-        .filter(t_price_basic::is_delete.eq(false))
-        .select(PriceBasicPo::as_select())
-        .offset(param.off_set())
-        .limit(param.limit())
+    let result = QueryDsl::order(
+        t_price_basic::table
+            .filter(t_price_basic::is_delete.eq(false))
+            .select(PriceBasicPo::as_select())
+            .offset(param.off_set())
+            .limit(param.limit()),
+        update_time.desc())
         .load(&mut db_get_connection())?;
 
     let total: i64 = t_price_basic::table

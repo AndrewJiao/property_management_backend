@@ -26,7 +26,7 @@ syn = { version = "2.0.43", features = ["full"], default-features = true }
 actix-web = "4.9.0"
 lazy_static = "1.4.0"
 derive_more = { version = "1.0.0", features = ["full"] }
-diesel = { version = "2.2.4", features = ["postgres", "r2d2", "chrono", "numeric"] }
+diesel = { version = "2.2.4", features = ["postgres", "r2d2", "chrono", "numeric", "serde_json"] }
 pq-sys = { version = "0.6", features = ["bundled_without_openssl"] }
 bigdecimal = { version = "0.4.6", features = ["serde"] }
 pg_bigdecimal = "0.1.5"

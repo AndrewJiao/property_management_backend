@@ -703,6 +703,7 @@ dependencies = [
  "num-traits",
  "pq-sys",
  "r2d2",
+ "serde_json",
 ]
 
 [[package]]
@@ -1849,7 +1850,6 @@ dependencies = [
  "pg_bigdecimal",
  "serde",
  "serde_json",
- "service",
 ]
 
 [[package]]
@@ -2003,6 +2003,7 @@ dependencies = [
  "log",
  "management_macro",
  "pg_bigdecimal",
+ "repository",
  "serde",
  "serde_json",
 ]

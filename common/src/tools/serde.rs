@@ -1,6 +1,5 @@
 use serde::{Deserialize, Deserializer, Serializer};
 use crate::const_value::SETTINGS;
-use crate::error::BaseError::BusinessError;
 use crate::error::PARAM_NOT_SUPPORT;
 
 // 反序列化：空字符串和 null 都转换为 None，其他字符串为 Some(value)
@@ -41,12 +40,17 @@ where
 
     match option_str {
         Some(value) => {
-            //verify
-            let length = value.as_str().unwrap().len();
-            if SETTINGS.app_config.json_length > length as u32 {
-                Ok(Some(value))
-            } else {
-                Err(serde::de::Error::custom(PARAM_NOT_SUPPORT.to_string()))
+            match value.as_str() {
+                None => { Ok(None) }
+                Some(value_str) => {
+                    //verify
+                    let length = value_str.len();
+                    if SETTINGS.app_config.json_length > length as u32 {
+                        Ok(Some(value))
+                    } else {
+                        Err(serde::de::Error::custom(PARAM_NOT_SUPPORT.to_string()))
+                    }
+                }
             }
         }
         None => Ok(None),
