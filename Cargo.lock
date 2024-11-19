@@ -448,6 +448,7 @@ name = "common"
 version = "0.1.0"
 dependencies = [
  "actix-web",
+ "bigdecimal 0.4.6",
  "chrono",
  "config",
  "derive_more 1.0.0",
@@ -455,6 +456,7 @@ dependencies = [
  "lazy_static",
  "log",
  "log4rs",
+ "management_macro",
  "pq-sys",
  "quote",
  "serde",
@@ -517,6 +519,9 @@ dependencies = [
  "management_macro",
  "repository",
  "serde",
+ "serde_json",
+ "service",
+ "validator",
 ]
 
 [[package]]
@@ -1317,7 +1322,6 @@ dependencies = [
 name = "management_macro"
 version = "0.1.0"
 dependencies = [
- "common",
  "quote",
  "syn 2.0.87",
 ]
@@ -1841,8 +1845,11 @@ dependencies = [
  "common",
  "diesel",
  "log",
+ "management_macro",
  "pg_bigdecimal",
  "serde",
+ "serde_json",
+ "service",
 ]
 
 [[package]]
@@ -1988,6 +1995,17 @@ dependencies = [
 [[package]]
 name = "service"
 version = "0.1.0"
+dependencies = [
+ "bigdecimal 0.4.6",
+ "chrono",
+ "common",
+ "diesel",
+ "log",
+ "management_macro",
+ "pg_bigdecimal",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "sha1"

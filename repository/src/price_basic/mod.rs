@@ -7,6 +7,7 @@ use diesel::deserialize::FromSql;
 use diesel::pg::Pg;
 use diesel::prelude::*;
 use serde::Serialize;
+use management_macro::AutoOperation;
 
 #[derive(Selectable, Queryable, Serialize)]
 #[diesel(table_name = t_price_basic)]
@@ -24,7 +25,7 @@ pub struct PriceBasicPo {
     comment: Option<String>,
 }
 
-#[derive(Identifiable, AsChangeset)]
+#[derive(Identifiable, AsChangeset, AutoOperation)]
 #[diesel(table_name = t_price_basic)]
 pub struct UpdatePriceBasicPo<'a> {
     pub id: i64,
@@ -40,6 +41,7 @@ pub enum CalculateOperationType {
     Mul,
     Div,
 }
+
 
 impl FromSql<CalculateOperation, Pg> for CalculateOperationType {
     fn from_sql(bytes: <Pg as Backend>::RawValue<'_>) -> diesel::deserialize::Result<Self> {

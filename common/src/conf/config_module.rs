@@ -14,6 +14,16 @@ pub struct WebConfig {
     pub shutting_down_timeout: u64,
     pub keep_alive: u64,
 }
+///
+/// 应用配置
+///
+#[derive(Debug, Deserialize)]
+#[allow(unused)]
+pub struct AppConfig {
+    pub json_length: u32,
+    pub number_max: i32,
+    pub number_min: i32,
+}
 
 ///
 /// 数据库配置
@@ -35,6 +45,7 @@ pub struct DatabasesConfig {
 pub struct Settings {
     pub web_config: WebConfig,
     pub databases: DatabasesConfig,
+    pub app_config: AppConfig,
 }
 impl Settings {
     pub fn new() -> Result<Self, ConfigError> {

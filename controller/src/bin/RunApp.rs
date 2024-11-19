@@ -14,6 +14,7 @@ async fn main() -> AppResult<()> {
 
     let configs = &[
         controller::price_basic::config,
+        controller::owner_info::config,
         controller::hello::config
     ];
     Ok(build_service(

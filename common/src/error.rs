@@ -52,4 +52,5 @@ impl error::ResponseError for BaseError {
 
 
 pub const DATA_NOT_FOUND: BaseError = BusinessError(AppBusinessError { error_msg: "data not found", error_code: 10001 });
+pub const PARAM_NOT_SUPPORT: BaseError = BusinessError(AppBusinessError { error_msg: "param is not support", error_code: 10002 });
 

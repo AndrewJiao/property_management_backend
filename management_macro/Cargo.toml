@@ -6,7 +6,5 @@ edition.workspace = true
 [dependencies]
 quote.workspace = true
 syn.workspace = true
-common = { path = "../common" }
-
 [lib]
 proc-macro = true

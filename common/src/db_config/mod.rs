@@ -1,3 +1,6 @@
+pub mod auto_trait;
+pub mod type_convertor;
+
 use crate::const_value::SETTINGS;
 use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
 use diesel::PgConnection;
@@ -24,5 +27,3 @@ pub fn db_get_connection() -> PooledConnection<ConnectionManager<PgConnection>> 
     let connection = &mut establish_connection();
     connection.get().expect("connection get error")
 }
-//endregion
-

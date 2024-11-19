@@ -1,5 +1,5 @@
+use crate::error::{BaseError, PARAM_NOT_SUPPORT};
 use chrono::Utc;
-use crate::error::BaseError;
 use derive_more::Display;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -15,12 +15,22 @@ pub struct PaginateSearch<T = ()> {
     order_type: Option<OrderType>,
     param: Option<T>,
 }
-impl PaginateSearch {
+impl<T> PaginateSearch<T> {
     pub fn off_set(&self) -> i64 {
         (self.current_page - 1) * self.page_size
     }
     pub fn limit(&self) -> i64 {
         self.page_size
+    }
+    pub fn current_page(&self) -> i64 {
+        self.current_page
+    }
+
+    pub fn value(&self) -> AppResult<Option<&T>> {
+        match self.param {
+            None => { Err(PARAM_NOT_SUPPORT) }
+            Some(ref e) => { Ok(Some(e)) }
+        }
     }
 
     pub fn produce_page_result(&self, total: i32) -> Option<PaginateResult> {

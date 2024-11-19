@@ -13,3 +13,9 @@ databases:
   port: 5432
   database: "property_management"
   database_url: "postgres://postgres:postgres@localhost:5432/property_management?options=-c%20search_path%3Dbasic"
+
+# 应用配置
+app_config:
+  json_length: 10000
+  number_max: 100000
+  number_min: -100000

@@ -1,7 +1,8 @@
-
 pub mod models;
 pub mod schema;
 pub mod price_basic;
+pub mod owner_info;
+pub mod component;
 
 #[cfg(test)]
 mod test {

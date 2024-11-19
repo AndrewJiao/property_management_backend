@@ -1,20 +1,26 @@
+use crate::dto::ToUpdatePO;
 use bigdecimal::BigDecimal;
 use repository::price_basic::UpdatePriceBasicPo;
 use serde::Deserialize;
+use validator::Validate;
 
-#[derive(Deserialize)]
-pub struct PriceBasic {
+#[derive(Deserialize, Validate)]
+pub struct PriceBasicUpdateDto {
+    #[validate(length(min = 0, max = 100))]
     pub name: Option<String>,
+    #[validate(custom(function = "common::tools::validator::validate_big_decimal"))]
     pub basic_number: Option<BigDecimal>,
 }
 
-impl PriceBasic {
-    pub fn to_update_po(&self, id: i64) -> UpdatePriceBasicPo {
+impl ToUpdatePO for PriceBasicUpdateDto {
+    type PO<'a> = UpdatePriceBasicPo<'a>;
+
+    fn to_update_po(&self, id: i32) -> Self::PO<'_> {
         UpdatePriceBasicPo {
-            id,
+            id: id as i64,
             name: self.name.as_deref(),
             basic_number: self.basic_number.as_ref(),
-            update_time: Some(chrono::Utc::now().naive_utc()),
+            update_time: None,
         }
     }
 }
