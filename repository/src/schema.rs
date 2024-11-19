@@ -21,7 +21,7 @@ pub mod basic {
             id -> Int4,
             room_number -> Varchar,
             owner_name -> Nullable<Varchar>,
-            room_square -> Nullable<Varchar>,
+            room_square -> Nullable<Numeric>,
             create_by -> Nullable<Varchar>,
             update_by -> Nullable<Varchar>,
             create_time -> Nullable<Timestamp>,

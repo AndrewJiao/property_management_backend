@@ -1,11 +1,11 @@
-use crate::dto::owner_info::{OwnerInfoSearchDto, OwnerInfoUpdateDto};
+use crate::dto::owner_info::{OwnerInfoInsertDto, OwnerInfoSearchDto, OwnerInfoUpdateDto};
 use actix_web::web::scope;
-use actix_web::{get, put, web, HttpResponse};
+use actix_web::{get, post, put, web, HttpResponse};
 use common::data_result::PaginateSearch;
 use common::db_config::db_get_connection;
 use common::error::AppResult;
 use common::{result_success, validate};
-use diesel::{ExpressionMethods, QueryDsl, QueryResult, SaveChangesDsl, SelectableHelper, TextExpressionMethods};
+use diesel::{ExpressionMethods, Insertable, QueryDsl, QueryResult, RunQueryDsl, SaveChangesDsl, SelectableHelper, TextExpressionMethods};
 use diesel::query_dsl::methods::OrderDsl;
 use common::db_config::auto_trait::AutoOperation;
 use repository::component::page::Paginate;
@@ -15,11 +15,11 @@ pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(scope("/owner_info")
         .service(get_info)
         .service(put_info)
+        .service(add_info)
     );
 }
-
 use repository::schema::basic::t_owner_basic_info::*;
-use crate::dto::ToUpdatePO;
+use crate::dto::{ToInsertPO, ToUpdatePO};
 
 ///
 /// 获取用户基础信息
@@ -55,8 +55,17 @@ async fn put_info(path: web::Path<i32>, body_param: web::Json<OwnerInfoUpdateDto
         .save_changes(&mut db_get_connection());
     result_success!()
 }
+///
+/// 新增用户
+///
 
-
-
-
-
+#[post("/info")]
+async fn add_info(body_param: web::Json<OwnerInfoInsertDto>) -> AppResult<HttpResponse> {
+    validate!(body_param);
+    body_param
+        .to_insert_po()
+        .update_time()
+        .insert_into(table)
+        .execute(&mut db_get_connection())?;
+    result_success!()
+}

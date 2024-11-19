@@ -1,6 +1,7 @@
+use bigdecimal::BigDecimal;
 use crate::schema::basic::t_owner_basic_info;
 use chrono::NaiveDateTime;
-use diesel::{AsChangeset, Identifiable, Queryable, Selectable};
+use diesel::{AsChangeset, Identifiable, Insertable, Queryable, Selectable};
 use management_macro::AutoOperation;
 use serde::{Deserialize, Serialize};
 
@@ -11,7 +12,7 @@ pub struct OwnerBasicInfoPo {
     id: i32,
     room_number: String,
     owner_name: Option<String>,
-    room_square: Option<String>,
+    room_square: Option<BigDecimal>,
     create_by: Option<String>,
     update_by: Option<String>,
     create_time: Option<NaiveDateTime>,
@@ -22,7 +23,7 @@ pub struct OwnerBasicInfoPo {
 }
 
 
-#[derive(Identifiable, AsChangeset, Deserialize, Serialize, AutoOperation)]
+#[derive(Identifiable, AsChangeset, Serialize, AutoOperation)]
 #[diesel(table_name = t_owner_basic_info)]
 pub struct UpdateOwnerBasicInfoPo<'a> {
     pub id: i32,
@@ -30,6 +31,22 @@ pub struct UpdateOwnerBasicInfoPo<'a> {
     pub owner_name: Option<&'a str>,
     pub is_delete: Option<bool>,
     pub comment: Option<&'a str>,
-    pub other_basic: Option<serde_json::Value>,
+    pub room_square: Option<&'a BigDecimal>,
+    pub other_basic: Option<&'a serde_json::Value>,
     pub update_time: Option<NaiveDateTime>,
+}
+
+#[derive(Serialize, AutoOperation, Insertable)]
+#[diesel(table_name = t_owner_basic_info)]
+pub struct InsertOwnerBasicInfoPo<'a> {
+    pub room_number: Option<&'a str>,
+    pub owner_name: Option<&'a str>,
+    pub room_square: Option<&'a BigDecimal>,
+    pub create_by: Option<&'a str>,
+    pub update_by: Option<&'a str>,
+    pub create_time: Option<NaiveDateTime>,
+    pub update_time: Option<NaiveDateTime>,
+    pub is_delete: bool,
+    pub comment: Option<&'a str>,
+    pub other_basic: Option<serde_json::Value>,
 }
