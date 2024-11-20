@@ -1,7 +1,7 @@
 pub mod price_basic;
 pub mod room_info;
 pub mod owner_info;
-
+pub mod property_fee;
 
 pub trait ToUpdatePO {
     type PO<'a>

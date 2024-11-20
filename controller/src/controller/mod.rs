@@ -2,6 +2,7 @@ pub mod hello;
 pub mod price_basic;
 pub mod owner_info;
 pub mod room_info;
+pub mod property_fee;
 
 
 trait IfFilter {

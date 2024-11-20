@@ -4,6 +4,7 @@ pub mod price_basic;
 pub mod owner_info;
 pub mod component;
 pub mod room_info;
+pub mod property_fee;
 
 
 
