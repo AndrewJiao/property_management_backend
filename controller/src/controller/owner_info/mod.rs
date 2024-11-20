@@ -1,4 +1,4 @@
-use crate::dto::owner_info::{OwnerInfoInsertDto, OwnerInfoSearchDto, OwnerInfoUpdateDto};
+use crate::dto::owner_info::{OwnerInfoInsertDto, OwnerInfoSearchDto, OwnerInfoSearchType, OwnerInfoUpdateDto};
 use actix_web::web::scope;
 use actix_web::{delete, get, post, put, web, HttpResponse};
 use common::data_result::PaginateSearch;
@@ -19,7 +19,6 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         .service(get_find)
     );
 }
-use crate::dto::basic::FindDto;
 use crate::dto::{ToInsertPO, ToUpdatePO};
 use repository::schema::basic::t_owner_basic_info::*;
 use repository::soft_delete_by_id;
@@ -80,17 +79,20 @@ async fn delete_info(path: web::Path<i32>) -> AppResult<HttpResponse> {
 }
 
 #[get("/find")]
-async fn get_find(param: web::Query<FindDto>) -> AppResult<HttpResponse> {
-    let search_type = match param.search_type {
-        Some(ref s_type) if !s_type.is_empty() => s_type,
-        _ => return result_success!(Vec::<String>::new()),
-    };
+async fn get_find(param: web::Query<OwnerInfoSearchType>) -> AppResult<HttpResponse> {
+    match param.into_inner() {
+        OwnerInfoSearchType::RoomNumber(ref value) => {
+            if value.is_empty() {
+                return result_success!(Vec::<String>::new());
+            }
 
-    let result = QueryDsl::group_by(
-        table.select(room_number)
-            .filter(room_number.is_not_null())
-            .filter(room_number.ne(""))
-            .filter(room_number.like(format!("%{}%", search_type))), room_number)
-        .get_results::<String>(&mut db_get_connection())?;
-    result_success!(result)
+            let result = QueryDsl::group_by(
+                table.select(room_number)
+                    .filter(room_number.is_not_null())
+                    .filter(room_number.ne(""))
+                    .filter(room_number.like(format!("%{}%", value))), room_number)
+                .get_results::<String>(&mut db_get_connection())?;
+            result_success!(result)
+        }
+    }
 }

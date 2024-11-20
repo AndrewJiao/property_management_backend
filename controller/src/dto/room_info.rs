@@ -91,3 +91,8 @@ impl ToUpdatePO for RoomInfoDetailUpdateDto {
         }
     }
 }
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", tag = "searchType", content = "searchValue")]
+pub enum RoomInfoSearchType {
+    MonthVersion(String)
+}

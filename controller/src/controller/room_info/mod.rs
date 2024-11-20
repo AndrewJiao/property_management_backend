@@ -1,4 +1,4 @@
-use crate::dto::room_info::{RoomInfoDetailSearchDto, RoomInfoDetailUpdateDto};
+use crate::dto::room_info::{RoomInfoDetailSearchDto, RoomInfoDetailUpdateDto, RoomInfoSearchType};
 use crate::dto::ToUpdatePO;
 use actix_web::web::scope;
 use actix_web::{get, put, web, HttpResponse};
@@ -6,7 +6,8 @@ use common::data_result::{AppResult, PaginateSearch};
 use common::db_config::auto_trait::AutoOperation;
 use common::db_config::db_get_connection;
 use common::{result_success, validate};
-use diesel::{ExpressionMethods, QueryDsl, SaveChangesDsl, SelectableHelper};
+use diesel::query_dsl::methods::GroupByDsl;
+use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SaveChangesDsl, SelectableHelper, TextExpressionMethods};
 use repository::component::page::Paginate;
 use repository::room_info::RoomInfoDetailPo;
 
@@ -14,12 +15,16 @@ pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(scope("/room_info")
         .service(get_data)
         .service(put_data)
+        .service(get_find)
     );
 }
 
 use crate::controller::IfFilter;
 use repository::schema::basic::t_room_info_detail::*;
 
+///
+/// 查询
+///
 #[get("/data")]
 async fn get_data(param: web::Query<PaginateSearch>, body_param: web::Json<RoomInfoDetailSearchDto>) -> AppResult<HttpResponse> {
     validate!(param,body_param);
@@ -46,6 +51,9 @@ async fn get_data(param: web::Query<PaginateSearch>, body_param: web::Json<RoomI
 }
 
 
+///
+/// 编辑
+///
 #[put("/data/{data_id}")]
 async fn put_data(path_param: web::Path<i32>, body_param: web::Json<RoomInfoDetailUpdateDto>) -> AppResult<HttpResponse> {
     validate!(body_param);
@@ -55,5 +63,27 @@ async fn put_data(path_param: web::Path<i32>, body_param: web::Json<RoomInfoDeta
         .update_time()
         .save_changes(&mut db_get_connection())?;
     result_success!()
+}
+
+///
+/// 获取版本
+///
+#[get("/find")]
+async fn get_find(param: web::Query<RoomInfoSearchType>) -> AppResult<HttpResponse> {
+    match param.into_inner() {
+        RoomInfoSearchType::MonthVersion(ref value) => {
+            if value.is_empty() {
+                return result_success!(Vec::<String>::new());
+            }
+            let result = GroupByDsl::group_by(
+                table.select(month_version)
+                    .filter(month_version.is_not_null())
+                    .filter(month_version.ne(""))
+                    .filter(month_version.like(format!("%{}%", value))), month_version)
+                .get_results::<Option<String>>(&mut db_get_connection())?;
+
+            result_success!(result)
+        }
+    }
 }
 

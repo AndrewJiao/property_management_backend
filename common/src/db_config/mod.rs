@@ -1,7 +1,7 @@
 pub mod auto_trait;
 pub mod type_convertor;
 
-use crate::const_value::SETTINGS;
+use crate::const_value::{DB_CONNECTION, SETTINGS};
 use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
 use diesel::PgConnection;
 
@@ -15,15 +15,10 @@ pub fn establish_connection() -> Pool<ConnectionManager<PgConnection>> {
         .expect("Failed to create pool.")
 }
 
-pub fn establish_connection_str(database_url: &str) -> Pool<ConnectionManager<PgConnection>> {
-    let manage = ConnectionManager::<PgConnection>::new(database_url);
 
-    Pool::builder()
-        .build(manage)
-        .expect("Failed to create pool.")
-}
-
-pub fn db_get_connection() -> PooledConnection<ConnectionManager<PgConnection>> {
-    let connection = &mut establish_connection();
-    connection.get().expect("connection get error")
+///
+/// 考虑多线程环境下获取
+///
+pub fn db_get_connection<'a>() -> PooledConnection<ConnectionManager<PgConnection>> {
+    DB_CONNECTION.get().expect("Failed to get db connection")
 }

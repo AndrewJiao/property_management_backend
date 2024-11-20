@@ -112,4 +112,9 @@ pub struct OwnerInfoResultDto {
     other_basic: Option<serde_json::Value>,
 }
 
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", tag = "searchType", content = "searchValue")]
+pub enum OwnerInfoSearchType {
+    RoomNumber(String)
+}
 
