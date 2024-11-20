@@ -5,7 +5,7 @@ use actix_web::{web, App, HttpServer};
 use std::time::Duration;
 use crate::data_result::AppResult;
 
-pub fn build_service<F>(service_config: &'static [F;4]) -> AppResult<Server>
+pub fn build_service<F>(service_config: &'static [F;5]) -> AppResult<Server>
 where
     F: FnOnce(&mut ServiceConfig) + Sync + Clone + Send,
 {

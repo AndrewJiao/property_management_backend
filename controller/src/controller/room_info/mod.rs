@@ -41,8 +41,9 @@ async fn get_data(param: web::Query<PaginateSearch>, body_param: web::Json<RoomI
             &body_param.update_time_star,
             &body_param.update_time_end,
             |sub_sql, (p1, p2)| sub_sql.filter(update_time.between(p1, p2)))
-        .if_filter(&body_param.room_number, |sub_sql, p| sub_sql.filter(room_number.eq(p)))
-        .if_filter(&body_param.month_version, |sub_sql, p| sub_sql.filter(month_version.eq(p)));
+        .if_filter(&body_param.room_number, |sub_sql, p| sub_sql.filter(room_number.like(format!("%{:?}%", p))))
+        .if_filter(&body_param.month_version, |sub_sql, p| sub_sql.filter(month_version.eq(p)))
+        .filter(is_delete.eq(true));
     let (result, total) = QueryDsl::order(
         statement.select(RoomInfoDetailPo::as_select()),
         update_time.desc())

@@ -14,7 +14,7 @@ create table if not exists t_property_fee_detail
     water_share_fee             numeric(10, 8),
     liquidate_fee               numeric(10, 8),
     pre_store_fee               numeric(10, 8),
-    recode_version              varchar,
+    record_version              varchar,
     create_by                   varchar,
     update_by                   varchar,
     create_time                 timestamp               not null,
@@ -45,7 +45,7 @@ comment on column t_property_fee_detail.liquidate_fee is '违约金';
 
 comment on column t_property_fee_detail.pre_store_fee is '预存金';
 
-comment on column t_property_fee_detail.recode_version is '记录版本如：20210101，by每月更新';
+comment on column t_property_fee_detail.record_version is '记录版本如：20210101，by每月更新';
 
 comment on column t_property_fee_detail.total_fee is '总费用';
 
@@ -56,7 +56,7 @@ create index if not exists property_fee_detail_create_time_index
     on t_property_fee_detail (create_time desc);
 
 create index if not exists property_fee_detail_recode_version_index
-    on t_property_fee_detail (recode_version);
+    on t_property_fee_detail (record_version);
 
 create index if not exists property_fee_detail_room_number_index
     on t_property_fee_detail (room_number);

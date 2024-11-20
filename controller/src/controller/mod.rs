@@ -6,7 +6,6 @@ pub mod property_fee;
 
 
 trait IfFilter {
-    #[allow(dead_code)]
     fn if_filter<'a, P>(self, param: &'a Option<P>, fun: fn(Self, &'a P) -> Self) -> Self;
     fn if_filter_tow_param<'a, 'b, P1, P2>(self, param1: &'a Option<P1>, param2: &'b Option<P2>, fun: fn(Self, (&'a P1, &'b P2)) -> Self) -> Self;
 }

@@ -64,7 +64,7 @@ pub mod basic {
             water_share_fee -> Nullable<Numeric>,
             liquidate_fee -> Nullable<Numeric>,
             pre_store_fee -> Nullable<Numeric>,
-            recode_version -> Nullable<Varchar>,
+            record_version -> Nullable<Varchar>,
             create_by -> Nullable<Varchar>,
             update_by -> Nullable<Varchar>,
             create_time -> Timestamp,

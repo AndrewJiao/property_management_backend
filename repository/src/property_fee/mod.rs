@@ -3,9 +3,9 @@ use crate::schema::basic::t_property_fee_detail;
 use chrono::NaiveDateTime;
 use diesel::{AsChangeset, Identifiable, Insertable, Queryable, Selectable};
 use management_macro::AutoOperation;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Selectable, Queryable, Serialize)]
+#[derive(Selectable, Queryable, Serialize, Deserialize)]
 #[diesel(table_name = t_property_fee_detail)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 #[serde(rename_all = "camelCase")]
@@ -22,7 +22,7 @@ pub struct PropertyFeeDetailPo {
     pub water_share_fee: Option<BigDecimal>,
     pub liquidate_fee: Option<BigDecimal>,
     pub pre_store_fee: Option<BigDecimal>,
-    pub recode_version: Option<String>,
+    pub record_version: Option<String>,
     pub create_by: Option<String>,
     pub update_by: Option<String>,
     pub create_time: NaiveDateTime,
@@ -67,7 +67,7 @@ pub struct PropertyFeeDetailInsertPo<'a> {
     pub water_share_fee: Option<BigDecimal>,
     pub liquidate_fee: Option<BigDecimal>,
     pub pre_store_fee: Option<BigDecimal>,
-    pub recode_version: &'a str,
+    pub record_version: &'a str,
     pub create_by: &'a str,
     pub update_by: &'a str,
     pub create_time: Option<NaiveDateTime>,

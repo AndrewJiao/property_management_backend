@@ -67,7 +67,7 @@ pub struct PropertyFeeDetailSearchDto {
     pub room_owner_name: Option<String>,
     #[validate(length(min = 0, max = 100))]
     #[serde(deserialize_with = "empty_string_or_null_as_none")]
-    pub recode_version: Option<String>,
+    pub record_version: Option<String>,
     pub create_time_begin: Option<NaiveDateTime>,
     pub create_time_end: Option<NaiveDateTime>,
     pub update_time_begin: Option<NaiveDateTime>,
