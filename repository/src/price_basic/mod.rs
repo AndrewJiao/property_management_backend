@@ -12,6 +12,7 @@ use management_macro::AutoOperation;
 #[derive(Selectable, Queryable, Serialize)]
 #[diesel(table_name = t_price_basic)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
+#[serde(rename_all = "camelCase")]
 pub struct PriceBasicPo {
     id: i64,
     name: Option<String>,

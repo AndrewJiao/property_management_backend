@@ -15,12 +15,14 @@ async fn main() -> AppResult<()> {
     let configs = &[
         controller::price_basic::config,
         controller::owner_info::config,
-        controller::hello::config
+        controller::hello::config,
+        controller::room_info::config
     ];
     Ok(build_service(
         configs,
     )?.await?)
 }
+
 
 fn before_init() {
     init_log4j();

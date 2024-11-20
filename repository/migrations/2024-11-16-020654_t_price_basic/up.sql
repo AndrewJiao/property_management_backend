@@ -10,7 +10,7 @@ create table if not exists t_price_basic
     update_by      varchar,
     create_time    timestamp not null,
     update_time    timestamp not null,
-    is_delete      boolean,
+    is_delete   boolean default false not null,
     operation_type calculate_operation,
     comment        text
 );

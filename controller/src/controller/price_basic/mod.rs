@@ -45,7 +45,6 @@ async fn get_data(param: web::Query<PaginateSearch>) -> AppResult<HttpResponse> 
 async fn put_data(param: web::Path<i64>, info: web::Json<PriceBasicUpdateDto>) -> AppResult<HttpResponse> {
     validate!(info);
     let data_id = param.into_inner();
-
     let _ = info
         .to_update_po(data_id as i32)
         .update_time()

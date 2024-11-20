@@ -7,6 +7,7 @@ use validator::Validate;
 
 //region 分页
 #[derive(Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
 pub struct PaginateSearch<T = ()> {
     #[validate(range(min = 1))]
     current_page: i64,
@@ -47,6 +48,7 @@ impl<T> PaginateSearch<T> {
 pub enum OrderType { DESC, ASC }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PaginateResult {
     pub page_size: i32,
     pub total_size: i32,
@@ -55,6 +57,7 @@ pub struct PaginateResult {
 
 //region 标准数据返回
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AppDataResult<T = ()> {
     pub code: u32,
     pub message: String,
@@ -69,6 +72,7 @@ pub struct AppDataResult<T = ()> {
 //region 错误相关
 #[derive(Error, Debug, Display, Serialize)]
 #[display("{error_msg:?}, code: {error_code:?}")]
+#[serde(rename_all = "camelCase")]
 pub struct AppBusinessError {
     pub error_msg: &'static str,
     pub error_code: u32,

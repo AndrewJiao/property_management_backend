@@ -1,4 +1,5 @@
 pub mod owner_info;
+pub  mod room_info;
 // pub mod action {
 //
 //     pub trait GetFromRepository {

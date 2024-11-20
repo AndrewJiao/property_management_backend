@@ -92,7 +92,7 @@ pub mod basic {
             update_by -> Nullable<Varchar>,
             create_time -> Timestamp,
             update_time -> Timestamp,
-            is_delete -> Nullable<Bool>,
+            is_delete -> Bool,
         }
     }
 

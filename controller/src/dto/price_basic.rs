@@ -5,6 +5,7 @@ use serde::Deserialize;
 use validator::Validate;
 
 #[derive(Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
 pub struct PriceBasicUpdateDto {
     #[validate(length(min = 0, max = 100))]
     pub name: Option<String>,

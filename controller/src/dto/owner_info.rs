@@ -12,6 +12,7 @@ use validator::Validate;
 ///
 ///
 #[derive(Deserialize, Serialize, Validate)]
+#[serde(rename_all = "camelCase")]
 pub struct OwnerInfoSearchDto {
     #[validate(length(min = 0, max = 100))]
     #[serde(deserialize_with = "empty_string_or_null_as_none")]
@@ -23,6 +24,7 @@ pub struct OwnerInfoSearchDto {
 
 
 #[derive(Deserialize, Serialize, Validate)]
+#[serde(rename_all = "camelCase")]
 pub struct OwnerInfoUpdateDto {
     pub id: i32,
     #[validate(length(min = 0, max = 100))]
@@ -59,6 +61,7 @@ impl ToUpdatePO for OwnerInfoUpdateDto {
 }
 
 #[derive(Deserialize, Serialize, Validate)]
+#[serde(rename_all = "camelCase")]
 pub struct OwnerInfoInsertDto {
     #[validate(length(min = 0, max = 100))]
     #[serde(deserialize_with = "empty_string_or_null_as_none")]
@@ -95,6 +98,7 @@ impl ToInsertPO for OwnerInfoInsertDto {
 }
 
 #[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct OwnerInfoResultDto {
     id: i32,
     room_number: String,

@@ -16,8 +16,10 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         .service(get_info)
         .service(put_info)
         .service(add_info)
+        .service(get_find)
     );
 }
+use crate::dto::basic::FindDto;
 use crate::dto::{ToInsertPO, ToUpdatePO};
 use repository::schema::basic::t_owner_basic_info::*;
 use repository::soft_delete_by_id;
@@ -69,11 +71,26 @@ async fn add_info(body_param: web::Json<OwnerInfoInsertDto>) -> AppResult<HttpRe
         .insert_into(table)
         .execute(&mut db_get_connection())?;
     result_success!()
-
 }
 
 #[delete("/info/{info_id}")]
-async fn delete_info(path :web::Path<i32>) -> AppResult<HttpResponse> {
+async fn delete_info(path: web::Path<i32>) -> AppResult<HttpResponse> {
     soft_delete_by_id!(path.into_inner());
     result_success!()
+}
+
+#[get("/find")]
+async fn get_find(param: web::Query<FindDto>) -> AppResult<HttpResponse> {
+    let search_type = match param.search_type {
+        Some(ref s_type) if !s_type.is_empty() => s_type,
+        _ => return result_success!(Vec::<String>::new()),
+    };
+
+    let result = QueryDsl::group_by(
+        table.select(room_number)
+            .filter(room_number.is_not_null())
+            .filter(room_number.ne(""))
+            .filter(room_number.like(format!("%{}%", search_type))), room_number)
+        .get_results::<String>(&mut db_get_connection())?;
+    result_success!(result)
 }

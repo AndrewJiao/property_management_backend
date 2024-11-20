@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Selectable, Queryable, Deserialize, Serialize)]
 #[diesel(table_name = t_owner_basic_info)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
+#[serde(rename_all = "camelCase")]
 pub struct OwnerBasicInfoPo {
     id: i32,
     room_number: String,
