@@ -1,7 +1,7 @@
 use crate::dto::room_info::{RoomInfoDetailSearchDto, RoomInfoDetailUpdateDto, RoomInfoSearchType};
 use crate::dto::ToUpdatePO;
 use actix_web::web::scope;
-use actix_web::{get, put, web, HttpResponse};
+use actix_web::{get, post, put, web, HttpResponse};
 use common::data_result::{AppResult, PaginateSearch};
 use common::db_config::auto_trait::AutoOperation;
 use common::db_config::db_get_connection;
@@ -16,11 +16,13 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         .service(get_data)
         .service(put_data)
         .service(get_find)
+        .service(post_data)
     );
 }
 
 use crate::controller::IfFilter;
 use repository::schema::basic::t_room_info_detail::*;
+use service::room_info::init_room_data;
 
 ///
 /// 查询
@@ -85,5 +87,15 @@ async fn get_find(param: web::Query<RoomInfoSearchType>) -> AppResult<HttpRespon
             result_success!(result)
         }
     }
+}
+
+
+///
+/// 初始化数据
+///
+#[post("/init")]
+async fn post_data() -> AppResult<HttpResponse> {
+    init_room_data()?;
+    result_success!()
 }
 

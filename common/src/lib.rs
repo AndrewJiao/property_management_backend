@@ -7,6 +7,7 @@ pub mod tools;
 pub mod process_macro_derive;
 pub mod db_config;
 
+pub const CURRENT_USE: &str = "System";
 
 // pub fn build_app_context() -> AppContextBuilder {
 //     AppContextBuilder {

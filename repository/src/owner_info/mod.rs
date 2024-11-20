@@ -10,17 +10,17 @@ use serde::{Deserialize, Serialize};
 #[diesel(check_for_backend(diesel::pg::Pg))]
 #[serde(rename_all = "camelCase")]
 pub struct OwnerBasicInfoPo {
-    id: i32,
-    room_number: String,
-    owner_name: Option<String>,
-    room_square: Option<BigDecimal>,
-    create_by: Option<String>,
-    update_by: Option<String>,
-    create_time: NaiveDateTime,
-    update_time: NaiveDateTime,
-    is_delete: bool,
-    comment: Option<String>,
-    other_basic: Option<serde_json::Value>,
+   pub  id: i32,
+   pub  room_number: String,
+   pub  owner_name: Option<String>,
+   pub  room_square: Option<BigDecimal>,
+   pub  create_by: Option<String>,
+   pub  update_by: Option<String>,
+   pub  create_time: NaiveDateTime,
+   pub  update_time: NaiveDateTime,
+   pub  is_delete: bool,
+   pub  comment: Option<String>,
+   pub  other_basic: Option<serde_json::Value>,
 }
 
 
