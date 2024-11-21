@@ -27,7 +27,6 @@ async fn main() -> AppResult<()> {
 
 fn before_init() {
     init_log4j();
-
     // 初始化db
     let _ = DB_CONNECTION;
 }

@@ -1,7 +1,8 @@
-use crate::error::BaseError;
+// use crate::error::BaseError;
 use config::{Config, ConfigError};
 use log::info;
 use serde::Deserialize;
+use crate::error::AppResult;
 
 ///
 /// web配置模块
@@ -64,7 +65,7 @@ impl Settings {
     }
 }
 
-pub fn init_settings() -> Result<Settings, BaseError> {
+pub fn init_settings() -> AppResult<Settings> {
     //准备配置文件
     let settings = Settings::new();
     info!("{settings:?}");

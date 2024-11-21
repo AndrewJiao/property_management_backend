@@ -92,7 +92,7 @@ impl FeeCalculator for PropertyFeeDetailUpdatePo<'_> {
 #[diesel(table_name = t_property_fee_detail)]
 pub struct PropertyFeeDetailInsertPo<'a> {
     pub room_number: &'a str,
-    pub room_owner_name: &'a str,
+    pub room_owner_name: Option<&'a str>,
     pub management_fee: Option<BigDecimal>,
     pub part_fee: Option<BigDecimal>,
     pub machine_room_renovation_fee: Option<BigDecimal>,
@@ -111,4 +111,38 @@ pub struct PropertyFeeDetailInsertPo<'a> {
     pub delete_at: Option<NaiveDateTime>,
     pub comment: Option<&'a str>,
     pub total_fee: Option<BigDecimal>,
+}
+
+impl PropertyFeeDetailInsertPo<'_>{
+    pub fn fee_calculate(&mut self) {
+        let mut total_fee = BigDecimal::from(0);
+        if let Some(ref management_fee) = self.management_fee {
+            total_fee += management_fee;
+        }
+        if let Some(ref part_fee) = self.part_fee {
+            total_fee += part_fee;
+        }
+        if let Some(ref machine_room_renovation_fee) = self.machine_room_renovation_fee {
+            total_fee += machine_room_renovation_fee;
+        }
+        if let Some(ref electric_fee) = self.electric_fee {
+            total_fee += electric_fee;
+        }
+        if let Some(ref electric_share_fee) = self.electric_share_fee {
+            total_fee += electric_share_fee;
+        }
+        if let Some(ref water_fee) = self.water_fee {
+            total_fee += water_fee;
+        }
+        if let Some(ref water_share_fee) = self.water_share_fee {
+            total_fee += water_share_fee;
+        }
+        if let Some(ref liquidate_fee) = self.liquidate_fee {
+            total_fee += liquidate_fee;
+        }
+        if let Some(ref pre_store_fee) = self.pre_store_fee {
+            total_fee += pre_store_fee;
+        }
+        self.total_fee = Some(total_fee);
+    }
 }

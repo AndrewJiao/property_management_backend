@@ -17,6 +17,7 @@ create table if not exists t_room_info_detail
     create_time                  timestamp             not null,
     update_time                  timestamp             not null,
     is_delete                    boolean default false not null
+    room_owner_name              varchar
 );
 
 comment on table t_room_info_detail is '房间读数';

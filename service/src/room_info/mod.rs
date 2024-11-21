@@ -65,6 +65,7 @@ pub fn init_room_data() -> AppResult<()> {
         let last_room_data = last_room_info_map.get(owner_info.room_number.as_str());
         RoomInfoDetailInsertPo {
             room_number: Some(owner_info.room_number.as_str()),
+            room_owner_name:owner_info.owner_name.as_deref(),
             water_meter_num_before: last_room_data.map(|e| e.water_meter_num.as_ref()).flatten(),
             water_meter_num: None,
             water_meter_sub: None,
@@ -93,7 +94,7 @@ pub fn init_room_data() -> AppResult<()> {
 ///
 /// 获取指定月份的版本
 ///
-fn init_current_month_version(time: chrono::DateTime<Local>) -> String {
+pub fn init_current_month_version(time: chrono::DateTime<Local>) -> String {
     //获取当前月份
     let month = time.month();
     let year = time.year();

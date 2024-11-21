@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-management_macro= { path = "../management_macro" }
+management_macro = { path = "../management_macro" }
 serde.workspace = true
 serde_json.workspace = true
 chrono.workspace = true
@@ -22,3 +22,4 @@ diesel.workspace = true
 pq-sys.workspace = true
 validator.workspace = true
 bigdecimal.workspace = true
+anyhow.workspace = true

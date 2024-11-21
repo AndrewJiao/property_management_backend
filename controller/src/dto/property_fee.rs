@@ -1,10 +1,10 @@
+use crate::dto::ToUpdatePO;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use common::tools::serde::empty_string_or_null_as_none;
+use repository::property_fee::PropertyFeeDetailUpdatePo;
 use serde::Deserialize;
 use validator::Validate;
-use repository::property_fee::PropertyFeeDetailUpdatePo;
-use crate::dto::ToUpdatePO;
 // #[derive(Serialize)]
 // #[serde(rename_all = "camelCase")]
 // pub struct PropertyFeeDetailResultDto {
@@ -99,4 +99,10 @@ impl ToUpdatePO for PropertyFeeDetailUpdateDto {
             total_fee: None,
         }
     }
+}
+#[derive(Deserialize, Validate)]
+pub struct PropertyFeeDetailInitDto {
+    #[validate(length(min = 0, max = 100))]
+    #[serde(deserialize_with = "empty_string_or_null_as_none")]
+    pub month_version: Option<String>,
 }

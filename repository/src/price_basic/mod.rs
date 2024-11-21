@@ -1,3 +1,4 @@
+use crate::schema::basic::sql_types::BasicCode;
 use crate::schema::basic::sql_types::CalculateOperation;
 use crate::schema::basic::t_price_basic;
 use bigdecimal::BigDecimal;
@@ -6,8 +7,9 @@ use diesel::backend::Backend;
 use diesel::deserialize::FromSql;
 use diesel::pg::Pg;
 use diesel::prelude::*;
-use serde::Serialize;
 use management_macro::AutoOperation;
+use serde::Serialize;
+use std::collections::HashMap;
 
 #[derive(Selectable, Queryable, Serialize)]
 #[diesel(table_name = t_price_basic)]
@@ -16,7 +18,7 @@ use management_macro::AutoOperation;
 pub struct PriceBasicPo {
     id: i64,
     name: Option<String>,
-    basic_number: Option<BigDecimal>,
+    pub basic_number: Option<BigDecimal>,
     create_by: Option<String>,
     update_by: Option<String>,
     create_time: NaiveDateTime,
@@ -24,7 +26,56 @@ pub struct PriceBasicPo {
     is_delete: Option<bool>,
     operation_type: Option<CalculateOperationType>,
     comment: Option<String>,
-    basic_code: Option<String>,
+    pub basic_code: Option<BasicPriceType>,
+}
+
+pub trait PriceBasicConfigGet {
+    fn to_price_type_map(self) -> HashMap<BasicPriceType, PriceBasicPo>;
+}
+impl PriceBasicConfigGet for Vec<PriceBasicPo> {
+    fn to_price_type_map(self) -> HashMap<BasicPriceType, PriceBasicPo> {
+        self.into_iter().flat_map(|po| {
+            match po.basic_code {
+                None => { None }
+                Some(ref base_type) => {
+                    Some((base_type.clone(), po))
+                }
+            }
+        }).collect::<HashMap<BasicPriceType, PriceBasicPo>>()
+    }
+}
+
+#[derive(Hash, Eq, PartialEq, Debug, Serialize, Clone)]
+pub enum BasicPriceType {
+    ManagementFee,
+    CarPartFee,
+    MotorCyclePartFee,
+    MachineRoomRenovationFee,
+    ElectricFee,
+    ElectricShareFee,
+    WaterFee,
+    WaterShareFee,
+    LiquidateFee,
+    PreStoreFee,
+}
+
+impl FromSql<BasicCode, Pg> for BasicPriceType {
+    fn from_sql(bytes: <Pg as Backend>::RawValue<'_>) -> diesel::deserialize::Result<Self> {
+        let str = std::str::from_utf8(bytes.as_bytes())?;
+        match str {
+            "ManagementFee" => { Ok(BasicPriceType::ManagementFee) }
+            "CarPartFee" => { Ok(BasicPriceType::CarPartFee) }
+            "MotorCyclePartFee" => { Ok(BasicPriceType::MotorCyclePartFee) }
+            "MachineRoomRenovationFee" => { Ok(BasicPriceType::MachineRoomRenovationFee) }
+            "ElectricFee" => { Ok(BasicPriceType::ElectricFee) }
+            "ElectricShareFee" => { Ok(BasicPriceType::ElectricShareFee) }
+            "WaterFee" => { Ok(BasicPriceType::WaterFee) }
+            "WaterShareFee" => { Ok(BasicPriceType::WaterShareFee) }
+            "LiquidateFee" => { Ok(BasicPriceType::LiquidateFee) }
+            "PreStoreFee" => { Ok(BasicPriceType::PreStoreFee) }
+            _ => { Err(Box::from(format!("Invalid BasicPriceType for type {}", str))) }
+        }
+    }
 }
 
 #[derive(Identifiable, AsChangeset, AutoOperation)]

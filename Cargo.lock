@@ -448,6 +448,7 @@ name = "common"
 version = "0.1.0"
 dependencies = [
  "actix-web",
+ "anyhow",
  "bigdecimal 0.4.6",
  "chrono",
  "config",
@@ -511,6 +512,7 @@ name = "controller"
 version = "0.1.0"
 dependencies = [
  "actix-web",
+ "anyhow",
  "bigdecimal 0.4.6",
  "chrono",
  "common",

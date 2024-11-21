@@ -1,4 +1,4 @@
-use crate::dto::property_fee::{PropertyFeeDetailSearchDto, PropertyFeeDetailUpdateDto};
+use crate::dto::property_fee::{PropertyFeeDetailInitDto, PropertyFeeDetailSearchDto, PropertyFeeDetailUpdateDto};
 use actix_web::web::scope;
 use actix_web::{get, post, put, web, HttpResponse};
 use common::data_result::{AppResult, PaginateSearch};
@@ -63,8 +63,8 @@ async fn put_data(path_param: web::Path<i32>, body_param: web::Json<PropertyFeeD
 /// 初始化
 ///
 #[post("/data")]
-async fn init_data() -> AppResult<HttpResponse> {
-    service::property_fee::init_data()?;
-
+async fn init_data(param: web::Query<PropertyFeeDetailInitDto>) -> AppResult<HttpResponse> {
+    validate!(param);
+    service::property_fee::init_data(param.month_version.as_deref())?;
     result_success!()
 }
