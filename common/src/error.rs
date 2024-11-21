@@ -5,6 +5,7 @@ use actix_web::{error, HttpResponse};
 use diesel::r2d2::Error as R2d2Error;
 use log::error;
 use std::env::VarError;
+use std::error::Error;
 use thiserror::Error;
 
 pub type AppResult<T> = Result<T, BaseError>;
@@ -26,10 +27,10 @@ pub enum BaseError {
     #[error("database r2d2 error")]
     DatabaseR2D2Error(#[from] R2d2Error),
 
-    #[error("database result error")]
+    #[error("database result error : {0}")]
     DatabaseError(#[from] diesel::result::Error),
 
-    #[error("business error")]
+    #[error("business error : {0}")]
     BusinessError(#[from] AppBusinessError),
 }
 
@@ -37,8 +38,6 @@ pub enum BaseError {
 impl error::ResponseError for BaseError {
     fn error_response(&self) -> HttpResponse<BoxBody> {
         //打印堆栈
-        let backtrace = std::backtrace::Backtrace::capture();
-        error!("error: {:?}, backtrace: {:?}", self, backtrace);
         match self {
             BusinessError(e) => {
                 HttpResponse::InternalServerError().json(e)

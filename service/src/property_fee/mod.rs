@@ -108,10 +108,14 @@ pub fn init_data(version: Option<&str>) -> AppResult<()> {
         po.fee_calculate();
         po.create_time()
     }).collect::<Vec<PropertyFeeDetailInsertPo>>();
-
+    if data_insert.is_empty() {
+        return Ok(());
+    }
     {
         use repository::schema::basic::t_property_fee_detail::table;
-        insert_into(table).values(data_insert).execute(&mut db_get_connection())?;
+        let statement = insert_into(table).values(data_insert);
+        println!("{}", diesel::debug_query::<diesel::pg::Pg, _>(&statement));
+        statement.execute(&mut db_get_connection())?;
     }
     Ok(())
 }

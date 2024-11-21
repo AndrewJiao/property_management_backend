@@ -76,7 +76,7 @@ impl RoomInfoDetailPo {
             = (self.electricity_meter_sub, electric_price, electric_share_price)
         {
             let ele_total = electric_pri * electric_num;
-            let ele_share = ele_total.clone().mul(electric_share_pri);
+            let ele_share = ele_total.clone() * electric_share_pri;
             Some((ele_total, ele_share))
         } else {
             None

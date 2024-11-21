@@ -31,7 +31,7 @@ impl OwnerBasicInfoPo {
     pub fn calculate_management_fee(&self, basic_config: &HashMap<BasicPriceType, PriceBasicPo>) -> Option<BigDecimal> {
         let new_basic_price = basic_config.get(&BasicPriceType::ManagementFee).map(|info| info.basic_number.clone()).flatten();
         if let (Some(square), Some(fee)) = (&self.room_square, new_basic_price) {
-            Some(fee.mul(square))
+            Some(fee * square)
         } else {
             None
         }
@@ -59,7 +59,6 @@ impl OwnerBasicInfoPo {
             _ => Some((0, 0))
         }
     }
-
 }
 
 #[derive(Identifiable, AsChangeset, Serialize, AutoOperation)]
