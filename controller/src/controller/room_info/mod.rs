@@ -16,7 +16,7 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         .service(get_data)
         .service(put_data)
         .service(get_find)
-        .service(post_data)
+        .service(init_data)
     );
 }
 
@@ -95,7 +95,7 @@ async fn get_find(param: web::Query<RoomInfoSearchType>) -> AppResult<HttpRespon
 /// 初始化数据
 ///
 #[post("/init")]
-async fn post_data() -> AppResult<HttpResponse> {
+async fn init_data() -> AppResult<HttpResponse> {
     init_room_data()?;
     result_success!()
 }

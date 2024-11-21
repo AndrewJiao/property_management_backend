@@ -4,6 +4,7 @@ use chrono::NaiveDateTime;
 use diesel::{AsChangeset, Identifiable, Insertable, Queryable, Selectable};
 use management_macro::AutoOperation;
 use serde::{Deserialize, Serialize};
+use crate::component::operation_trait::FeeCalculator;
 
 #[derive(Selectable, Queryable, Serialize, Deserialize)]
 #[diesel(table_name = t_property_fee_detail)]
@@ -36,21 +37,55 @@ pub struct PropertyFeeDetailPo {
 #[diesel(table_name = t_property_fee_detail)]
 pub struct PropertyFeeDetailUpdatePo<'a> {
     pub id: i32,
-    pub management_fee: Option<BigDecimal>,
-    pub part_fee: Option<BigDecimal>,
-    pub machine_room_renovation_fee: Option<BigDecimal>,
-    pub electric_fee: Option<BigDecimal>,
-    pub electric_share_fee: Option<BigDecimal>,
-    pub water_fee: Option<BigDecimal>,
-    pub water_share_fee: Option<BigDecimal>,
-    pub liquidate_fee: Option<BigDecimal>,
-    pub pre_store_fee: Option<BigDecimal>,
+    pub management_fee: Option<&'a BigDecimal>,
+    pub part_fee: Option<&'a BigDecimal>,
+    pub machine_room_renovation_fee: Option<&'a BigDecimal>,
+    pub electric_fee: Option<&'a BigDecimal>,
+    pub electric_share_fee: Option<&'a BigDecimal>,
+    pub water_fee: Option<&'a BigDecimal>,
+    pub water_share_fee: Option<&'a BigDecimal>,
+    pub liquidate_fee: Option<&'a BigDecimal>,
+    pub pre_store_fee: Option<&'a BigDecimal>,
     pub update_by: Option<&'a str>,
     pub update_time: Option<NaiveDateTime>,
     pub is_delete: Option<bool>,
     pub delete_at: Option<NaiveDateTime>,
     pub comment: Option<&'a str>,
     pub total_fee: Option<BigDecimal>,
+}
+
+impl FeeCalculator for PropertyFeeDetailUpdatePo<'_> {
+    fn fee_calculate(&mut self) {
+        let mut total_fee = BigDecimal::from(0);
+        if let Some(management_fee) = self.management_fee {
+            total_fee += management_fee;
+        }
+        if let Some(part_fee) = self.part_fee {
+            total_fee += part_fee;
+        }
+        if let Some(machine_room_renovation_fee) = self.machine_room_renovation_fee {
+            total_fee += machine_room_renovation_fee;
+        }
+        if let Some(electric_fee) = self.electric_fee {
+            total_fee += electric_fee;
+        }
+        if let Some(electric_share_fee) = self.electric_share_fee {
+            total_fee += electric_share_fee;
+        }
+        if let Some(water_fee) = self.water_fee {
+            total_fee += water_fee;
+        }
+        if let Some(water_share_fee) = self.water_share_fee {
+            total_fee += water_share_fee;
+        }
+        if let Some(liquidate_fee) = self.liquidate_fee {
+            total_fee += liquidate_fee;
+        }
+        if let Some(pre_store_fee) = self.pre_store_fee {
+            total_fee += pre_store_fee;
+        }
+        self.total_fee = Some(total_fee);
+    }
 }
 
 #[derive(Insertable, AutoOperation)]

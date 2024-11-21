@@ -47,6 +47,7 @@ pub mod basic {
             is_delete -> Nullable<Bool>,
             operation_type -> Nullable<CalculateOperation>,
             comment -> Nullable<Text>,
+            basic_code -> Nullable<Varchar>,
         }
     }
 

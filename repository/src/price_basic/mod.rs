@@ -24,6 +24,7 @@ pub struct PriceBasicPo {
     is_delete: Option<bool>,
     operation_type: Option<CalculateOperationType>,
     comment: Option<String>,
+    basic_code: Option<String>,
 }
 
 #[derive(Identifiable, AsChangeset, AutoOperation)]

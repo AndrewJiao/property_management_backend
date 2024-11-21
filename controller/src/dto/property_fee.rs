@@ -3,6 +3,8 @@ use chrono::NaiveDateTime;
 use common::tools::serde::empty_string_or_null_as_none;
 use serde::Deserialize;
 use validator::Validate;
+use repository::property_fee::PropertyFeeDetailUpdatePo;
+use crate::dto::ToUpdatePO;
 // #[derive(Serialize)]
 // #[serde(rename_all = "camelCase")]
 // pub struct PropertyFeeDetailResultDto {
@@ -72,4 +74,29 @@ pub struct PropertyFeeDetailSearchDto {
     pub create_time_end: Option<NaiveDateTime>,
     pub update_time_begin: Option<NaiveDateTime>,
     pub update_time_end: Option<NaiveDateTime>,
+}
+
+impl ToUpdatePO for PropertyFeeDetailUpdateDto {
+    type PO<'a> = PropertyFeeDetailUpdatePo<'a>;
+
+    fn to_update_po(&self, id: i32) -> Self::PO<'_> {
+        PropertyFeeDetailUpdatePo {
+            id,
+            management_fee: self.management_fee.as_ref(),
+            part_fee: self.part_fee.as_ref(),
+            machine_room_renovation_fee: self.machine_room_renovation_fee.as_ref(),
+            electric_fee: self.electric_fee.as_ref(),
+            electric_share_fee: self.electric_share_fee.as_ref(),
+            water_fee: self.water_fee.as_ref(),
+            water_share_fee: self.water_share_fee.as_ref(),
+            liquidate_fee: self.liquidate_fee.as_ref(),
+            pre_store_fee: self.pre_store_fee.as_ref(),
+            update_by: None,
+            update_time: None,
+            is_delete: None,
+            delete_at: None,
+            comment: self.comment.as_deref(),
+            total_fee: None,
+        }
+    }
 }
