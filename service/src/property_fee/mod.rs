@@ -82,7 +82,7 @@ pub fn init_data(version: Option<&str>) -> AppResult<()> {
                     let (water_total, water_share) = info.calculate_water(&basic_price_config).unzip();
                     Some(PropertyFeeDetailInsertPo {
                         room_number: info.room_number.as_deref().unwrap(),
-                        room_owner_name: info.room_owner_name.as_deref(),
+                        room_owner_name: owner_info.owner_name.as_deref(),
                         management_fee: owner_info.calculate_management_fee(&basic_price_config),
                         part_fee: owner_info.calculate_part_fee(&basic_price_config),
                         machine_room_renovation_fee: machine_room_fee,

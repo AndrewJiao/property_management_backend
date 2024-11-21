@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::ops::Mul;
 use bigdecimal::BigDecimal;
 use crate::schema::basic::t_owner_basic_info;
 use chrono::NaiveDateTime;
@@ -52,10 +51,14 @@ impl OwnerBasicInfoPo {
 
     fn get_vehicle_num(&self) -> Option<(u64, u64)> {
         match self.other_basic {
-            Some(Value::Object(ref map)) => Some((
-                map.get("carNumber").map(|value| value.as_u64()).flatten().unwrap_or(0),
-                map.get("motorCycleNumber").map(|value| value.as_u64()).flatten().unwrap_or(0)
-            )),
+            Some(Value::Object(ref map)) => {
+                println!("carNumber={:?}", map.get("carNumber"));
+                println!("motorCycleNumber={:?}", map.get("motorCycleNumber"));
+                return Some((
+                    map.get("carNumber").map(|value| value.as_u64()).flatten().unwrap_or(0),
+                    map.get("motorCycleNumber").map(|value| value.as_u64()).flatten().unwrap_or(0),
+                ));
+            }
             _ => Some((0, 0))
         }
     }

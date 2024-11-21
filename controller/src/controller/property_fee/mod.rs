@@ -1,10 +1,10 @@
 use crate::dto::property_fee::{PropertyFeeDetailInitDto, PropertyFeeDetailSearchDto, PropertyFeeDetailUpdateDto};
 use actix_web::web::scope;
-use actix_web::{get, post, put, web, HttpResponse};
+use actix_web::{delete, get, post, put, web, HttpResponse};
 use common::data_result::{AppResult, PaginateSearch};
 use common::db_config::db_get_connection;
 use common::{result_success, validate};
-use diesel::{ExpressionMethods, QueryDsl, SelectableHelper, TextExpressionMethods};
+use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper, TextExpressionMethods};
 use repository::component::page::Paginate;
 use repository::property_fee::PropertyFeeDetailPo;
 
@@ -17,9 +17,9 @@ pub fn config(cfg: &mut web::ServiceConfig) {
 }
 
 use crate::controller::IfFilter;
+use crate::dto::ToUpdatePO;
 use repository::schema::basic::t_property_fee_detail::*;
 use service::property_fee::do_edit_update;
-use crate::dto::ToUpdatePO;
 
 #[get("/data")]
 async fn get_data(param: web::Query<PaginateSearch>, body_param: web::Json<PropertyFeeDetailSearchDto>) -> AppResult<HttpResponse> {
@@ -49,7 +49,7 @@ async fn get_data(param: web::Query<PaginateSearch>, body_param: web::Json<Prope
 }
 
 ///
-/// 修改水电数据j
+/// 修改水电数据
 ///
 #[put("/data/{data_id}")]
 async fn put_data(path_param: web::Path<i32>, body_param: web::Json<PropertyFeeDetailUpdateDto>) -> AppResult<HttpResponse> {
@@ -66,5 +66,17 @@ async fn put_data(path_param: web::Path<i32>, body_param: web::Json<PropertyFeeD
 async fn init_data(param: web::Query<PropertyFeeDetailInitDto>) -> AppResult<HttpResponse> {
     validate!(param);
     service::property_fee::init_data(param.month_version.as_deref())?;
+    result_success!()
+}
+
+///
+/// 初始化
+///
+#[delete("/data/{data_id}")]
+async fn delete(path_param: web::Query<i32>) -> AppResult<HttpResponse> {
+    diesel::update(table)
+        .filter(id.eq(path_param.into_inner()))
+        .set((is_delete.eq(true), delete_at.eq(chrono::Local::now().naive_local())))
+        .execute(&mut db_get_connection())?;
     result_success!()
 }

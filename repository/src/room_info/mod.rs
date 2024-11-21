@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::ops::Mul;
 use bigdecimal::BigDecimal;
 use crate::schema::basic::t_room_info_detail;
 use chrono::NaiveDateTime;

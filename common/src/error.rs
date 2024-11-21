@@ -5,7 +5,6 @@ use actix_web::{error, HttpResponse};
 use diesel::r2d2::Error as R2d2Error;
 use log::error;
 use std::env::VarError;
-use std::error::Error;
 use thiserror::Error;
 
 pub type AppResult<T> = Result<T, BaseError>;

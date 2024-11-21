@@ -5,15 +5,15 @@ create table if not exists t_property_fee_detail
     primary key,
     room_number                 varchar,
     room_owner_name             varchar,
-    management_fee              numeric(10, 8),
-    part_fee                    numeric(10, 8),
-    machine_room_renovation_fee numeric(10, 8),
-    electric_fee                numeric(10, 8),
-    electric_share_fee          numeric(10, 8),
-    water_fee                   numeric(10, 8),
-    water_share_fee             numeric(10, 8),
-    liquidate_fee               numeric(10, 8),
-    pre_store_fee               numeric(10, 8),
+    management_fee              numeric(10, 2),
+    part_fee                    numeric(10, 2),
+    machine_room_renovation_fee numeric(10, 2),
+    electric_fee                numeric(10, 2),
+    electric_share_fee          numeric(10, 2),
+    water_fee                   numeric(10, 2),
+    water_share_fee             numeric(10, 2),
+    liquidate_fee               numeric(10, 2),
+    pre_store_fee               numeric(10, 2),
     record_version              varchar,
     create_by                   varchar,
     update_by                   varchar,
@@ -22,7 +22,7 @@ create table if not exists t_property_fee_detail
     is_delete                   boolean,
     delete_at                   timestamp,
     comment                     text,
-    total_fee                   numeric(10, 8)
+    total_fee                   numeric(10, 2)
     );
 
 comment on column t_property_fee_detail.room_number is '房间号';
@@ -58,9 +58,6 @@ create index if not exists property_fee_detail_create_time_index
 create index if not exists property_fee_detail_recode_version_index
     on t_property_fee_detail (record_version);
 
-create index if not exists property_fee_detail_room_number_index
-    on t_property_fee_detail (room_number);
-
 create index if not exists property_fee_detail_room_owner_name_index
     on t_property_fee_detail (room_owner_name);
 
@@ -69,4 +66,7 @@ create index if not exists property_fee_detail_update_by_index
 
 create index if not exists property_fee_detail_create_by_index
     on t_property_fee_detail (create_by);
+
+create unique index if not exists property_fee_detail_room_number_index
+    on t_property_fee_detail (room_number, record_version, is_delete, delete_at);
 
