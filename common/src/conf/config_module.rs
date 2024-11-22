@@ -1,9 +1,9 @@
-use std::env;
+use crate::conf::{get_current_config_dir_path};
+use crate::error::AppResult;
 // use crate::error::BaseError;
 use config::{Config, ConfigError};
 use log::info;
 use serde::Deserialize;
-use crate::error::AppResult;
 
 ///
 /// web配置模块
@@ -51,9 +51,10 @@ pub struct Settings {
 }
 impl Settings {
     pub fn new() -> Result<Self, ConfigError> {
-        let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
+        let config_dir = get_current_config_dir_path("config");
+        println!("config: {}", config_dir);
         let s = Config::builder()
-            .add_source(config::File::with_name(format!("{}/../config_dir/config", manifest_dir).as_str()))
+            .add_source(config::File::with_name(config_dir.as_str()))
             .build()?;
         s.try_deserialize()
     }

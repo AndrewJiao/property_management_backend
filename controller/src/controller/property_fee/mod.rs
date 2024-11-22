@@ -74,7 +74,7 @@ async fn init_data(param: web::Query<PropertyFeeDetailInitDto>) -> AppResult<Htt
 /// 初始化
 ///
 #[delete("/data/{data_id}")]
-async fn delete_data(path_param: web::Query<i32>) -> AppResult<HttpResponse> {
+async fn delete_data(path_param: web::Path<i32>) -> AppResult<HttpResponse> {
     diesel::update(table)
         .filter(id.eq(path_param.into_inner()))
         .set((is_delete.eq(true), delete_at.eq(chrono::Local::now().naive_local())))

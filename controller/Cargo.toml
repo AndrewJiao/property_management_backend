@@ -3,7 +3,7 @@ name = "controller"
 version.workspace = true
 edition.workspace = true
 default-run = "PropertyManagement"
-
+build = "../build.rs"
 [dependencies]
 common = { path = "../common" }
 repository = { path = "../repository" }
