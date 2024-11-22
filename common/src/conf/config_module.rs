@@ -1,3 +1,4 @@
+use std::env;
 // use crate::error::BaseError;
 use config::{Config, ConfigError};
 use log::info;
@@ -50,16 +51,9 @@ pub struct Settings {
 }
 impl Settings {
     pub fn new() -> Result<Self, ConfigError> {
-        //看当前文件路径
-        let file_path = std::env::current_dir().unwrap();
-        println!("{:?}", file_path);
-
-        //看当前项目路径
-        let project_path = std::env::current_exe().unwrap();
-        println!("{:?}", project_path);
-
+        let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
         let s = Config::builder()
-            .add_source(config::File::with_name("common/config"))
+            .add_source(config::File::with_name(format!("{}/../config_dir/config", manifest_dir).as_str()))
             .build()?;
         s.try_deserialize()
     }

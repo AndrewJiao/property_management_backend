@@ -17,14 +17,3 @@ macro_rules! soft_delete_by_id {
             .execute(&mut common::db_config::db_get_connection())?;
     }
 }
-// #[macro_export]
-// macro_rules! soft_delete_by_id {
-//     ($($param:expr,$condition:stmt),* $(,)?) => {
-//             $(
-//                 if let Some(end) = $param {
-//                     // statement = statement.filter(create_time.between(star, end))
-//                     statement = $condition
-//                 }
-//             )*
-//     }
-// }

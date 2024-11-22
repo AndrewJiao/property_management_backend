@@ -2,8 +2,7 @@
 name = "controller"
 version.workspace = true
 edition.workspace = true
-default-run = "RunApp"
-
+default-run = "PropertyManagement"
 
 [dependencies]
 common = { path = "../common" }
@@ -21,6 +20,6 @@ validator.workspace = true
 anyhow.workspace = true
 
 [[bin]]
-name = "RunApp"
-path = "src/bin/RunApp.rs"
+name = "PropertyManagement"
+path = "src/bin/PropertyManagement.rs"
 
