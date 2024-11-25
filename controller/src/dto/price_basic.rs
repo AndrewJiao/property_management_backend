@@ -11,6 +11,8 @@ pub struct PriceBasicUpdateDto {
     pub name: Option<String>,
     #[validate(custom(function = "common::tools::validator::validate_big_decimal"))]
     pub basic_number: Option<BigDecimal>,
+    #[validate(length(min = 0, max = 1000))]
+    pub comment: Option<String>,
 }
 
 impl ToUpdatePO for PriceBasicUpdateDto {
@@ -22,6 +24,7 @@ impl ToUpdatePO for PriceBasicUpdateDto {
             name: self.name.as_deref(),
             basic_number: self.basic_number.as_ref(),
             update_time: None,
+            comment: self.comment.as_deref(),
         }
     }
 }

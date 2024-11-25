@@ -22,4 +22,6 @@ diesel.workspace = true
 pq-sys.workspace = true
 validator.workspace = true
 bigdecimal.workspace = true
-anyhow.workspace = true
+actix-cors.workspace = true
+tracing-actix-web.workspace = true
+base64.workspace = true

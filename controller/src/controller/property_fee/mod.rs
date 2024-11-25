@@ -46,7 +46,7 @@ async fn get_data(param: web::Query<PaginateSearch>, body_param: web::Json<Prope
             statement.select(PropertyFeeDetailPo::as_select()), update_time.desc())
             .paginate(param.current_page()).per_page(param.limit())
             .load_and_count_pages(&mut db_get_connection())?;
-    result_success!(result, param.produce_page_result(total as i32))
+    result_success!(result, param.produce_page_result(total))
 }
 
 ///

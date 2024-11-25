@@ -27,21 +27,23 @@ use repository::soft_delete_by_id;
 /// 获取用户基础信息
 ///
 #[get("/info")]
-async fn get_info(param: web::Query<PaginateSearch>, body_param: web::Json<OwnerInfoSearchDto>) -> AppResult<HttpResponse> {
-    validate!(param, body_param);
+async fn get_info(param: web::Query<PaginateSearch>) -> AppResult<HttpResponse> {
+    let search_param: OwnerInfoSearchDto = param.convert_param()?;
+    validate!(param, &search_param);
+
     let mut statement = table.into_boxed();
-    if let Some(ref e) = body_param.owner_name {
+    if let Some(e) = search_param.owner_name.as_deref() {
         statement = statement.filter(owner_name.like(e))
     }
-    if let Some(ref e) = body_param.room_number {
+    if let Some(e) = search_param.room_number.as_deref() {
         statement = statement.filter(room_number.like(e));
     }
     let (result, total) =
         OrderDsl::order(statement.select(OwnerBasicInfoPo::as_select()),
-                        update_time.desc())
+                        create_time.desc())
             .paginate(param.current_page()).per_page(param.limit())
             .load_and_count_pages(&mut db_get_connection())?;
-    result_success!(result, param.produce_page_result(total as i32))
+    result_success!(result, param.produce_page_result(total))
 }
 
 ///

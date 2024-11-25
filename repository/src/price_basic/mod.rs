@@ -85,6 +85,7 @@ pub struct UpdatePriceBasicPo<'a> {
     pub name: Option<&'a str>,
     pub basic_number: Option<&'a BigDecimal>,
     pub update_time: Option<NaiveDateTime>,
+    pub comment: Option<&'a str>,
 }
 
 #[derive(Serialize)]

@@ -5,6 +5,7 @@ use actix_web::{error, HttpResponse};
 use diesel::r2d2::Error as R2d2Error;
 use log::error;
 use std::env::VarError;
+use std::string::FromUtf8Error;
 use thiserror::Error;
 
 pub type AppResult<T> = Result<T, BaseError>;
@@ -20,6 +21,9 @@ pub enum BaseError {
     #[error("serde json error : {0}")]
     JsonError(#[from] serde_json::Error),
 
+    #[error("serde json error : {0}")]
+    FromUtf8Error(#[from] FromUtf8Error),
+
     #[error("configure error : {0}")]
     ConfigError(#[from] config::ConfigError),
 
@@ -28,9 +32,13 @@ pub enum BaseError {
 
     #[error("database result error : {0}")]
     DatabaseError(#[from] diesel::result::Error),
+    #[error("base64 error : {0}")]
+    Base64Error(#[from] base64::DecodeError),
+
 
     #[error("business error : {0}")]
     BusinessError(#[from] AppBusinessError),
+
 }
 
 

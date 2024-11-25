@@ -33,4 +33,6 @@ pq-sys = { version = "0.6", features = ["bundled_without_openssl"] }
 bigdecimal = { version = "0.4.6", features = ["serde"] }
 pg_bigdecimal = "0.1.5"
 validator = { version = "0.19", features = ["derive"] }
-
+actix-cors = "0.7.0"
+tracing-actix-web = "0.7.15"
+base64 = "0.22.1"

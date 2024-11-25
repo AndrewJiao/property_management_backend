@@ -8,16 +8,13 @@ build = "../build.rs"
 common = { path = "../common" }
 repository = { path = "../repository" }
 service = { path = "../service" }
-management_macro = { path = "../management_macro" }
 actix-web.workspace = true
-log.workspace = true
 diesel.workspace = true
 chrono.workspace = true
 bigdecimal.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 validator.workspace = true
-anyhow.workspace = true
 
 [[bin]]
 name = "PropertyManagement"

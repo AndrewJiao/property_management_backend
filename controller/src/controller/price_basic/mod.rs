@@ -29,7 +29,7 @@ async fn get_data(param: web::Query<PaginateSearch>) -> AppResult<HttpResponse> 
             .select(PriceBasicPo::as_select())
             .offset(param.off_set())
             .limit(param.limit()),
-        update_time.desc())
+        create_time.desc())
         .load(&mut db_get_connection())?;
 
     let total: i64 = t_price_basic::table
@@ -37,7 +37,7 @@ async fn get_data(param: web::Query<PaginateSearch>) -> AppResult<HttpResponse> 
         .select(diesel::dsl::count_star())
         .first(&mut db_get_connection())?;
 
-    result_success!(result, param.produce_page_result(total as i32))
+    result_success!(result, param.produce_page_result(total))
 }
 
 
@@ -45,9 +45,9 @@ async fn get_data(param: web::Query<PaginateSearch>) -> AppResult<HttpResponse> 
 async fn put_data(param: web::Path<i64>, info: web::Json<PriceBasicUpdateDto>) -> AppResult<HttpResponse> {
     validate!(info);
     let data_id = param.into_inner();
-    let _ = info
+    let result = info
         .to_update_po(data_id as i32)
         .update_time()
-        .save_changes::<PriceBasicPo>(&mut db_get_connection());
-    result_success!()
+        .save_changes::<PriceBasicPo>(&mut db_get_connection())?;
+    result_success!(result)
 }
