@@ -1,4 +1,3 @@
-use crate::schema::basic::sql_types::BasicCode;
 use crate::schema::basic::sql_types::CalculateOperation;
 use crate::schema::basic::t_price_basic;
 use bigdecimal::BigDecimal;
@@ -59,7 +58,7 @@ pub enum BasicPriceType {
     PreStoreFee,
 }
 
-impl FromSql<BasicCode, Pg> for BasicPriceType {
+impl FromSql<diesel::sql_types::Text, Pg> for BasicPriceType {
     fn from_sql(bytes: <Pg as Backend>::RawValue<'_>) -> diesel::deserialize::Result<Self> {
         let str = std::str::from_utf8(bytes.as_bytes())?;
         match str {

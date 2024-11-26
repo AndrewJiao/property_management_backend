@@ -16,8 +16,9 @@ create table if not exists t_room_info_detail
     update_by                    varchar,
     create_time                  timestamp             not null,
     update_time                  timestamp             not null,
-    is_delete                    boolean default false not null
-    room_owner_name              varchar
+    is_delete                    boolean default false not null,
+    room_owner_name              varchar,
+    delete_at                    timestamp
 );
 
 comment on table t_room_info_detail is '房间读数';
@@ -28,9 +29,9 @@ alter table t_room_info_detail
 create index if not exists t_room_info_detail_month_version_index
     on t_room_info_detail (month_version);
 
-create unique index if not exists t_room_info_detail_room_number_month_version_uindex
-    on t_room_info_detail (room_number, month_version);
-
 create index if not exists t_room_info_detail_update_time_index
     on t_room_info_detail (update_time desc);
+
+create unique index if not exists t_room_info_detail_room_number_month_version_is_delete_delete_a
+    on t_room_info_detail (room_number, month_version, is_delete, delete_at);
 

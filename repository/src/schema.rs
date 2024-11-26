@@ -5,10 +5,6 @@ pub mod basic {
         #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
         #[diesel(postgres_type(name = "calculate_operation"))]
         pub struct CalculateOperation;
-
-        #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
-        #[diesel(postgres_type(name = "basic_code"))]
-        pub struct BasicCode;
     }
 
     diesel::table! {
@@ -33,13 +29,13 @@ pub mod basic {
             is_delete -> Bool,
             comment -> Nullable<Text>,
             other_basic -> Nullable<Json>,
+            delete_at -> Nullable<Timestamp>,
         }
     }
 
     diesel::table! {
         use diesel::sql_types::*;
         use super::sql_types::CalculateOperation;
-        use super::sql_types::BasicCode;
 
         basic.t_price_basic (id) {
             id -> Int8,
@@ -52,7 +48,7 @@ pub mod basic {
             is_delete -> Nullable<Bool>,
             operation_type -> Nullable<CalculateOperation>,
             comment -> Nullable<Text>,
-            basic_code -> Nullable<BasicCode>,
+            basic_code -> Nullable<Varchar>,
         }
     }
 
@@ -100,6 +96,7 @@ pub mod basic {
             update_time -> Timestamp,
             is_delete -> Bool,
             room_owner_name -> Nullable<Varchar>,
+            delete_at -> Nullable<Timestamp>,
         }
     }
 

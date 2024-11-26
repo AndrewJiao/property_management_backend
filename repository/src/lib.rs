@@ -11,9 +11,9 @@ pub mod property_fee;
 #[macro_export]
 macro_rules! soft_delete_by_id {
     ($data_id:expr) => {
-        diesel::update(table)
-            .set(is_delete.eq(true))
-            .filter(id.eq( $data_id ))
-            .execute(&mut common::db_config::db_get_connection())?;
+    diesel::update(table)
+        .set((is_delete.eq(true), delete_at.eq(Some(common::tools::time::now_local_date_time_naive()))))
+        .filter(id.eq($data_id))
+        .execute(&mut common::db_config::db_get_connection())?;
     }
 }

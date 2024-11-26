@@ -7,7 +7,8 @@ use common::db_config::db_get_connection;
 use common::error::AppResult;
 use common::{result_success, validate};
 use diesel::query_dsl::methods::OrderDsl;
-use diesel::{ExpressionMethods, Insertable, QueryDsl, QueryResult, RunQueryDsl, SaveChangesDsl, SelectableHelper, TextExpressionMethods};
+use diesel::{ExpressionMethods, Insertable, QueryDsl, RunQueryDsl, SaveChangesDsl, SelectableHelper, TextExpressionMethods};
+use log::info;
 use repository::component::page::Paginate;
 use repository::owner_info::OwnerBasicInfoPo;
 
@@ -17,6 +18,7 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         .service(put_info)
         .service(add_info)
         .service(get_find)
+        .service(delete_info)
     );
 }
 use crate::dto::{ToInsertPO, ToUpdatePO};
@@ -33,13 +35,15 @@ async fn get_info(param: web::Query<PaginateSearch>) -> AppResult<HttpResponse> 
 
     let mut statement = table.into_boxed();
     if let Some(e) = search_param.owner_name.as_deref() {
-        statement = statement.filter(owner_name.like(e))
+        statement = statement.filter(owner_name.like(format!("%{}%", e)))
     }
     if let Some(e) = search_param.room_number.as_deref() {
-        statement = statement.filter(room_number.like(e));
+        statement = statement.filter(room_number.like(format!("%{}%", e)));
     }
     let (result, total) =
-        OrderDsl::order(statement.select(OwnerBasicInfoPo::as_select()),
+        OrderDsl::order(statement
+                            .filter(is_delete.eq(false))
+                            .select(OwnerBasicInfoPo::as_select()),
                         create_time.desc())
             .paginate(param.current_page()).per_page(param.limit())
             .load_and_count_pages(&mut db_get_connection())?;
@@ -53,11 +57,12 @@ async fn get_info(param: web::Query<PaginateSearch>) -> AppResult<HttpResponse> 
 async fn put_info(path: web::Path<i32>, body_param: web::Json<OwnerInfoUpdateDto>) -> AppResult<HttpResponse> {
     let info_id = path.into_inner();
     validate!(body_param);
-    let _: QueryResult<OwnerBasicInfoPo> = body_param
+    info!("param = {:?}", body_param);
+    let result: OwnerBasicInfoPo = body_param
         .to_update_po(info_id)
         .update_time()
-        .save_changes(&mut db_get_connection());
-    result_success!()
+        .save_changes(&mut db_get_connection())?;
+    result_success!(result)
 }
 ///
 /// 新增用户
@@ -77,6 +82,7 @@ async fn add_info(body_param: web::Json<OwnerInfoInsertDto>) -> AppResult<HttpRe
 #[delete("/info/{info_id}")]
 async fn delete_info(path: web::Path<i32>) -> AppResult<HttpResponse> {
     soft_delete_by_id!(path.into_inner());
+
     result_success!()
 }
 
@@ -95,6 +101,21 @@ async fn get_find(param: web::Query<OwnerInfoSearchType>) -> AppResult<HttpRespo
                     .filter(room_number.like(format!("%{}%", value))), room_number)
                 .get_results::<String>(&mut db_get_connection())?;
             result_success!(result)
-        }
+        },
+        OwnerInfoSearchType::OwnerName(ref value)=>{
+                if value.is_empty() {
+                    return result_success!(Vec::<String>::new());
+                }
+            let result = QueryDsl::group_by(
+                table.select(owner_name)
+                    .filter(owner_name.is_not_null())
+                    .filter(owner_name.ne(""))
+                    .filter(owner_name.like(format!("%{}%", value))), owner_name)
+                .get_results::<Option<String>>(&mut db_get_connection())?
+                .into_iter().flat_map(|e|e).collect::<Vec<String>>();
+                result_success!(result)
+            }
+
     }
 }
+

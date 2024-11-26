@@ -1,12 +1,12 @@
-use std::collections::HashMap;
-use bigdecimal::BigDecimal;
+use crate::price_basic::{BasicPriceType, PriceBasicPo};
 use crate::schema::basic::t_owner_basic_info;
+use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use diesel::{AsChangeset, Identifiable, Insertable, Queryable, Selectable};
 use management_macro::AutoOperation;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use crate::price_basic::{BasicPriceType, PriceBasicPo};
+use std::collections::HashMap;
 
 #[derive(Selectable, Queryable, Deserialize, Serialize)]
 #[diesel(table_name = t_owner_basic_info)]
@@ -24,6 +24,7 @@ pub struct OwnerBasicInfoPo {
     pub is_delete: bool,
     pub comment: Option<String>,
     pub other_basic: Option<serde_json::Value>,
+    pub delete_at: Option<NaiveDateTime>,
 }
 
 impl OwnerBasicInfoPo {
@@ -75,6 +76,7 @@ pub struct UpdateOwnerBasicInfoPo<'a> {
     pub room_square: Option<&'a BigDecimal>,
     pub other_basic: Option<&'a serde_json::Value>,
     pub update_time: Option<NaiveDateTime>,
+    pub delete_at: Option<NaiveDateTime>,
 }
 
 #[derive(Serialize, AutoOperation, Insertable)]
@@ -90,4 +92,5 @@ pub struct InsertOwnerBasicInfoPo<'a> {
     pub is_delete: bool,
     pub comment: Option<&'a str>,
     pub other_basic: Option<serde_json::Value>,
+    pub delete_at: Option<NaiveDateTime>,
 }

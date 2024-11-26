@@ -30,5 +30,3 @@ fn before_init() {
     // 初始化db
     let _ = DB_CONNECTION;
 }
-
-

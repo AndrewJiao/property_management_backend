@@ -7,6 +7,7 @@ use repository::owner_info::OwnerBasicInfoPo;
 use repository::room_info::{RoomInfoDetailInsertPo, RoomInfoDetailPo};
 use repository::schema::basic::t_room_info_detail::dsl::t_room_info_detail;
 use std::collections::{HashMap, HashSet};
+use common::tools::time::now_local_date_time_naive;
 
 pub fn init_room_data() -> AppResult<()> {
     let current_version = init_current_month_version(chrono::Local::now());
@@ -58,7 +59,7 @@ pub fn init_room_data() -> AppResult<()> {
         }).collect::<HashMap<&str, &RoomInfoDetailPo>>();
 
 
-    let now = Some(chrono::Utc::now().naive_utc());
+    let now = Some(now_local_date_time_naive());
     let data_init = owner_info_data.iter()
         .filter(|e|!exists_room_info.contains(&e.room_number))
         .map(|owner_info| {

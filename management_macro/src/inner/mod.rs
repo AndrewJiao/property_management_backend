@@ -3,6 +3,7 @@ use quote::quote;
 use syn::Data::Struct;
 use syn::DeriveInput;
 
+
 pub(crate) fn do_derive_auto_process_before_save(input: DeriveInput) -> TokenStream {
     let name = input.ident;
     let has_update_time = if let Struct(data) = &input.data {
@@ -19,8 +20,8 @@ pub(crate) fn do_derive_auto_process_before_save(input: DeriveInput) -> TokenStr
     let create_time_fn = if has_create_time {
         quote! {
             fn create_time(mut self) -> Self {
-                self.create_time = Some(chrono::Utc::now().naive_utc());
-                self.update_time = Some(chrono::Utc::now().naive_utc());
+                self.create_time = Some(common::tools::time::now_local_date_time_naive());
+                self.update_time = Some(common::tools::time::now_local_date_time_naive());
                 self
             }
         }
@@ -35,7 +36,7 @@ pub(crate) fn do_derive_auto_process_before_save(input: DeriveInput) -> TokenStr
     let update_time_fn = if has_update_time {
         quote! {
             fn update_time(mut self) -> Self {
-                self.update_time = Some(chrono::Utc::now().naive_utc());
+                self.update_time = Some(common::tools::time::now_local_date_time_naive());
                 self
             }
         }

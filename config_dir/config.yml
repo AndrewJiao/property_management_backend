@@ -17,5 +17,5 @@ databases:
 # 应用配置
 app_config:
   json_length: 10000
-  number_max: 100000
-  number_min: -100000
+  number_max: 100000000
+  number_min: -100000000

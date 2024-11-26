@@ -5,7 +5,7 @@ macro_rules! result_success {
             data: $data,
             code: 200,
             message: "success".to_string(),
-            time_stamp: chrono::Utc::now(),
+            time_stamp: common::tools::time::now_local_date_time_naive(),
             paginate_result: $paginate_result,
         }))
     };

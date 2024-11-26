@@ -1,3 +1,5 @@
+pub(crate) mod interceptor;
+
 use crate::const_value::SETTINGS;
 use crate::data_result::AppResult;
 use actix_web::dev::Server;

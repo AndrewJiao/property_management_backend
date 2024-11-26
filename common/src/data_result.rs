@@ -1,7 +1,7 @@
 use crate::error::{BaseError, PARAM_NOT_SUPPORT};
 use base64::engine::general_purpose;
 use base64::Engine;
-use chrono::Utc;
+use chrono::NaiveDateTime;
 use derive_more::Display;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -13,10 +13,11 @@ use validator::Validate;
 pub struct PaginateSearch {
     #[validate(range(min = 1))]
     current_page: i64,
-    #[validate(range(min = 1, max = 10))]
+    #[validate(range(min = 1, max = 100))]
     page_size: i64,
     #[allow(dead_code)]
     order_type: Option<OrderType>,
+    pub owner_name: Option<String>,
     pub param: Option<String>,
 }
 
@@ -79,7 +80,7 @@ pub struct AppDataResult<T = ()> {
     pub message: String,
     pub data: T,
     pub paginate_result: Option<PaginateResult>,
-    pub time_stamp: chrono::DateTime<Utc>,
+    pub time_stamp: NaiveDateTime,
 }
 
 //endregion
