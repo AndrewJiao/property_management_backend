@@ -15,11 +15,11 @@ use diesel::dsl::insert_into;
 ///
 /// 编辑的过程中尝试重新计算
 ///
-pub fn do_edit_update(mut po: PropertyFeeDetailUpdatePo) -> AppResult<()> {
+pub fn do_edit_update(mut po: PropertyFeeDetailUpdatePo) -> AppResult<PropertyFeeDetailPo> {
     po.fee_calculate();
-    po.update_time()
+    let result  = po.update_time()
         .save_changes::<PropertyFeeDetailPo>(&mut db_get_connection())?;
-    Ok(())
+    Ok(result)
 }
 
 ///

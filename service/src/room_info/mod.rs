@@ -42,8 +42,8 @@ pub fn init_room_data() -> AppResult<()> {
             .get_results::<Option<String>>(&mut db_get_connection())?
             .into_iter().flat_map(|e| {
             match e {
-                None => {None}
-                Some(e) => {Some(e)}
+                None => { None }
+                Some(e) => { Some(e) }
             }
         }).collect::<HashSet<String>>();
     }
@@ -61,26 +61,27 @@ pub fn init_room_data() -> AppResult<()> {
 
     let now = Some(now_local_date_time_naive());
     let data_init = owner_info_data.iter()
-        .filter(|e|!exists_room_info.contains(&e.room_number))
+        .filter(|e| !exists_room_info.contains(&e.room_number))
         .map(|owner_info| {
-        let last_room_data = last_room_info_map.get(owner_info.room_number.as_str());
-        RoomInfoDetailInsertPo {
-            room_number: Some(owner_info.room_number.as_str()),
-            room_owner_name:owner_info.owner_name.as_deref(),
-            water_meter_num_before: last_room_data.map(|e| e.water_meter_num.as_ref()).flatten(),
-            water_meter_num: None,
-            water_meter_sub: None,
-            electricity_meter_num_before: last_room_data.map(|e| e.electricity_meter_num.as_ref()).flatten(),
-            electricity_meter_num: None,
-            electricity_meter_sub: None,
-            month_version: Some(current_version.as_str()),
-            comment: None,
-            create_by: Some(CURRENT_USE),
-            update_by: Some(CURRENT_USE),
-            create_time: now,
-            update_time: now,
-        }
-    }).collect::<Vec<RoomInfoDetailInsertPo>>();
+            let last_room_data = last_room_info_map.get(owner_info.room_number.as_str());
+            RoomInfoDetailInsertPo {
+                room_number: Some(owner_info.room_number.as_str()),
+                room_owner_name: owner_info.owner_name.as_deref(),
+                water_meter_num_before: last_room_data.map(|e| e.water_meter_num.as_ref()).flatten(),
+                water_meter_num: None,
+                water_meter_sub: None,
+                electricity_meter_num_before: last_room_data.map(|e| e.electricity_meter_num.as_ref()).flatten(),
+                electricity_meter_num: None,
+                electricity_meter_sub: None,
+                month_version: Some(current_version.as_str()),
+                comment: None,
+                create_by: Some(CURRENT_USE),
+                update_by: Some(CURRENT_USE),
+                create_time: now,
+                update_time: now,
+                delete_at: Some(chrono::NaiveDateTime::UNIX_EPOCH),
+            }
+        }).collect::<Vec<RoomInfoDetailInsertPo>>();
 
     insert_into(t_room_info_detail)
         .values(data_init)

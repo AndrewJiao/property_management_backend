@@ -7,7 +7,7 @@ pub trait ToUpdatePO {
     type PO<'a>
     where
         Self: 'a;
-    fn to_update_po(&self, id: i32) -> Self::PO<'_>;
+    fn to_update_po(&self, id: i64) -> Self::PO<'_>;
 }
 
 pub trait ToInsertPO {

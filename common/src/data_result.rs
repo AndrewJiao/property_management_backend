@@ -1,4 +1,4 @@
-use crate::error::{BaseError, PARAM_NOT_SUPPORT};
+use crate::error::BaseError;
 use base64::engine::general_purpose;
 use base64::Engine;
 use chrono::NaiveDateTime;
@@ -17,7 +17,6 @@ pub struct PaginateSearch {
     page_size: i64,
     #[allow(dead_code)]
     order_type: Option<OrderType>,
-    pub owner_name: Option<String>,
     pub param: Option<String>,
 }
 
@@ -39,13 +38,14 @@ impl PaginateSearch {
     pub fn convert_param<T>(&self) -> AppResult<T>
     where
         T: for<'de> Deserialize<'de>,
+        T:Default
     {
         if let Some(ref e) = self.param {
             let decode = general_purpose::STANDARD.decode(e).map_err(BaseError::Base64Error)?;
             let decode_str = String::from_utf8(decode).map_err(BaseError::FromUtf8Error)?;
             serde_json::from_str::<T>(&decode_str).map_err(BaseError::JsonError)
         } else {
-            Err(PARAM_NOT_SUPPORT)
+            Ok(T::default())
         }
     }
 

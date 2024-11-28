@@ -54,7 +54,7 @@ async fn get_info(param: web::Query<PaginateSearch>) -> AppResult<HttpResponse> 
 /// 修改用户
 ///
 #[put("/info/{info_id}")]
-async fn put_info(path: web::Path<i32>, body_param: web::Json<OwnerInfoUpdateDto>) -> AppResult<HttpResponse> {
+async fn put_info(path: web::Path<i64>, body_param: web::Json<OwnerInfoUpdateDto>) -> AppResult<HttpResponse> {
     let info_id = path.into_inner();
     validate!(body_param);
     info!("param = {:?}", body_param);

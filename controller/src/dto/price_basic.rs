@@ -18,9 +18,9 @@ pub struct PriceBasicUpdateDto {
 impl ToUpdatePO for PriceBasicUpdateDto {
     type PO<'a> = UpdatePriceBasicPo<'a>;
 
-    fn to_update_po(&self, id: i32) -> Self::PO<'_> {
+    fn to_update_po(&self, id: i64) -> Self::PO<'_> {
         UpdatePriceBasicPo {
-            id: id as i64,
+            id,
             name: self.name.as_deref(),
             basic_number: self.basic_number.as_ref(),
             update_time: None,

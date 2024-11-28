@@ -1,10 +1,10 @@
+use crate::dto::ToUpdatePO;
 use chrono::NaiveDateTime;
+use repository::room_info::RoomInfoDetailUpdatePo;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
-use repository::room_info::RoomInfoDetailUpdatePo;
-use crate::dto::ToUpdatePO;
 
-#[derive(Deserialize, Validate)]
+#[derive(Deserialize, Validate, Default,Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct RoomInfoDetailSearchDto {
     #[validate(length(min = 0, max = 100))]
@@ -61,29 +61,31 @@ pub struct RoomInfoDetailUpdateDto {
     pub water_meter_num_before: Option<i64>,
     #[validate(range(min = 0))]
     pub water_meter_num: Option<i64>,
-    #[validate(range(min = 0))]
-    pub water_meter_sub: Option<i64>,
+    // #[validate(range(min = 0))]
+    // pub water_meter_sub: Option<i64>,
     #[validate(range(min = 0))]
     pub electricity_meter_num_before: Option<i64>,
     #[validate(range(min = 0))]
     pub electricity_meter_num: Option<i64>,
-    #[validate(range(min = 0))]
-    pub electricity_meter_sub: Option<i64>,
+    // #[validate(range(min = 0))]
+    // pub electricity_meter_sub: Option<i64>,
+    #[validate(length(min = 0, max = 100))]
+    pub comment: Option<String>,
 }
 impl ToUpdatePO for RoomInfoDetailUpdateDto {
     type PO<'a> = RoomInfoDetailUpdatePo<'a>;
 
-    fn to_update_po(&self, id: i32) -> Self::PO<'_> {
+    fn to_update_po(&self, id: i64) -> Self::PO<'_> {
         RoomInfoDetailUpdatePo {
-            id: id as i64,
+            id,
             water_meter_num_before: self.water_meter_num_before.as_ref(),
             water_meter_num: self.water_meter_num.as_ref(),
-            water_meter_sub: self.water_meter_sub,
+            water_meter_sub: None,
             electricity_meter_num_before: self.electricity_meter_num_before.as_ref(),
             electricity_meter_num: self.electricity_meter_num.as_ref(),
-            electricity_meter_sub: self.electricity_meter_sub,
+            electricity_meter_sub: None,
             month_version: None,
-            comment: None,
+            comment: self.comment.as_deref(),
             create_by: None,
             update_by: None,
             create_time: None,

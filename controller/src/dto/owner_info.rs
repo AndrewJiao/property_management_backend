@@ -12,7 +12,7 @@ use validator::Validate;
 /// 作为业主表分页查询条件
 ///
 ///
-#[derive(Deserialize, Serialize, Validate, Default,Debug)]
+#[derive(Deserialize, Serialize, Validate, Default, Debug)]
 #[serde(rename_all = "camelCase", default)]
 // #[serde(default)] // 缺失字段时自动使用默认值
 pub struct OwnerInfoSearchDto {
@@ -48,9 +48,9 @@ pub struct OwnerInfoUpdateDto {
 impl ToUpdatePO for OwnerInfoUpdateDto {
     type PO<'a> = UpdateOwnerBasicInfoPo<'a>;
 
-    fn to_update_po(&self, id: i32) -> Self::PO<'_> {
+    fn to_update_po(&self, id: i64) -> Self::PO<'_> {
         UpdateOwnerBasicInfoPo {
-            id,
+            id:id as i32,
             room_number: self.room_number.as_deref(),
             owner_name: self.owner_name.as_deref(),
             is_delete: None,

@@ -1,11 +1,11 @@
-use std::collections::HashMap;
-use bigdecimal::BigDecimal;
+use crate::price_basic::{BasicPriceType, PriceBasicPo};
 use crate::schema::basic::t_room_info_detail;
+use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use diesel::{AsChangeset, Identifiable, Insertable, Queryable, Selectable};
 use management_macro::AutoOperation;
 use serde::{Deserialize, Serialize};
-use crate::price_basic::{BasicPriceType, PriceBasicPo};
+use std::collections::HashMap;
 
 #[derive(Queryable, Selectable, Deserialize, Serialize)]
 #[diesel(table_name = t_room_info_detail)]
@@ -28,6 +28,7 @@ pub struct RoomInfoDetailPo {
     pub update_time: NaiveDateTime,
     pub is_delete: bool,
     pub room_owner_name: Option<String>,
+    pub delete_at: Option<NaiveDateTime>,
 }
 
 #[derive(Insertable, Serialize, AutoOperation)]
@@ -47,6 +48,7 @@ pub struct RoomInfoDetailInsertPo<'a> {
     pub create_time: Option<NaiveDateTime>,
     pub update_time: Option<NaiveDateTime>,
     pub room_owner_name: Option<&'a str>,
+    pub delete_at: Option<NaiveDateTime>,
 }
 
 #[derive(Identifiable, AsChangeset, Serialize, AutoOperation)]
@@ -66,6 +68,17 @@ pub struct RoomInfoDetailUpdatePo<'a> {
     pub create_time: Option<NaiveDateTime>,
     pub update_time: Option<NaiveDateTime>,
 }
+
+impl<'a> RoomInfoDetailUpdatePo<'a> {
+    pub fn full_filed(mut self, info_po: &'a RoomInfoDetailPo) -> Self {
+        if self.water_meter_num_before.is_none() { self.water_meter_num_before = info_po.water_meter_num_before.as_ref()};
+        if self.water_meter_num.is_none(){ self.water_meter_num =  info_po.water_meter_num.as_ref()};
+        if self.electricity_meter_num_before.is_none(){self.electricity_meter_num_before = info_po.electricity_meter_num_before.as_ref()};
+        if self.electricity_meter_num.is_none(){self.electricity_meter_num = info_po.electricity_meter_num.as_ref()};
+        self
+    }
+}
+
 impl RoomInfoDetailPo {
     pub fn calculate_electric(&self, basic_config: &HashMap<BasicPriceType, PriceBasicPo>) -> Option<(BigDecimal, BigDecimal)> {
         let electric_price = basic_config.get(&BasicPriceType::ElectricFee).map(|info| info.basic_number.clone()).flatten();
@@ -102,18 +115,19 @@ impl RoomInfoDetailUpdatePo<'_> {
     pub fn re_calculate(mut self) -> Self {
         if let (Some(before), Some(now)) = (self.water_meter_num_before, self.water_meter_num) {
             self.water_meter_sub = Some(now - before);
-        } else {
+        } else if let (None, Some(now)) = (self.water_meter_num_before, self.water_meter_num) {
+            self.water_meter_sub = Some(now.clone());
+        }else{
             self.water_meter_sub = None;
         }
 
         self.electricity_meter_sub = match
-        (
-            self.electricity_meter_num_before,
-            self.electricity_meter_num
-        ) {
+        (self.electricity_meter_num_before, self.electricity_meter_num) {
             (Some(before), Some(now)) => Some(now - before),
+            (None, Some(now)) => Some(now.clone()),
             _ => None,
         };
         self
     }
 }
+

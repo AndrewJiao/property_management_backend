@@ -46,7 +46,7 @@ async fn put_data(param: web::Path<i64>, info: web::Json<PriceBasicUpdateDto>) -
     validate!(info);
     let data_id = param.into_inner();
     let result = info
-        .to_update_po(data_id as i32)
+        .to_update_po(data_id)
         .update_time()
         .save_changes::<PriceBasicPo>(&mut db_get_connection())?;
     result_success!(result)

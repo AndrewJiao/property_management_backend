@@ -23,21 +23,22 @@ use repository::schema::basic::t_property_fee_detail::*;
 use service::property_fee::do_edit_update;
 
 #[get("/data")]
-async fn get_data(param: web::Query<PaginateSearch>, body_param: web::Json<PropertyFeeDetailSearchDto>) -> AppResult<HttpResponse> {
-    validate!(param,body_param);
+async fn get_data(param: web::Query<PaginateSearch>) -> AppResult<HttpResponse> {
+    let search_param: PropertyFeeDetailSearchDto = param.convert_param()?;
+    validate!(param,search_param);
     let mut statement = table.into_boxed();
     statement = statement
         .if_filter_tow_param(
-            &body_param.create_time_begin,
-            &body_param.create_time_end,
+            &search_param.create_time_begin,
+            &search_param.create_time_end,
             |sub_sql, (p1, p2)| sub_sql.filter(create_time.between(p1, p2)))
         .if_filter_tow_param(
-            &body_param.update_time_begin,
-            &body_param.update_time_end,
+            &search_param.update_time_begin,
+            &search_param.update_time_end,
             |sub_sql, (p1, p2)| sub_sql.filter(update_time.between(p1, p2)))
-        .if_filter(&body_param.room_number, |sub_sql, p| sub_sql.filter(room_number.like(format!("%{}%", p))))
-        .if_filter(&body_param.room_owner_name, |sub_statement, value| sub_statement.filter(room_owner_name.like(format!("%{}%", value))))
-        .if_filter(&body_param.record_version, |sub_statement, value| sub_statement.filter(record_version.eq(value)))
+        .if_filter(&search_param.room_number, |sub_sql, p| sub_sql.filter(room_number.like(format!("%{}%", p))))
+        .if_filter(&search_param.room_owner_name, |sub_statement, value| sub_statement.filter(room_owner_name.like(format!("%{}%", value))))
+        .if_filter(&search_param.record_version, |sub_statement, value| sub_statement.filter(record_version.eq(value)))
         .filter(is_delete.eq(false));
 
 
@@ -53,11 +54,10 @@ async fn get_data(param: web::Query<PaginateSearch>, body_param: web::Json<Prope
 /// 修改水电数据
 ///
 #[put("/data/{data_id}")]
-async fn put_data(path_param: web::Path<i32>, body_param: web::Json<PropertyFeeDetailUpdateDto>) -> AppResult<HttpResponse> {
+async fn put_data(path_param: web::Path<i64>, body_param: web::Json<PropertyFeeDetailUpdateDto>) -> AppResult<HttpResponse> {
     validate!(body_param);
-    do_edit_update(body_param.to_update_po(path_param.into_inner()))?;
-
-    result_success!()
+    let result = do_edit_update(body_param.to_update_po(path_param.into_inner()))?;
+    result_success!(result)
 }
 
 ///
@@ -71,7 +71,7 @@ async fn init_data(param: web::Query<PropertyFeeDetailInitDto>) -> AppResult<Htt
 }
 
 ///
-/// 初始化
+/// 删除
 ///
 #[delete("/data/{data_id}")]
 async fn delete_data(path_param: web::Path<i32>) -> AppResult<HttpResponse> {

@@ -52,13 +52,12 @@ pub struct PropertyFeeDetailUpdateDto {
     pub liquidate_fee: Option<BigDecimal>,
     #[validate(custom(function = "common::tools::validator::validate_big_decimal"))]
     pub pre_store_fee: Option<BigDecimal>,
-    #[validate(length(min = 0, max = 100))]
-    #[serde(deserialize_with = "empty_string_or_null_as_none")]
+    #[validate(length(min = 0, max = 1000))]
     pub comment: Option<String>,
 }
 
 
-#[derive(Deserialize, Validate)]
+#[derive(Deserialize, Validate,Debug, Clone,Default)]
 #[serde(rename_all = "camelCase")]
 pub struct PropertyFeeDetailSearchDto {
     #[validate(length(min = 0, max = 100))]
@@ -79,9 +78,9 @@ pub struct PropertyFeeDetailSearchDto {
 impl ToUpdatePO for PropertyFeeDetailUpdateDto {
     type PO<'a> = PropertyFeeDetailUpdatePo<'a>;
 
-    fn to_update_po(&self, id: i32) -> Self::PO<'_> {
+    fn to_update_po(&self, id: i64) -> Self::PO<'_> {
         PropertyFeeDetailUpdatePo {
-            id,
+            id:id as i32,
             management_fee: self.management_fee.as_ref(),
             part_fee: self.part_fee.as_ref(),
             machine_room_renovation_fee: self.machine_room_renovation_fee.as_ref(),
