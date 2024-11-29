@@ -2,9 +2,13 @@
 
 pub mod basic {
     pub mod sql_types {
-        #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
+        #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
         #[diesel(postgres_type(name = "calculate_operation"))]
         pub struct CalculateOperation;
+
+        #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
+        #[diesel(postgres_type(name = "detail_type", schema = "basic"))]
+        pub struct DetailType;
     }
 
     diesel::table! {
@@ -34,12 +38,15 @@ pub mod basic {
     }
 
     diesel::table! {
+        use diesel::sql_types::*;
+        use super::sql_types::DetailType;
+
         basic.t_owner_fee_detail (id) {
             id -> Int8,
             stream_id -> Varchar,
             room_number -> Varchar,
             owner_name -> Nullable<Varchar>,
-            detail_type -> Varchar,
+            detail_type -> DetailType,
             amount -> Numeric,
             comment -> Nullable<Text>,
             create_by -> Varchar,
@@ -117,6 +124,15 @@ pub mod basic {
         }
     }
 
+    diesel::table! {
+        basic.t_tool_table (id) {
+            id -> Int4,
+            code -> Varchar,
+            value -> Varchar,
+            comment -> Varchar,
+        }
+    }
+
     diesel::allow_tables_to_appear_in_same_query!(
         posts,
         t_owner_basic_info,
@@ -124,5 +140,6 @@ pub mod basic {
         t_price_basic,
         t_property_fee_detail,
         t_room_info_detail,
+        t_tool_table,
     );
 }
