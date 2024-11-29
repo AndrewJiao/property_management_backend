@@ -34,6 +34,23 @@ pub mod basic {
     }
 
     diesel::table! {
+        basic.t_owner_fee_detail (id) {
+            id -> Int8,
+            stream_id -> Varchar,
+            room_number -> Varchar,
+            owner_name -> Nullable<Varchar>,
+            detail_type -> Varchar,
+            amount -> Numeric,
+            comment -> Nullable<Text>,
+            create_by -> Varchar,
+            update_by -> Varchar,
+            create_time -> Timestamp,
+            update_time -> Timestamp,
+            is_delete -> Bool,
+        }
+    }
+
+    diesel::table! {
         use diesel::sql_types::*;
         use super::sql_types::CalculateOperation;
 
@@ -103,6 +120,7 @@ pub mod basic {
     diesel::allow_tables_to_appear_in_same_query!(
         posts,
         t_owner_basic_info,
+        t_owner_fee_detail,
         t_price_basic,
         t_property_fee_detail,
         t_room_info_detail,

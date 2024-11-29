@@ -17,13 +17,14 @@ where
     let server = HttpServer::new(
         move || {
             service_config.into_iter().fold(
-                App::new().app_data(data.clone()),
+                App::new().app_data(data.clone())
+                    .wrap(create_cors())
+                    .wrap(TracingLogger::default())
+                ,
                 |app, conf| {
                     app.configure(conf.clone())
                 },
             )
-                .wrap(create_cors())
-                .wrap(TracingLogger::default())
         })
 
         .keep_alive(Duration::from_secs(config.keep_alive))

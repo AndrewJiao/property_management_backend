@@ -29,11 +29,11 @@ async fn get_data(param: web::Query<PaginateSearch>) -> AppResult<HttpResponse> 
     let mut statement = table.into_boxed();
     statement = statement
         .if_filter_tow_param(
-            &search_param.create_time_begin,
+            &search_param.create_time_star,
             &search_param.create_time_end,
             |sub_sql, (p1, p2)| sub_sql.filter(create_time.between(p1, p2)))
         .if_filter_tow_param(
-            &search_param.update_time_begin,
+            &search_param.update_time_star,
             &search_param.update_time_end,
             |sub_sql, (p1, p2)| sub_sql.filter(update_time.between(p1, p2)))
         .if_filter(&search_param.room_number, |sub_sql, p| sub_sql.filter(room_number.like(format!("%{}%", p))))
@@ -64,7 +64,7 @@ async fn put_data(path_param: web::Path<i64>, body_param: web::Json<PropertyFeeD
 /// 初始化
 ///
 #[post("/data")]
-async fn init_data(param: web::Query<PropertyFeeDetailInitDto>) -> AppResult<HttpResponse> {
+async fn init_data(param: web::Json<PropertyFeeDetailInitDto>) -> AppResult<HttpResponse> {
     validate!(param);
     service::property_fee::init_data(param.month_version.as_deref())?;
     result_success!()
