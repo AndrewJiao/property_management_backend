@@ -7,7 +7,7 @@ use validator::Validate;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct OwnerFeeDetail {
+pub struct OwnerFeeDetailDto {
     pub id: i64,
     pub stream_id: StreamId,
     pub room_number: String,

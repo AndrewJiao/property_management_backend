@@ -5,13 +5,13 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug)]
 pub enum CountType {
-    OWNER_FEE_SEQ_NUMBER
+    OwnerFeeSeqNumber
 }
 
 impl Display for CountType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            CountType::OWNER_FEE_SEQ_NUMBER => write!(f, "OWNER_FEE_SEQ_NUMBER"),
+            CountType::OwnerFeeSeqNumber => write!(f, "OwnerFeeSeqNumber"),
         }
     }
 }
@@ -21,7 +21,6 @@ struct ReturnValue {
     // pub id: i64,
     // pub code: String,
     #[diesel(sql_type = diesel::sql_types::Text)]
-    // #[diesel(deserialize_as = LowercaseString)]
     pub value: String,
     // pub comment: String,
 }

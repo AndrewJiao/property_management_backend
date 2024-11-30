@@ -1,8 +1,6 @@
 use crate::conf::config_module::Settings;
 use crate::db_config::{establish_connection, AppConn};
-use diesel::r2d2::{ConnectionManager, Pool};
-use diesel::PgConnection;
-use diesel_logger::LoggingConnection;
+use diesel::r2d2::Pool;
 use lazy_static::lazy_static;
 
 lazy_static! {

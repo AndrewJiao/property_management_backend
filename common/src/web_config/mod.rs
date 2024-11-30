@@ -8,7 +8,7 @@ use actix_web::{web, App, HttpServer};
 use std::time::Duration;
 use tracing_actix_web::TracingLogger;
 
-pub fn build_service<F>(service_config: &'static [F; 5]) -> AppResult<Server>
+pub fn build_service<F>(service_config: &'static [F; 6]) -> AppResult<Server>
 where
     F: FnOnce(&mut ServiceConfig) + Sync + Clone + Send,
 {

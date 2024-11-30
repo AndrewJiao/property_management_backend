@@ -17,7 +17,8 @@ async fn main() -> AppResult<()> {
         controller::owner_info::config,
         controller::hello::config,
         controller::room_info::config,
-        controller::property_fee::config
+        controller::property_fee::config,
+        controller::owner_fee::config
     ];
     Ok(build_service(
         configs,
