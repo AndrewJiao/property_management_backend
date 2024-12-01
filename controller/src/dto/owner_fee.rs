@@ -1,11 +1,11 @@
+use crate::dto::ToUpdatePO;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use common::tools::serde::empty_string_or_null_as_none;
-use repository::owner_fee::{DetailType, OwnerFeeDetailUpdatePo, StreamId};
+use common::CURRENT_USE;
+use repository::owner_fee::{DetailType, OwnerFeeDetailPo, OwnerFeeDetailUpdatePo, StreamId};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
-use common::CURRENT_USE;
-use crate::dto::ToUpdatePO;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -64,3 +64,36 @@ impl ToUpdatePO for OwnerFeeDetailUpdateDto {
     }
 }
 
+pub struct OwnerFeeDetailResultDto {
+    pub id: i64,
+    pub stream_id: String,
+    pub room_number: String,
+    pub owner_name: Option<String>,
+    pub detail_type: DetailType,
+    pub amount: BigDecimal,
+    pub amount_balance: BigDecimal,
+    pub comment: Option<String>,
+    pub create_by: String,
+    pub update_by: String,
+    pub create_time: NaiveDateTime,
+    pub update_time: NaiveDateTime,
+}
+
+impl OwnerFeeDetailResultDto {
+    pub fn new(po: OwnerFeeDetailPo, amount_balance: BigDecimal) -> Self {
+        Self {
+            id: po.id,
+            stream_id: po.stream_id,
+            room_number: po.room_number,
+            owner_name: po.owner_name,
+            detail_type: po.detail_type,
+            amount: po.amount,
+            comment: po.comment,
+            create_by: po.create_by,
+            update_by: po.update_by,
+            create_time: po.create_time,
+            update_time: po.update_time,
+            amount_balance,
+        }
+    }
+}

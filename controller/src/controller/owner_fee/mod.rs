@@ -1,4 +1,4 @@
-use crate::dto::owner_fee::{OwnerFeeDetailSearchDto, OwnerFeeDetailUpdateDto};
+use crate::dto::owner_fee::{OwnerFeeDetailResultDto, OwnerFeeDetailSearchDto, OwnerFeeDetailUpdateDto};
 use crate::dto::ToUpdatePO;
 use actix_web::web::scope;
 use actix_web::{get, post, put, web, HttpResponse};
@@ -7,13 +7,15 @@ use common::data_result::{PaginateSearch, WebResult};
 use common::db_config::db_get_connection;
 use common::{result_success, validate};
 use diesel::query_dsl::methods::OrderDsl;
-use diesel::ExpressionMethods;
+use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 use repository::component::page::Paginate;
 use repository::owner_fee::{DetailType, OwnerFeeDetailPo};
 use repository::schema::basic::t_owner_fee_detail::*;
+use serde::Deserialize;
 use service::owner_fee::value_object::StreamAddVal;
 use std::clone::Clone;
-use serde::Deserialize;
+use std::collections::HashMap;
+use repository::schema::basic::t_owner_basic_info::amount_balance;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(scope("/owner_fee")
@@ -39,7 +41,45 @@ async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpResponse> 
             .paginate(param.current_page())
             .per_page(param.limit())
             .load_and_count_pages::<OwnerFeeDetailPo>(&mut db_get_connection())?;
+
+    let vec: Vec<&str> = result.iter().map(|e| e.stream_id.as_str()).collect();
+    let id_amount_map;
+    {
+        use repository::schema::basic::t_owner_fee_detail::*;
+        id_amount_map = table.select((stream_id, amount))
+            .filter(stream_id.eq_any(vec))
+            .get_results::<(String, BigDecimal)>(&mut db_get_connection())?
+            .into_iter().collect::<HashMap<String, BigDecimal>>();
+    }
+
+
     result_success!(result, param.produce_page_result(total))
+}
+
+fn calculate(amount: Vec<OwnerFeeDetailPo>,  amount_balance: BigDecimal) -> Vec<OwnerFeeDetailResultDto> {
+    let mut result = vec![];
+    todo!();
+    for item in amount {
+        let mut amount_balance = amount_balance.clone();
+        amount_balance = amount_balance - item.amount;
+        result.push(OwnerFeeDetailResultDto {
+            id: item.id,
+            stream_id: item.stream_id,
+            room_number: item.room_number,
+            owner_name: item.owner_name,
+            detail_type: item.detail_type,
+            amount: item.amount,
+            comment: item.comment,
+            create_by: item.create_by,
+            update_by: item.update_by,
+            create_time: item.create_time,
+            update_time: item.update_time,
+            amount_balance: amount_balance,
+        });
+    }
+    result
+
+
 }
 
 ///
