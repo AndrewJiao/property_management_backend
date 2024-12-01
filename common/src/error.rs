@@ -2,13 +2,12 @@ use crate::data_result::AppBusinessError;
 use crate::error::BaseError::BusinessError;
 use actix_web::body::BoxBody;
 use actix_web::{error, HttpResponse};
+use anyhow::anyhow;
 use diesel::r2d2::Error as R2d2Error;
 use log::error;
 use std::env::VarError;
 use std::string::FromUtf8Error;
 use thiserror::Error;
-
-pub type AppResult<T> = Result<T, BaseError>;
 
 #[derive(Debug, Error)]
 pub enum BaseError {
@@ -35,10 +34,11 @@ pub enum BaseError {
     #[error("base64 error : {0}")]
     Base64Error(#[from] base64::DecodeError),
 
-
     #[error("business error : {0}")]
     BusinessError(#[from] AppBusinessError),
 
+    #[error("anyhow error :{0}")]
+    AnyhowError(#[from] anyhow::Error),
 }
 
 
@@ -56,7 +56,11 @@ impl error::ResponseError for BaseError {
     }
 }
 
-
-pub const DATA_NOT_FOUND: BaseError = BusinessError(AppBusinessError { error_msg: "data not found", error_code: 10001 });
-pub const PARAM_NOT_SUPPORT: BaseError = BusinessError(AppBusinessError { error_msg: "param is not support", error_code: 10002 });
+pub const DATA_NOT_FOUND: fn() -> anyhow::Error = || anyhow!("data not found");
+pub const PARAM_NOT_SUPPORT: fn() -> anyhow::Error = || anyhow!( "param not support");
+pub const DB_UPDATE_ERROR: fn() -> anyhow::Error = || anyhow!("db update error");
+pub const DB_INSERT_ERROR: fn() -> anyhow::Error = || anyhow!("db insert error");
+pub const DB_DELETE_ERROR: fn() -> anyhow::Error = || anyhow!("db delete error");
+pub const BUSINESS_ERROR: fn(&str, u32) -> anyhow::Error = |msg, code| anyhow!("errorMsg = {} code = {}",msg,code);
+pub const APP_ERROR: fn(&str) -> anyhow::Error = |msg| anyhow!("system_error = {}",msg);
 

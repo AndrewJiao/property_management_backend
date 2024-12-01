@@ -1,39 +1,55 @@
 use common::data_result::AppResult;
-use common::db_config::db_get_connection;
+use common::db_config::{db_get_connection, Conn};
+use common::tools::time::now_local_date;
 use diesel::{QueryableByName, RunQueryDsl};
-use std::fmt::{Display, Formatter};
 
 #[derive(Debug)]
 pub enum CountType {
-    OwnerFeeSeqNumber
+    OwnerFeeSeqNumber,
+    OwnerFeeRecordSeqNumber,
 }
 
-impl Display for CountType {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+impl Into<String> for &CountType {
+    fn into(self) -> String {
         match self {
-            CountType::OwnerFeeSeqNumber => write!(f, "OwnerFeeSeqNumber"),
+            CountType::OwnerFeeSeqNumber => "OwnerFeeSeqNumber".to_string(),
+            CountType::OwnerFeeRecordSeqNumber => "OwnerFeeRecordSeqNumber".to_string(),
         }
     }
 }
 
 #[derive(QueryableByName)]
 struct ReturnValue {
-    // pub id: i64,
-    // pub code: String,
     #[diesel(sql_type = diesel::sql_types::Text)]
     pub value: String,
-    // pub comment: String,
 }
 
 
-pub fn current_date_count(count_type: CountType) -> AppResult<String> {
-    let sql = " update basic.t_tool_table set value = cast(value as numeric) + 1 where code = $1 returning value into current; ";
-    let result = diesel::sql_query(sql)
-        .bind::<diesel::sql_types::Text, _>(count_type.to_string())
-        .get_result::<ReturnValue>(&mut db_get_connection())?;
-
+pub fn current_date_count_with_conn(count_type: CountType, conn: &mut Conn) -> AppResult<String> {
+    let sql = " update basic.t_tool_table set value = cast(value as numeric) + 1 where code = $1 returning value;";
+    let result =
+     diesel::sql_query(sql)
+        .bind::<diesel::sql_types::Text, String>((&count_type).into())
+        .get_result::<ReturnValue>(conn)?;
     //生成00001，00002...00009，00100，00101...00999，01000，01001...09999，10000，10001...99999
-    Ok(format!("{:05}", result.value))
+    let order_number = match count_type {
+        CountType::OwnerFeeSeqNumber => {
+            format!("{}{}{}",
+                    "HSMZ",
+                    now_local_date("%Y%m%d"),
+                    result.value)
+        }
+        CountType::OwnerFeeRecordSeqNumber => {
+            format!("R-HSMZ{}{}",
+                    now_local_date("%Y%m%d"),
+                    result.value)
+        }
+    };
+    Ok(order_number)
+}
+
+pub fn current_date_count(count_type: CountType) -> AppResult<String> {
+    current_date_count_with_conn(count_type, &mut db_get_connection())
 }
 
 

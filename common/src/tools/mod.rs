@@ -1,5 +1,6 @@
 pub mod serde;
 pub mod validator;
+pub mod lock;
 ///
 /// 查看当前泛型的类型
 ///

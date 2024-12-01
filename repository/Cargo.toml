@@ -14,5 +14,3 @@ bigdecimal.workspace = true
 pg_bigdecimal.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-
-

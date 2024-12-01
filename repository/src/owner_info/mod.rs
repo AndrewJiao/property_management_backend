@@ -1,8 +1,14 @@
 use crate::price_basic::{BasicPriceType, PriceBasicPo};
 use crate::schema::basic::t_owner_basic_info;
+use crate::schema::basic::t_owner_basic_info::*;
+use crate::SqlType;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
-use diesel::{AsChangeset, Identifiable, Insertable, Queryable, Selectable};
+use common::data_result::AppResult;
+use common::db_config::Conn;
+use common::error::DB_UPDATE_ERROR;
+use diesel::pg::Pg;
+use diesel::{AsChangeset, ExpressionMethods, Identifiable, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper};
 use management_macro::AutoOperation;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -25,9 +31,20 @@ pub struct OwnerBasicInfoPo {
     pub comment: Option<String>,
     pub other_basic: Option<serde_json::Value>,
     pub delete_at: Option<NaiveDateTime>,
+    pub amount_balance: BigDecimal,
+
 }
 
+type BoxedQuery<'a> = t_owner_basic_info::BoxedQuery<'a, Pg, SqlType<OwnerBasicInfoPo>>;
 impl OwnerBasicInfoPo {
+    pub fn all<'a>() -> BoxedQuery<'a> {
+        table.select(OwnerBasicInfoPo::as_select()).into_boxed()
+    }
+
+    pub fn by_room_number(param:&str,conn : &mut Conn)-> AppResult<OwnerBasicInfoPo>{
+        Ok(Self::all().filter(room_number.eq(param)).first(conn)?)
+    }
+
     pub fn calculate_management_fee(&self, basic_config: &HashMap<BasicPriceType, PriceBasicPo>) -> Option<BigDecimal> {
         let new_basic_price = basic_config.get(&BasicPriceType::ManagementFee).map(|info| info.basic_number.clone()).flatten();
         if let (Some(square), Some(fee)) = (&self.room_square, new_basic_price) {
@@ -93,4 +110,12 @@ pub struct InsertOwnerBasicInfoPo<'a> {
     pub comment: Option<&'a str>,
     pub other_basic: Option<serde_json::Value>,
     pub delete_at: Option<NaiveDateTime>,
+}
+
+pub fn update_amount(param_id:i32, amount:&BigDecimal, conn:&mut Conn)->AppResult<()>{
+    let update_count = diesel::update(table)
+        .set(amount_balance.eq(amount))
+        .filter(id.eq(param_id))
+        .execute(conn)?;
+    if update_count!=1 { Err(DB_UPDATE_ERROR()) }else { Ok(()) }
 }

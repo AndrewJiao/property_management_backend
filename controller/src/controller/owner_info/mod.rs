@@ -1,10 +1,10 @@
 use crate::dto::owner_info::{OwnerInfoInsertDto, OwnerInfoSearchDto, OwnerInfoSearchType, OwnerInfoUpdateDto};
 use actix_web::web::scope;
 use actix_web::{delete, get, post, put, web, HttpResponse};
+use common::data_result::{ WebResult};
 use common::data_result::PaginateSearch;
 use common::db_config::auto_trait::AutoOperation;
 use common::db_config::db_get_connection;
-use common::error::AppResult;
 use common::{result_success, validate};
 use diesel::query_dsl::methods::OrderDsl;
 use diesel::{ExpressionMethods, Insertable, QueryDsl, RunQueryDsl, SaveChangesDsl, SelectableHelper, TextExpressionMethods};
@@ -29,7 +29,7 @@ use repository::soft_delete_by_id;
 /// 获取用户基础信息
 ///
 #[get("/info")]
-async fn get_info(param: web::Query<PaginateSearch>) -> AppResult<HttpResponse> {
+async fn get_info(param: web::Query<PaginateSearch>) -> WebResult<HttpResponse> {
     let search_param: OwnerInfoSearchDto = param.convert_param()?;
     validate!(param, &search_param);
 
@@ -54,7 +54,7 @@ async fn get_info(param: web::Query<PaginateSearch>) -> AppResult<HttpResponse> 
 /// 修改用户
 ///
 #[put("/info/{info_id}")]
-async fn put_info(path: web::Path<i64>, body_param: web::Json<OwnerInfoUpdateDto>) -> AppResult<HttpResponse> {
+async fn put_info(path: web::Path<i64>, body_param: web::Json<OwnerInfoUpdateDto>) -> WebResult<HttpResponse> {
     let info_id = path.into_inner();
     validate!(body_param);
     info!("param = {:?}", body_param);
@@ -69,7 +69,7 @@ async fn put_info(path: web::Path<i64>, body_param: web::Json<OwnerInfoUpdateDto
 ///
 
 #[post("/info")]
-async fn add_info(body_param: web::Json<OwnerInfoInsertDto>) -> AppResult<HttpResponse> {
+async fn add_info(body_param: web::Json<OwnerInfoInsertDto>) -> WebResult<HttpResponse> {
     validate!(body_param);
     body_param
         .to_insert_po()
@@ -80,14 +80,14 @@ async fn add_info(body_param: web::Json<OwnerInfoInsertDto>) -> AppResult<HttpRe
 }
 
 #[delete("/info/{info_id}")]
-async fn delete_info(path: web::Path<i32>) -> AppResult<HttpResponse> {
+async fn delete_info(path: web::Path<i32>) -> WebResult<HttpResponse> {
     soft_delete_by_id!(path.into_inner());
 
     result_success!()
 }
 
 #[get("/find")]
-async fn get_find(param: web::Query<OwnerInfoSearchType>) -> AppResult<HttpResponse> {
+async fn get_find(param: web::Query<OwnerInfoSearchType>) -> WebResult<HttpResponse> {
     match param.into_inner() {
         OwnerInfoSearchType::RoomNumber(ref value) => {
             if value.is_empty() {

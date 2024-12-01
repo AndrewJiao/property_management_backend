@@ -1,7 +1,7 @@
 use crate::dto::property_fee::{PropertyFeeDetailInitDto, PropertyFeeDetailSearchDto, PropertyFeeDetailUpdateDto};
 use actix_web::web::scope;
 use actix_web::{delete, get, post, put, web, HttpResponse};
-use common::data_result::{AppResult, PaginateSearch};
+use common::data_result::{PaginateSearch, WebResult};
 use common::db_config::db_get_connection;
 use common::{result_success, validate};
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper, TextExpressionMethods};
@@ -23,7 +23,7 @@ use repository::schema::basic::t_property_fee_detail::*;
 use service::property_fee::do_edit_update;
 
 #[get("/data")]
-async fn get_data(param: web::Query<PaginateSearch>) -> AppResult<HttpResponse> {
+async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpResponse> {
     let search_param: PropertyFeeDetailSearchDto = param.convert_param()?;
     validate!(param,search_param);
     let mut statement = table.into_boxed();
@@ -54,7 +54,7 @@ async fn get_data(param: web::Query<PaginateSearch>) -> AppResult<HttpResponse> 
 /// 修改水电数据
 ///
 #[put("/data/{data_id}")]
-async fn put_data(path_param: web::Path<i64>, body_param: web::Json<PropertyFeeDetailUpdateDto>) -> AppResult<HttpResponse> {
+async fn put_data(path_param: web::Path<i64>, body_param: web::Json<PropertyFeeDetailUpdateDto>) -> WebResult<HttpResponse> {
     validate!(body_param);
     let result = do_edit_update(body_param.to_update_po(path_param.into_inner()))?;
     result_success!(result)
@@ -64,7 +64,7 @@ async fn put_data(path_param: web::Path<i64>, body_param: web::Json<PropertyFeeD
 /// 初始化
 ///
 #[post("/data")]
-async fn init_data(param: web::Json<PropertyFeeDetailInitDto>) -> AppResult<HttpResponse> {
+async fn init_data(param: web::Json<PropertyFeeDetailInitDto>) -> WebResult<HttpResponse> {
     validate!(param);
     service::property_fee::init_data(param.month_version.as_deref())?;
     result_success!()
@@ -74,7 +74,7 @@ async fn init_data(param: web::Json<PropertyFeeDetailInitDto>) -> AppResult<Http
 /// 删除
 ///
 #[delete("/data/{data_id}")]
-async fn delete_data(path_param: web::Path<i32>) -> AppResult<HttpResponse> {
+async fn delete_data(path_param: web::Path<i32>) -> WebResult<HttpResponse> {
     diesel::update(table)
         .filter(id.eq(path_param.into_inner()))
         .set((is_delete.eq(true), delete_at.eq(chrono::Local::now().naive_local())))

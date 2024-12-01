@@ -1,9 +1,10 @@
-use crate::conf::{get_current_config_dir_path};
-use crate::error::AppResult;
+use crate::conf::get_current_config_dir_path;
+use bigdecimal::BigDecimal;
 // use crate::error::BaseError;
 use config::{Config, ConfigError};
 use log::info;
 use serde::Deserialize;
+use crate::data_result::AppResult;
 
 ///
 /// web配置模块
@@ -25,6 +26,8 @@ pub struct AppConfig {
     pub json_length: u32,
     pub number_max: i32,
     pub number_min: i32,
+    pub record_max: i32,
+    pub liquidated_damages_rate: BigDecimal
 }
 
 ///

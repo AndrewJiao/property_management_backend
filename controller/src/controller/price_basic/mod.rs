@@ -3,7 +3,7 @@ use actix_web::web::scope;
 use crate::dto::price_basic::PriceBasicUpdateDto;
 use crate::dto::ToUpdatePO;
 use actix_web::{get, put, web, HttpResponse};
-use common::data_result::{AppResult, PaginateSearch};
+use common::data_result::{PaginateSearch, WebResult};
 use common::db_config::auto_trait::AutoOperation;
 use common::db_config::db_get_connection;
 use common::{result_success, validate};
@@ -21,7 +21,7 @@ pub fn config(cfg: &mut web::ServiceConfig) {
 
 
 #[get("/data")]
-async fn get_data(param: web::Query<PaginateSearch>) -> AppResult<HttpResponse> {
+async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpResponse> {
     validate!(param);
     let result = QueryDsl::order(
         t_price_basic::table
@@ -42,7 +42,7 @@ async fn get_data(param: web::Query<PaginateSearch>) -> AppResult<HttpResponse> 
 
 
 #[put("/data/{data_id}")]
-async fn put_data(param: web::Path<i64>, info: web::Json<PriceBasicUpdateDto>) -> AppResult<HttpResponse> {
+async fn put_data(param: web::Path<i64>, info: web::Json<PriceBasicUpdateDto>) -> WebResult<HttpResponse> {
     validate!(info);
     let data_id = param.into_inner();
     let result = info

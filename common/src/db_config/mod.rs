@@ -17,6 +17,7 @@ pub fn establish_connection() -> Pool<AppConn> {
 
 
 pub type AppConn = ConnectionManager<PgConnection>;
+pub type Conn = PooledConnection<AppConn>;
 ///
 /// 考虑多线程环境下获取
 ///

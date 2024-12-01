@@ -24,7 +24,7 @@ macro_rules! validate {
             use validator::Validate;
             $(
                 if let Err(e) = $data.validate() {
-                    return Err(common::error::PARAM_NOT_SUPPORT);
+                    return Err(common::error::BaseError::AnyhowError(common::error::PARAM_NOT_SUPPORT()));
                 }
             )*
         }

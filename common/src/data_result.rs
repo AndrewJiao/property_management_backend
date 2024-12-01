@@ -38,12 +38,12 @@ impl PaginateSearch {
     pub fn convert_param<T>(&self) -> AppResult<T>
     where
         T: for<'de> Deserialize<'de>,
-        T:Default
+        T: Default,
     {
         if let Some(ref e) = self.param {
             let decode = general_purpose::STANDARD.decode(e).map_err(BaseError::Base64Error)?;
             let decode_str = String::from_utf8(decode).map_err(BaseError::FromUtf8Error)?;
-            serde_json::from_str::<T>(&decode_str).map_err(BaseError::JsonError)
+            Ok(serde_json::from_str::<T>(&decode_str).map_err(BaseError::JsonError)?)
         } else {
             Ok(T::default())
         }
@@ -103,4 +103,6 @@ impl AppBusinessError {
 }
 //endregion
 
-pub type AppResult<T> = Result<T, BaseError>;
+pub type AppResult<T> = anyhow::Result<T, anyhow::Error>;
+pub type AppError = anyhow::Error;
+pub type WebResult<T> = Result<T, BaseError>;

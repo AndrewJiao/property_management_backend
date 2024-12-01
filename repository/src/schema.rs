@@ -34,6 +34,7 @@ pub mod basic {
             comment -> Nullable<Text>,
             other_basic -> Nullable<Json>,
             delete_at -> Nullable<Timestamp>,
+            amount_balance -> Numeric,
         }
     }
 
@@ -48,6 +49,23 @@ pub mod basic {
             owner_name -> Nullable<Varchar>,
             detail_type -> DetailType,
             amount -> Numeric,
+            comment -> Nullable<Text>,
+            create_by -> Varchar,
+            update_by -> Varchar,
+            create_time -> Timestamp,
+            update_time -> Timestamp,
+            is_delete -> Bool,
+            record_id -> Varchar,
+        }
+    }
+
+    diesel::table! {
+        basic.t_owner_fee_detail_record (id) {
+            id -> Int8,
+            record_id -> Varchar,
+            room_number -> Varchar,
+            count -> Int4,
+            amount_balance -> Numeric,
             comment -> Nullable<Text>,
             create_by -> Varchar,
             update_by -> Varchar,
@@ -137,6 +155,7 @@ pub mod basic {
         posts,
         t_owner_basic_info,
         t_owner_fee_detail,
+        t_owner_fee_detail_record,
         t_price_basic,
         t_property_fee_detail,
         t_room_info_detail,

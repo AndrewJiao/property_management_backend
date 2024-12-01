@@ -43,6 +43,13 @@ impl PriceBasicConfigGet for Vec<PriceBasicPo> {
         }).collect::<HashMap<BasicPriceType, PriceBasicPo>>()
     }
 }
+use crate::schema::basic::t_price_basic::*;
+type BoxedQuery<'a> = t_price_basic::BoxedQuery<'a, Pg, crate::SqlType<PriceBasicPo>>;
+impl PriceBasicPo {
+    pub fn all() -> BoxedQuery<'static> {
+        table.select(PriceBasicPo::as_select()).into_boxed()
+    }
+}
 
 #[derive(Hash, Eq, PartialEq, Debug, Serialize, Clone)]
 pub enum BasicPriceType {

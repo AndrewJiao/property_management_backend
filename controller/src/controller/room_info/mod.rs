@@ -2,7 +2,7 @@ use crate::dto::room_info::{RoomInfoDetailSearchDto, RoomInfoDetailUpdateDto, Ro
 use crate::dto::ToUpdatePO;
 use actix_web::web::scope;
 use actix_web::{get, post, put, web, HttpResponse};
-use common::data_result::{AppResult, PaginateSearch};
+use common::data_result::{PaginateSearch, WebResult};
 use common::db_config::auto_trait::AutoOperation;
 use common::db_config::db_get_connection;
 use common::{result_success, validate};
@@ -29,7 +29,7 @@ use service::room_info::init_room_data;
 /// 查询
 ///
 #[get("/data")]
-async fn get_data(param: web::Query<PaginateSearch>) -> AppResult<HttpResponse> {
+async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpResponse> {
     let search_param: RoomInfoDetailSearchDto = param.convert_param()?;
     validate!(&param, &search_param);
     print!("search_param:{:?}", &search_param);
@@ -62,7 +62,7 @@ async fn get_data(param: web::Query<PaginateSearch>) -> AppResult<HttpResponse> 
 /// 编辑
 ///
 #[put("/data/{data_id}")]
-async fn put_data(path_param: web::Path<i64>, body_param: web::Json<RoomInfoDetailUpdateDto>) -> AppResult<HttpResponse> {
+async fn put_data(path_param: web::Path<i64>, body_param: web::Json<RoomInfoDetailUpdateDto>) -> WebResult<HttpResponse> {
     validate!(body_param);
     let data_id = path_param.into_inner();
     let save_data_before = table.find(data_id).first::<RoomInfoDetailPo>(&mut db_get_connection())?;
@@ -78,7 +78,7 @@ async fn put_data(path_param: web::Path<i64>, body_param: web::Json<RoomInfoDeta
 /// 获取版本
 ///
 #[get("/find")]
-async fn get_find(param: web::Query<RoomInfoSearchType>) -> AppResult<HttpResponse> {
+async fn get_find(param: web::Query<RoomInfoSearchType>) -> WebResult<HttpResponse> {
     match param.into_inner() {
         RoomInfoSearchType::MonthVersion(ref value) => {
             if value.is_empty() {
@@ -101,7 +101,7 @@ async fn get_find(param: web::Query<RoomInfoSearchType>) -> AppResult<HttpRespon
 /// 初始化数据
 ///
 #[post("/init")]
-async fn init_data() -> AppResult<HttpResponse> {
+async fn init_data() -> WebResult<HttpResponse> {
     init_room_data()?;
     result_success!()
 }

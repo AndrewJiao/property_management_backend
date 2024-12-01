@@ -1,7 +1,7 @@
 use crate::room_info;
 use common::db_config::auto_trait::AutoOperation;
 use common::db_config::db_get_connection;
-use common::error::AppResult;
+use common::data_result::AppResult;
 use common::CURRENT_USE;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SaveChangesDsl};
 use repository::component::operation_trait::FeeCalculator;

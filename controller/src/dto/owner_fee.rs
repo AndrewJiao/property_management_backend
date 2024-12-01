@@ -1,9 +1,11 @@
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use common::tools::serde::empty_string_or_null_as_none;
-use repository::owner_fee::{DetailType, StreamId};
+use repository::owner_fee::{DetailType, OwnerFeeDetailUpdatePo, StreamId};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
+use common::CURRENT_USE;
+use crate::dto::ToUpdatePO;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -47,3 +49,18 @@ pub struct OwnerFeeDetailUpdateDto {
     #[serde(deserialize_with = "empty_string_or_null_as_none")]
     pub comment: Option<String>,
 }
+impl ToUpdatePO for OwnerFeeDetailUpdateDto {
+    type PO<'a> = OwnerFeeDetailUpdatePo<'a>;
+
+    fn to_update_po(&self, id: i64) -> OwnerFeeDetailUpdatePo {
+        OwnerFeeDetailUpdatePo {
+            id,
+            amount: self.amount.as_ref(),
+            comment: self.comment.as_deref(),
+            update_by: Some(CURRENT_USE),
+            update_time: None,
+            is_delete: None,
+        }
+    }
+}
+

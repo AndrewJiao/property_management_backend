@@ -1,12 +1,12 @@
 use chrono::{Datelike, Local, Months};
 use common::db_config::db_get_connection;
-use common::error::AppResult;
 use common::CURRENT_USE;
 use diesel::{insert_into, ExpressionMethods, QueryDsl, RunQueryDsl};
 use repository::owner_info::OwnerBasicInfoPo;
 use repository::room_info::{RoomInfoDetailInsertPo, RoomInfoDetailPo};
 use repository::schema::basic::t_room_info_detail::dsl::t_room_info_detail;
 use std::collections::{HashMap, HashSet};
+use common::data_result::AppResult;
 use common::tools::time::now_local_date_time_naive;
 
 pub fn init_room_data() -> AppResult<()> {

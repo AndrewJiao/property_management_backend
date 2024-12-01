@@ -1,6 +1,6 @@
 use common::conf::log4::init_log4j;
 use common::const_value::DB_CONNECTION;
-use common::error::AppResult;
+use common::data_result::AppResult;
 use common::web_config::build_service;
 
 #[path = "../controller/mod.rs"]

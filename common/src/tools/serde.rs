@@ -48,7 +48,7 @@ where
                     if SETTINGS.app_config.json_length > length as u32 {
                         Ok(Some(value))
                     } else {
-                        Err(serde::de::Error::custom(PARAM_NOT_SUPPORT.to_string()))
+                        Err(serde::de::Error::custom(PARAM_NOT_SUPPORT().to_string()))
                     }
                 }
             }
