@@ -476,6 +476,7 @@ dependencies = [
  "log",
  "log4rs",
  "management_macro",
+ "parking_lot",
  "pq-sys",
  "quote",
  "serde",

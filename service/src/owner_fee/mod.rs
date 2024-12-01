@@ -2,7 +2,7 @@ use crate::owner_fee::value_object::StreamAddVal;
 use common::data_result::{AppError, AppResult};
 use common::db_config::auto_trait::AutoOperation;
 use common::db_config::db_get_connection;
-use common::error::{APP_ERROR, BUSINESS_ERROR};
+use common::error::BUSINESS_ERROR;
 use common::tools::lock::LOCK_OWNER_FEE;
 use diesel::{Connection, SaveChangesDsl};
 use repository::owner_fee::{create_new_owner_fee_detail_stream, OwnerFeeDetailPo, OwnerFeeDetailUpdatePo};
@@ -11,7 +11,6 @@ use repository::tool_table::CountType;
 use repository::{owner_fee, owner_info};
 use std::thread;
 use std::time::Duration;
-use log::info;
 
 pub mod value_object;
 
@@ -40,10 +39,11 @@ pub fn new_data(mut value: StreamAddVal) -> AppResult<()> {
     //查询业主信息
     let mut basic_info = OwnerBasicInfoPo::by_room_number(room_number, conn)?;
 
-    let binding = LOCK_OWNER_FEE.lock(basic_info.room_number.as_str())?;
-    let _guard = binding.try_lock().map_err(|e|APP_ERROR(&e.to_string()))?;
+    let _guard = LOCK_OWNER_FEE.try_lock(basic_info.room_number.as_str())?;
     conn.transaction::<_, AppError, _>(|conn| {
         //计算
+        thread::sleep(Duration::from_secs(10));
+
         let new_amount_balance = value.calculate(&mut basic_info.amount_balance);
         //更新结余，更新记录表，新增流水数据
         let record = owner_fee::try_record_data(&new_amount_balance, room_number, conn)?;
