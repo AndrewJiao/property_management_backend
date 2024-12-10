@@ -41,7 +41,7 @@ macro_rules! if_filter {
 #[macro_export]
 macro_rules! filter_data_enable {
     ($statement:ident) => {
-      $statement = $statement.filter(is_delete.eq(true))
+      $statement = $statement.filter(is_delete.eq(false))
     };
 }
 

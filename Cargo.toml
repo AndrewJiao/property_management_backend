@@ -29,6 +29,7 @@ config = "0.14.1"
 quote = "1.0.33"
 syn = { version = "2.0.43", features = ["full"], default-features = true }
 actix-web = "4.9.0"
+actix = "0.13.5"
 lazy_static = "1.4.0"
 derive_more = { version = "1.0.0", features = ["full"] }
 diesel = { version = "2.2.4", features = ["postgres", "r2d2", "chrono", "numeric", "serde_json"] }
@@ -42,3 +43,6 @@ validator = { version = "0.19", features = ["derive"] }
 actix-cors = "0.7.0"
 tracing-actix-web = "0.7.15"
 base64 = "0.22.1"
+itertools = "0.13.0"
+tokio = { version = "1.42.0", features = ["full"] }
+rayon = { version = "1.8"}

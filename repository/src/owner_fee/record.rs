@@ -65,6 +65,13 @@ impl OwnerFeeDetailRecordPo {
             .order_by(create_time.desc())
             .limit(1)
     }
+    pub fn by_record_id_list(param_record_id_list: &Vec<&str>,conn:&mut Conn) -> AppResult<Vec<OwnerFeeDetailRecordPo>> {
+        let result = OwnerFeeDetailRecordPo::all()
+            .filter(record_id.eq_any(param_record_id_list))
+            .filter(is_delete.eq(false))
+            .get_results(conn)?;
+        Ok(result)
+    }
 }
 
 #[derive(Insertable, Serialize, Debug, AutoOperation)]

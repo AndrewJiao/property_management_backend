@@ -2,20 +2,18 @@ use crate::dto::owner_fee::{OwnerFeeDetailResultDto, OwnerFeeDetailSearchDto, Ow
 use crate::dto::ToUpdatePO;
 use actix_web::web::scope;
 use actix_web::{get, post, put, web, HttpResponse};
-use bigdecimal::BigDecimal;
+use bigdecimal::{BigDecimal, Zero};
 use common::data_result::{PaginateSearch, WebResult};
 use common::db_config::db_get_connection;
 use common::{result_success, validate};
 use diesel::query_dsl::methods::OrderDsl;
-use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
+use diesel::ExpressionMethods;
 use repository::component::page::Paginate;
 use repository::owner_fee::{DetailType, OwnerFeeDetailPo};
 use repository::schema::basic::t_owner_fee_detail::*;
 use serde::Deserialize;
 use service::owner_fee::value_object::StreamAddVal;
 use std::clone::Clone;
-use std::collections::HashMap;
-use repository::schema::basic::t_owner_basic_info::amount_balance;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(scope("/owner_fee")
@@ -25,6 +23,10 @@ pub fn config(cfg: &mut web::ServiceConfig) {
     );
 }
 
+///
+/// 查询明细
+/// 通过记录节点计算每个明细的余额
+///
 #[get("/data")]
 async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpResponse> {
     let search_param: OwnerFeeDetailSearchDto = param.convert_param()?;
@@ -42,45 +44,22 @@ async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpResponse> 
             .per_page(param.limit())
             .load_and_count_pages::<OwnerFeeDetailPo>(&mut db_get_connection())?;
 
-    let vec: Vec<&str> = result.iter().map(|e| e.stream_id.as_str()).collect();
-    let id_amount_map;
-    {
-        use repository::schema::basic::t_owner_fee_detail::*;
-        id_amount_map = table.select((stream_id, amount))
-            .filter(stream_id.eq_any(vec))
-            .get_results::<(String, BigDecimal)>(&mut db_get_connection())?
-            .into_iter().collect::<HashMap<String, BigDecimal>>();
-    }
+    let record_ids = &result.iter().map(|e| e.record_id.as_str()).collect::<Vec<&str>>();
+    let amount_map = &service::owner_fee::re_calculate_amount_balance(record_ids).await?;
+
+    let result_dto = result.into_iter()
+        .map(|e| {
+            let v_amount_balance = amount_map.get(e.stream_id.as_str())
+                .unwrap_or(&BigDecimal::zero())
+                .clone();
+            OwnerFeeDetailResultDto::new(e, v_amount_balance)
+        })
+        .collect::<Vec<OwnerFeeDetailResultDto>>();
 
 
-    result_success!(result, param.produce_page_result(total))
+    result_success!(result_dto, param.produce_page_result(total))
 }
 
-fn calculate(amount: Vec<OwnerFeeDetailPo>,  amount_balance: BigDecimal) -> Vec<OwnerFeeDetailResultDto> {
-    let mut result = vec![];
-    todo!();
-    for item in amount {
-        let mut amount_balance = amount_balance.clone();
-        amount_balance = amount_balance - item.amount;
-        result.push(OwnerFeeDetailResultDto {
-            id: item.id,
-            stream_id: item.stream_id,
-            room_number: item.room_number,
-            owner_name: item.owner_name,
-            detail_type: item.detail_type,
-            amount: item.amount,
-            comment: item.comment,
-            create_by: item.create_by,
-            update_by: item.update_by,
-            create_time: item.create_time,
-            update_time: item.update_time,
-            amount_balance: amount_balance,
-        });
-    }
-    result
-
-
-}
 
 ///
 /// 修改流水

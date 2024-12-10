@@ -63,7 +63,8 @@ impl ToUpdatePO for OwnerFeeDetailUpdateDto {
         }
     }
 }
-
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct OwnerFeeDetailResultDto {
     pub id: i64,
     pub stream_id: String,

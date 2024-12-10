@@ -1,4 +1,9 @@
 mod record;
+
+use std::cmp::Ordering;
+pub use record::try_record_data;
+pub use record::OwnerFeeDetailRecordPo;
+
 use crate::schema::basic::t_owner_fee_detail;
 use crate::schema::basic::t_owner_fee_detail::*;
 use crate::tool_table::{current_date_count, CountType};
@@ -17,7 +22,6 @@ use diesel::sql_types::Text;
 use diesel::{define_sql_function, AsChangeset, Expression, ExpressionMethods, Identifiable, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper};
 use diesel_derive_enum::DbEnum;
 use management_macro::AutoOperation;
-pub use record::try_record_data;
 use serde::{Deserialize, Serialize};
 
 #[derive(Queryable, Selectable, Deserialize, Serialize, Debug)]
@@ -91,6 +95,34 @@ impl OwnerFeeDetailPo {
         Ok(result)
     }
 
+    pub fn get_by_stream_record_id_list(param_stream_record_id_list:&Vec<&str>, conn:&mut Conn) -> AppResult<Vec<OwnerFeeDetailPo>> {
+        let result = OwnerFeeDetailPo::all()
+            .filter(record_id.eq_any(param_stream_record_id_list))
+            .filter(is_delete.eq(false))
+            .get_results(conn)?;
+        Ok(result)
+    }
+
+}
+
+impl Eq for OwnerFeeDetailPo {}
+
+impl PartialEq<Self> for OwnerFeeDetailPo {
+    fn eq(&self, other: &Self) -> bool {
+        self.stream_id == other.stream_id
+    }
+}
+
+impl PartialOrd<Self> for OwnerFeeDetailPo {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other).into())
+    }
+}
+
+impl Ord for OwnerFeeDetailPo {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.stream_id.cmp(&other.stream_id)
+    }
 }
 
 #[derive(Serialize, Debug, Insertable, AutoOperation)]
@@ -148,7 +180,7 @@ pub struct OwnerFeeDetailUpdatePo<'a> {
 }
 
 
-#[derive(Deserialize, Serialize, DbEnum, Debug, Clone)]
+#[derive(Deserialize, Serialize, DbEnum, Debug, Clone,PartialEq,Eq)]
 #[ExistingTypePath = "crate::schema::basic::sql_types::DetailType"]
 #[serde(rename_all = "PascalCase")]
 pub enum DetailType {

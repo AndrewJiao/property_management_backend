@@ -1,16 +1,19 @@
 use crate::owner_fee::value_object::StreamAddVal;
+use bigdecimal::BigDecimal;
 use common::data_result::{AppError, AppResult};
 use common::db_config::auto_trait::AutoOperation;
 use common::db_config::db_get_connection;
 use common::error::BUSINESS_ERROR;
 use common::tools::lock::LOCK_OWNER_FEE;
 use diesel::{Connection, SaveChangesDsl};
-use repository::owner_fee::{create_new_owner_fee_detail_stream, OwnerFeeDetailPo, OwnerFeeDetailUpdatePo};
+use itertools::Itertools;
+use rayon::iter::IntoParallelIterator;
+use rayon::iter::ParallelIterator;
+use repository::owner_fee::{create_new_owner_fee_detail_stream, DetailType, OwnerFeeDetailPo, OwnerFeeDetailRecordPo, OwnerFeeDetailUpdatePo};
 use repository::owner_info::OwnerBasicInfoPo;
 use repository::tool_table::CountType;
 use repository::{owner_fee, owner_info};
-use std::thread;
-use std::time::Duration;
+use std::collections::HashMap;
 
 pub mod value_object;
 
@@ -18,12 +21,6 @@ pub mod value_object;
 /// 每次修改时要验证价格
 ///
 pub fn put_data(po: OwnerFeeDetailUpdatePo) -> AppResult<OwnerFeeDetailPo> {
-    //是否有修改价格
-    // po.amount.map(|new_amount| {
-    //     let old_owner_fee = OwnerFeeDetailPo::get_by_id(po.id)?;
-    //
-    //     Ok(())
-    // })
     let result = po.update_time()
         .save_changes(&mut db_get_connection())?;
     Ok(result)
@@ -33,25 +30,23 @@ pub fn put_data(po: OwnerFeeDetailUpdatePo) -> AppResult<OwnerFeeDetailPo> {
 /// 初始化一个新的流水
 ///
 pub fn new_data(mut value: StreamAddVal) -> AppResult<()> {
-    let room_number = &value.room_number.clone();
+    let p_room_number = &value.room_number.clone();
     //生成一个单号
     let conn = &mut db_get_connection();
     //查询业主信息
-    let mut basic_info = OwnerBasicInfoPo::by_room_number(room_number, conn)?;
+    let mut basic_info = OwnerBasicInfoPo::by_room_number(p_room_number, conn)?;
 
     let _guard = LOCK_OWNER_FEE.try_lock(basic_info.room_number.as_str())?;
     conn.transaction::<_, AppError, _>(|conn| {
         //计算
-        thread::sleep(Duration::from_secs(10));
-
         let new_amount_balance = value.calculate(&mut basic_info.amount_balance);
         //更新结余，更新记录表，新增流水数据
-        let record = owner_fee::try_record_data(&new_amount_balance, room_number, conn)?;
+        let record = owner_fee::try_record_data(&new_amount_balance, p_room_number, conn)?;
         owner_info::update_amount(basic_info.id, &new_amount_balance, conn)?;
 
         let _ = create_new_owner_fee_detail_stream(
             &repository::tool_table::current_date_count_with_conn(CountType::OwnerFeeSeqNumber, conn)?,
-            room_number,
+            p_room_number,
             basic_info.owner_name.as_deref(),
             &value.stream_type,
             &value.amount.ok_or(BUSINESS_ERROR("amount is required", 1001))?,
@@ -62,3 +57,54 @@ pub fn new_data(mut value: StreamAddVal) -> AppResult<()> {
     })?;
     Ok(())
 }
+
+
+
+///
+/// 根据stream_id重新从数据库取出相关的流水数据计算余额
+///
+pub async fn re_calculate_amount_balance(stream_record_id: &Vec<&str>) -> AppResult<HashMap<String,BigDecimal>> {
+    let conn = &mut db_get_connection();
+
+    let all_relative_stream = OwnerFeeDetailPo::get_by_stream_record_id_list(stream_record_id, conn)?;
+    let all_relative_stream_map = all_relative_stream.into_iter().map(|e| (e.record_id.clone(), e)).into_group_map();
+
+    let all_relative_record = OwnerFeeDetailRecordPo::by_record_id_list(stream_record_id, conn)?;
+    let record_amount_map = &all_relative_record.into_iter().map(|e| (e.record_id, e.amount_balance)).collect::<HashMap<String, BigDecimal>>();
+
+    //异步的批量将all_relative_stream的余额更新
+    let result = all_relative_stream_map
+        .into_par_iter()
+        .map(|(k, e)| {
+            calculate(e, record_amount_map.get(k.as_str()).expect("record_id not found").clone())
+        })
+        .reduce(
+            || HashMap::new()
+            , |mut a, b| {
+                a.extend(b);
+                a
+            });
+    Ok(result)
+}
+
+
+fn calculate(mut relative_stream:Vec<OwnerFeeDetailPo>, p_amount:BigDecimal) -> HashMap<String, BigDecimal> {
+    let mut p_amount_balance = p_amount;
+    assert!(relative_stream.len() > 0);
+    let mut map = HashMap::new();
+    //根据时间倒序排序
+    relative_stream.sort_by(|a, b| b.stream_id.cmp(&a.stream_id));
+    for detail_po in relative_stream {
+        if detail_po.detail_type == DetailType::SettlementFee {
+            //结算费用
+            p_amount_balance = p_amount_balance + detail_po.amount;
+        } else {
+            //其他费用
+            p_amount_balance = p_amount_balance - detail_po.amount;
+        }
+        map.insert(detail_po.stream_id.clone(), p_amount_balance.clone());
+    }
+    map
+}
+
+
