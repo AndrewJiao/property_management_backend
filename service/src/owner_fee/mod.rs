@@ -29,7 +29,7 @@ pub fn put_data(po: OwnerFeeDetailUpdatePo) -> AppResult<OwnerFeeDetailPo> {
 ///
 /// 初始化一个新的流水
 ///
-pub fn new_data(mut value: StreamAddVal) -> AppResult<()> {
+pub fn new_data(mut value: StreamAddVal) -> AppResult<OwnerFeeDetailPo> {
     let p_room_number = &value.room_number.clone();
     //生成一个单号
     let conn = &mut db_get_connection();
@@ -37,14 +37,14 @@ pub fn new_data(mut value: StreamAddVal) -> AppResult<()> {
     let mut basic_info = OwnerBasicInfoPo::by_room_number(p_room_number, conn)?;
 
     let _guard = LOCK_OWNER_FEE.try_lock(basic_info.room_number.as_str())?;
-    conn.transaction::<_, AppError, _>(|conn| {
+    let result = conn.transaction::<_, AppError, _>(|conn| {
         //计算
         let new_amount_balance = value.calculate(&mut basic_info.amount_balance);
         //更新结余，更新记录表，新增流水数据
         let record = owner_fee::try_record_data(&new_amount_balance, p_room_number, conn)?;
         owner_info::update_amount(basic_info.id, &new_amount_balance, conn)?;
 
-        let _ = create_new_owner_fee_detail_stream(
+        let result = create_new_owner_fee_detail_stream(
             &repository::tool_table::current_date_count_with_conn(CountType::OwnerFeeSeqNumber, conn)?,
             p_room_number,
             basic_info.owner_name.as_deref(),
@@ -53,17 +53,16 @@ pub fn new_data(mut value: StreamAddVal) -> AppResult<()> {
             &record.record_id,
             conn,
         )?;
-        Ok(())
+        Ok(result)
     })?;
-    Ok(())
+    Ok(result)
 }
-
 
 
 ///
 /// 根据stream_id重新从数据库取出相关的流水数据计算余额
 ///
-pub async fn re_calculate_amount_balance(stream_record_id: &Vec<&str>) -> AppResult<HashMap<String,BigDecimal>> {
+pub async fn re_calculate_amount_balance(stream_record_id: &Vec<&str>) -> AppResult<HashMap<String, BigDecimal>> {
     let conn = &mut db_get_connection();
 
     let all_relative_stream = OwnerFeeDetailPo::get_by_stream_record_id_list(stream_record_id, conn)?;
@@ -88,18 +87,16 @@ pub async fn re_calculate_amount_balance(stream_record_id: &Vec<&str>) -> AppRes
 }
 
 
-fn calculate(mut relative_stream:Vec<OwnerFeeDetailPo>, p_amount:BigDecimal) -> HashMap<String, BigDecimal> {
+fn calculate(mut relative_stream: Vec<OwnerFeeDetailPo>, p_amount: BigDecimal) -> HashMap<String, BigDecimal> {
     let mut p_amount_balance = p_amount;
     assert!(relative_stream.len() > 0);
     let mut map = HashMap::new();
     //根据时间倒序排序
     relative_stream.sort_by(|a, b| b.stream_id.cmp(&a.stream_id));
     for detail_po in relative_stream {
-        if detail_po.detail_type == DetailType::SettlementFee {
-            //结算费用
+        if detail_po.detail_type == DetailType::SettlementFee || detail_po.detail_type == DetailType::PreStoreFee {
             p_amount_balance = p_amount_balance + detail_po.amount;
         } else {
-            //其他费用
             p_amount_balance = p_amount_balance - detail_po.amount;
         }
         map.insert(detail_po.stream_id.clone(), p_amount_balance.clone());

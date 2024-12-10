@@ -11,19 +11,12 @@ pub struct StreamAddVal {
 impl StreamAddVal {
     pub fn calculate(&mut self, amount_balance: &BigDecimal) -> BigDecimal {
         match &self.stream_type {
-            DetailType::ManagementFee => {
-                amount_balance + self.amount.as_ref().expect("need amount")
-            }
             DetailType::LiquidatedDamages => {
                 let amount =  amount_balance * &SETTINGS.app_config.liquidated_damages_rate;
                 self.amount = Some(amount.clone());
                 amount_balance + &amount
-
             }
-            DetailType::PreStoreFee => {
-                amount_balance + self.amount.as_ref().expect("need amount")
-            }
-            DetailType::SettlementFee => {
+            DetailType::ManagementFee|DetailType::SettlementFee|DetailType::PreStoreFee => {
                 amount_balance + self.amount.as_ref().expect("need amount")
             }
         }
