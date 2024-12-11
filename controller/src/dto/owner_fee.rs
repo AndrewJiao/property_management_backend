@@ -78,6 +78,7 @@ pub struct OwnerFeeDetailResultDto {
     pub update_by: String,
     pub create_time: NaiveDateTime,
     pub update_time: NaiveDateTime,
+    pub related_order_number: String,
 }
 
 impl OwnerFeeDetailResultDto {
@@ -95,6 +96,22 @@ impl OwnerFeeDetailResultDto {
             create_time: po.create_time,
             update_time: po.update_time,
             amount_balance,
+            related_order_number: po.related_order_number,
         }
     }
+}
+
+#[derive(Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct OwnerFeeAssignedAddDto {
+    #[validate(length(min = 0, max = 100))]
+    pub room_number: String,
+    #[validate(length(min = 0, max = 100))]
+    pub version: String,
+}
+#[derive(Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct OwnerFeeAssignedAddDtos {
+    #[validate(length(min = 0, max = 100))]
+    pub version: String,
 }

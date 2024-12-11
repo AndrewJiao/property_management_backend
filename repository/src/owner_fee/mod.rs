@@ -19,7 +19,7 @@ use diesel::dsl::auto_type;
 use diesel::pg::Pg;
 use diesel::serialize::{Output, ToSql};
 use diesel::sql_types::Text;
-use diesel::{define_sql_function, AsChangeset, Expression, ExpressionMethods, Identifiable, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper};
+use diesel::{define_sql_function, AsChangeset, BoolExpressionMethods, Expression, ExpressionMethods, Identifiable, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper};
 use diesel_derive_enum::DbEnum;
 use management_macro::AutoOperation;
 use serde::{Deserialize, Serialize};
@@ -42,6 +42,7 @@ pub struct OwnerFeeDetailPo {
     pub update_time: chrono::NaiveDateTime,
     pub is_delete: bool,
     pub record_id: String,
+    pub related_order_number: String,
 }
 common_type!();
 
@@ -103,6 +104,14 @@ impl OwnerFeeDetailPo {
         Ok(result)
     }
 
+    pub fn by_room_number_and_relative_order_numbers(params:&Vec<(&str,&str)>, conn:&mut Conn) -> AppResult<Vec<OwnerFeeDetailPo>> {
+        let mut boxed_query= OwnerFeeDetailPo::all();
+        boxed_query = params.iter().fold(boxed_query,|query,(p_room_number,p_related_order_number,)|{
+            query.or_filter(room_number.eq(p_room_number).and(related_order_number.eq(p_related_order_number)))
+        });
+        let result = boxed_query.get_results(conn)?;
+        Ok(result)
+    }
 }
 
 impl Eq for OwnerFeeDetailPo {}
@@ -139,6 +148,7 @@ pub struct OwnerFeeDetailInsertPo<'a> {
     pub create_time: Option<chrono::NaiveDateTime>,
     pub update_time: Option<chrono::NaiveDateTime>,
     pub record_id:&'a str,
+    pub related_order_number:&'a str,
 }
 
 pub fn create_new_owner_fee_detail_stream<'a>(
@@ -148,6 +158,7 @@ pub fn create_new_owner_fee_detail_stream<'a>(
      param_detail_type: &'a DetailType,
      param_amount: &'a BigDecimal,
      param_record_id:&'a str,
+     param_relative_order_number:&'a str,
      conn :&mut Conn
 )->AppResult<OwnerFeeDetailPo>{
     let po = OwnerFeeDetailInsertPo {
@@ -161,7 +172,8 @@ pub fn create_new_owner_fee_detail_stream<'a>(
         update_by: "System",
         create_time: None,
         update_time: None,
-        record_id:param_record_id
+        record_id:param_record_id,
+        related_order_number:param_relative_order_number,
     }.create_time();
     let result = diesel::insert_into(table).values(po).get_result::<OwnerFeeDetailPo>(conn)?;
     Ok(result)

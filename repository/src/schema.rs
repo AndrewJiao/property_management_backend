@@ -56,6 +56,7 @@ pub mod basic {
             update_time -> Timestamp,
             is_delete -> Bool,
             record_id -> Varchar,
+            related_order_number -> Varchar,
         }
     }
 
@@ -96,7 +97,7 @@ pub mod basic {
 
     diesel::table! {
         basic.t_property_fee_detail (id) {
-            id -> Int4,
+            id -> Int8,
             room_number -> Nullable<Varchar>,
             room_owner_name -> Nullable<Varchar>,
             management_fee -> Nullable<Numeric>,
@@ -109,11 +110,11 @@ pub mod basic {
             liquidate_fee -> Nullable<Numeric>,
             pre_store_fee -> Nullable<Numeric>,
             record_version -> Nullable<Varchar>,
-            create_by -> Nullable<Varchar>,
-            update_by -> Nullable<Varchar>,
+            create_by -> Varchar,
+            update_by -> Varchar,
             create_time -> Timestamp,
             update_time -> Timestamp,
-            is_delete -> Nullable<Bool>,
+            is_delete -> Bool,
             delete_at -> Nullable<Timestamp>,
             comment -> Nullable<Text>,
             total_fee -> Nullable<Numeric>,

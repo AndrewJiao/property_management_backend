@@ -1,4 +1,4 @@
-use crate::dto::owner_fee::{OwnerFeeDetailResultDto, OwnerFeeDetailSearchDto, OwnerFeeDetailUpdateDto};
+use crate::dto::owner_fee::{OwnerFeeAssignedAddDto, OwnerFeeAssignedAddDtos, OwnerFeeDetailResultDto, OwnerFeeDetailSearchDto, OwnerFeeDetailUpdateDto};
 use crate::dto::ToUpdatePO;
 use actix_web::web::scope;
 use actix_web::{get, post, put, web, HttpResponse};
@@ -20,6 +20,8 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         .service(get_data)
         .service(put_data)
         .service(add_data)
+        .service(add_datas)
+        // .service(test_add_data)
     );
 }
 
@@ -56,7 +58,6 @@ async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpResponse> 
         })
         .collect::<Vec<OwnerFeeDetailResultDto>>();
 
-
     result_success!(result_dto, param.produce_page_result(total))
 }
 
@@ -79,14 +80,32 @@ pub struct StreamAdd {
     room_number: String,
 }
 
+// #[post("/test")]
+// async fn test_add_data(param: web::Json<StreamAdd>) -> WebResult<HttpResponse> {
+//     service::owner_fee::new_data(
+//         StreamAddVal {
+//             stream_type: param.detail_type.clone(),
+//             room_number: param.room_number.clone(),
+//             amount: param.amount.clone(),
+//             relative_order_number: "test".to_string(),
+//         }
+//     )?;
+//     result_success!()
+// }
+
+
 #[post("/data")]
-async fn add_data(param: web::Json<StreamAdd>) -> WebResult<HttpResponse> {
-    service::owner_fee::new_data(
-        StreamAddVal {
-            stream_type: param.detail_type.clone(),
-            room_number: param.room_number.clone(),
-            amount: param.amount.clone(),
-        }
-    )?;
+async fn add_data(param: web::Json<OwnerFeeAssignedAddDto>) -> WebResult<HttpResponse> {
+    let param = param.into_inner();
+    validate!(param);
+    let result = service::owner_fee::add_assigned_data(&param.room_number,&param.version)?;
+    result_success!(result)
+}
+
+#[post("/datas")]
+async fn add_datas(param: web::Json<OwnerFeeAssignedAddDtos>) -> WebResult<HttpResponse> {
+    let param = param.into_inner();
+    validate!(param);
+    let _ = service::owner_fee::add_assigned_datas(&param.version)?;
     result_success!()
 }

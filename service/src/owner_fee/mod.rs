@@ -3,7 +3,7 @@ use bigdecimal::BigDecimal;
 use common::data_result::{AppError, AppResult};
 use common::db_config::auto_trait::AutoOperation;
 use common::db_config::db_get_connection;
-use common::error::BUSINESS_ERROR;
+use common::error::{BUSINESS_ERROR, BUSINESS_ERROR_OWNER_FEE_DETAIL_EXIST, DATA_NOT_EXIST};
 use common::tools::lock::LOCK_OWNER_FEE;
 use diesel::{Connection, SaveChangesDsl};
 use itertools::Itertools;
@@ -11,9 +11,11 @@ use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
 use repository::owner_fee::{create_new_owner_fee_detail_stream, DetailType, OwnerFeeDetailPo, OwnerFeeDetailRecordPo, OwnerFeeDetailUpdatePo};
 use repository::owner_info::OwnerBasicInfoPo;
+use repository::property_fee::PropertyFeeDetailPo;
 use repository::tool_table::CountType;
 use repository::{owner_fee, owner_info};
 use std::collections::HashMap;
+use log::info;
 
 pub mod value_object;
 
@@ -30,6 +32,7 @@ pub fn put_data(po: OwnerFeeDetailUpdatePo) -> AppResult<OwnerFeeDetailPo> {
 /// 初始化一个新的流水
 ///
 pub fn new_data(mut value: StreamAddVal) -> AppResult<OwnerFeeDetailPo> {
+    info!("添加流水数据: {:?}", value);
     let p_room_number = &value.room_number.clone();
     //生成一个单号
     let conn = &mut db_get_connection();
@@ -51,6 +54,7 @@ pub fn new_data(mut value: StreamAddVal) -> AppResult<OwnerFeeDetailPo> {
             &value.stream_type,
             &value.amount.ok_or(BUSINESS_ERROR("amount is required", 1001))?,
             &record.record_id,
+            value.relative_order_number.as_str(),
             conn,
         )?;
         Ok(result)
@@ -104,4 +108,63 @@ fn calculate(mut relative_stream: Vec<OwnerFeeDetailPo>, p_amount: BigDecimal) -
     map
 }
 
+///
+/// 根据房间号和版本生成指定的物业费
+///
+pub fn add_assigned_data(param_room_number:&str,param_version:&str)->AppResult<OwnerFeeDetailPo>{
+    let conn = &mut db_get_connection();
+    //查询是否有物业费
+    let property_fee = PropertyFeeDetailPo::by_room_number_and_version(param_room_number, param_version,conn)?;
+    let exist_owner_fees = OwnerFeeDetailPo::by_room_number_and_relative_order_numbers(&vec![(param_room_number, param_version)],conn)?;
+    if exist_owner_fees.len() > 0 {
+        return Err(BUSINESS_ERROR_OWNER_FEE_DETAIL_EXIST());
+    }
+    self::new_data(StreamAddVal {
+        stream_type: DetailType::ManagementFee,
+        room_number: property_fee.room_number.ok_or(DATA_NOT_EXIST())?,
+        amount: property_fee.total_fee,
+        relative_order_number: property_fee.record_version.ok_or(DATA_NOT_EXIST())?,
+    })
+}
+///
+/// 基于版本号生成数据
+///
+
+pub fn add_assigned_datas(param_version:&str)->AppResult<()>{
+    let conn = &mut db_get_connection();
+    //查询是否有物业费
+    let property_fee = PropertyFeeDetailPo::by_version(param_version,conn)?;
+    let condition_par = property_fee.iter().map(|e| (e.room_number.as_deref().expect("data_not_exist"), e.record_version.as_deref().expect("data_not_exit"))).collect();
+    let exist_owner_fees = OwnerFeeDetailPo::by_room_number_and_relative_order_numbers(&condition_par,conn)?;
+    //过滤掉已有的
+    tokio::spawn(async move {
+        let need_create =
+            property_fee.into_iter()
+                .filter(|e|!exist_owner_fees.contains(e)).collect::<Vec<_>>();
+
+        need_create.into_iter()
+            .for_each(|e|{
+                let _ = self::new_data(StreamAddVal {
+                    stream_type: DetailType::ManagementFee,
+                    room_number: e.room_number.ok_or(DATA_NOT_EXIST()).unwrap(),
+                    amount: e.total_fee,
+                    relative_order_number: e.record_version.ok_or(DATA_NOT_EXIST()).unwrap(),
+                });
+            });
+    });
+
+    Ok(())
+}
+
+trait  Contains{
+    fn contains(&self,_: &PropertyFeeDetailPo)->bool;
+}
+impl Contains for Vec<OwnerFeeDetailPo>  {
+    fn contains(&self ,po: &PropertyFeeDetailPo) -> bool {
+        self.iter().any(|e| {
+            po.room_number.as_deref() == Some(&e.room_number) &&
+                po.record_version.as_deref() == Some(&e.related_order_number)
+        })
+    }
+}
 

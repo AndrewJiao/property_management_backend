@@ -52,7 +52,7 @@ impl ToUpdatePO for PropertyFeeDetailUpdateDto {
 
     fn to_update_po(&self, id: i64) -> Self::PO<'_> {
         PropertyFeeDetailUpdatePo {
-            id:id as i32,
+            id,
             management_fee: self.management_fee.as_ref(),
             part_fee: self.part_fee.as_ref(),
             machine_room_renovation_fee: self.machine_room_renovation_fee.as_ref(),

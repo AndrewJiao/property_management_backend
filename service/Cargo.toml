@@ -17,3 +17,4 @@ serde_json.workspace = true
 
 itertools.workspace = true
 rayon.workspace = true
+tokio.workspace = true

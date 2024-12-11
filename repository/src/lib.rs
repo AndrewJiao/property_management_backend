@@ -85,3 +85,20 @@ macro_rules! common_type {
 
     }
 }
+
+
+// #[macro_export]
+// macro_rules! with_conn_function {
+//     ( pub fn $function_name_with_conn:ident | $function_name:ident( $($param:ident : $type_value:ty),*)->$return_value:ty
+//         $inner:block
+//     ) => {
+//         pub fn $function_name_with_conn ($($param:$type_value),*,conn:&mut common::db_config::Conn) -> $return_value{
+//             $inner
+//         }
+//
+//         pub fn  $function_name($($param:$type_value),* ) -> $return_value{
+//             Self::$function_name_with_conn($($param),*,&mut common::db_config::db_get_connection())
+//         }
+//     };
+// }
+
