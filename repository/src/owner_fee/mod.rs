@@ -1,8 +1,8 @@
 mod record;
 
-use std::cmp::Ordering;
 pub use record::try_record_data;
 pub use record::OwnerFeeDetailRecordPo;
+use std::cmp::Ordering;
 
 use crate::schema::basic::t_owner_fee_detail;
 use crate::schema::basic::t_owner_fee_detail::*;
@@ -19,7 +19,7 @@ use diesel::dsl::auto_type;
 use diesel::pg::Pg;
 use diesel::serialize::{Output, ToSql};
 use diesel::sql_types::Text;
-use diesel::{define_sql_function, AsChangeset, BoolExpressionMethods, Expression, ExpressionMethods, Identifiable, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper};
+use diesel::{AsChangeset, BoolExpressionMethods, Expression, ExpressionMethods, Identifiable, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper, TextExpressionMethods};
 use diesel_derive_enum::DbEnum;
 use management_macro::AutoOperation;
 use serde::{Deserialize, Serialize};
@@ -46,24 +46,21 @@ pub struct OwnerFeeDetailPo {
 }
 common_type!();
 
-define_sql_function!(fn canon_owner_fee_stream_id(x:Text)->Text);
 #[auto_type(no_type_alias)]
 pub fn with_stream_id<'a>(value: &'a str) -> _ {
-    canon_owner_fee_stream_id(stream_id).eq(value)
+    stream_id.eq(value)
 }
 
-define_sql_function!(fn canon_owner_fee_room_number(x:Text)->Text);
 #[auto_type(no_type_alias)]
-pub fn with_room_number<'a>(value: &'a str) -> _ {
-    canon_owner_fee_room_number(room_number).eq(value)
+pub fn with_room_number_like<'a>(value: &'a str) -> _ {
+    let pattern:String = format!("{}%", value);
+    room_number.like(pattern)
 }
 
-type ColumnDetailType = crate::schema::basic::sql_types::DetailType;
-define_sql_function!(fn canon_owner_fee_detail_type(x:ColumnDetailType)->ColumnDetailType);
 #[auto_type(no_type_alias)]
-pub fn with_detail_type<'a>(value: &'a DetailType) ->_
+pub fn with_detail_type_in<'a>(value: &'a Vec<DetailType>) ->_
 {
-   canon_owner_fee_detail_type(detail_type).eq(value)
+   detail_type.eq_any(value)
 }
 type BoxedQuery<'a> = t_owner_fee_detail::BoxedQuery<'a, Pg, crate::SqlType<OwnerFeeDetailPo>>;
 impl OwnerFeeDetailPo {
@@ -73,7 +70,7 @@ impl OwnerFeeDetailPo {
     pub fn search_by_param<'a>(
          param_stream_id: Option<&'a str>,
          param_room_number: Option<&'a str>,
-         param_detail_type: Option<&'a DetailType>,
+         param_detail_type: Option<&'a Vec<DetailType>>,
          param_create_time_star: Option<&'a chrono::NaiveDateTime>,
          param_create_time_end: Option<&'a chrono::NaiveDateTime>,
          param_update_time_star: Option<&'a chrono::NaiveDateTime>,
@@ -81,8 +78,8 @@ impl OwnerFeeDetailPo {
     ) -> BoxedQuery<'a>{
         let mut statement = OwnerFeeDetailPo::all();
         if_filter!(statement = with_stream_id(param_stream_id));
-        if_filter!(statement = with_room_number(param_room_number));
-        if_filter!(statement = with_detail_type(param_detail_type));
+        if_filter!(statement = with_room_number_like(param_room_number));
+        if_filter!(statement = with_detail_type_in(param_detail_type));
         if_filter!(statement = with_create_time_between(param_create_time_star,param_create_time_end));
         if_filter!(statement = with_update_time_between(param_update_time_star,param_update_time_end));
         filter_data_enable!(statement);

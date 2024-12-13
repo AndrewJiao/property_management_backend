@@ -50,37 +50,32 @@ macro_rules! filter_data_enable {
 macro_rules! common_type {
     () => {
 
-        diesel::define_sql_function!(fn canon_create_time_type(x:diesel::sql_types::Timestamp)->diesel::sql_types::Timestamp);
-
         #[allow(dead_code)]
         #[diesel::dsl::auto_type(no_type_alias)]
         pub fn with_create_time_between<'a>(begin: &'a chrono::NaiveDateTime, end: &'a chrono::NaiveDateTime) ->_
         {
-            canon_create_time_type(create_time).between(begin,end)
+            create_time.between(begin,end)
         }
 
-        diesel::define_sql_function!(fn canon_update_time_type(x:diesel::sql_types::Timestamp)->diesel::sql_types::Timestamp);
         #[allow(dead_code)]
         #[diesel::dsl::auto_type(no_type_alias)]
         pub fn with_update_time_between<'a>(begin: &'a chrono::NaiveDateTime,end:&'a chrono::NaiveDateTime) ->_
         {
-            canon_update_time_type(update_time).between(begin, end)
+            update_time.between(begin, end)
         }
 
-        diesel::define_sql_function!(fn canon_data_enable(x:diesel::sql_types::Bool)->diesel::sql_types::Bool);
         #[allow(dead_code)]
         #[diesel::dsl::auto_type(no_type_alias)]
         pub fn with_data_enable<'a>()->_
         {
-            canon_data_enable(is_delete).eq(false)
+            is_delete.eq(false)
         }
 
-        diesel::define_sql_function!(fn canon_id_filter(x:diesel::sql_types::BigInt)->diesel::sql_types::BigInt);
         #[allow(dead_code)]
         #[diesel::dsl::auto_type(no_type_alias)]
         pub fn with_id_filter<'a>(param_id:i64)->_
         {
-            canon_id_filter(id).eq(param_id)
+            id.eq(param_id)
         }
 
     }

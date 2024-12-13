@@ -9,19 +9,17 @@ use common::{result_success, validate};
 use diesel::query_dsl::methods::OrderDsl;
 use diesel::ExpressionMethods;
 use repository::component::page::Paginate;
-use repository::owner_fee::{DetailType, OwnerFeeDetailPo};
+use repository::owner_fee::OwnerFeeDetailPo;
 use repository::schema::basic::t_owner_fee_detail::*;
-use serde::Deserialize;
-use service::owner_fee::value_object::StreamAddVal;
 use std::clone::Clone;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(scope("/owner_fee")
-        .service(get_data)
-        .service(put_data)
-        .service(add_data)
-        .service(add_datas)
-        // .service(test_add_data)
+                    .service(get_data)
+                    .service(put_data)
+                    .service(add_data)
+                    .service(add_datas)
+                // .service(test_add_data)
     );
 }
 
@@ -73,12 +71,12 @@ async fn put_data(path_param: web::Path<i64>, param: web::Json<OwnerFeeDetailUpd
     result_success!(result)
 }
 
-#[derive(Deserialize)]
-pub struct StreamAdd {
-    amount: Option<BigDecimal>,
-    detail_type: DetailType,
-    room_number: String,
-}
+// #[derive(Deserialize)]
+// pub struct StreamAdd {
+//     amount: Option<BigDecimal>,
+//     detail_type: DetailType,
+//     room_number: String,
+// }
 
 // #[post("/test")]
 // async fn test_add_data(param: web::Json<StreamAdd>) -> WebResult<HttpResponse> {
@@ -98,7 +96,7 @@ pub struct StreamAdd {
 async fn add_data(param: web::Json<OwnerFeeAssignedAddDto>) -> WebResult<HttpResponse> {
     let param = param.into_inner();
     validate!(param);
-    let result = service::owner_fee::add_assigned_data(&param.room_number,&param.version)?;
+    let result = service::owner_fee::add_assigned_data(&param.room_number, &param.version)?;
     result_success!(result)
 }
 

@@ -28,12 +28,12 @@ pub struct OwnerFeeDetailDto {
 #[serde(rename_all = "camelCase")]
 pub struct OwnerFeeDetailSearchDto {
     #[validate(length(min = 0, max = 100))]
-    #[serde(deserialize_with = "empty_string_or_null_as_none")]
+    #[serde(default, deserialize_with = "empty_string_or_null_as_none")]
     pub stream_id: Option<String>,
+    #[serde(default, deserialize_with = "empty_string_or_null_as_none")]
     #[validate(length(min = 0, max = 100))]
-    #[serde(deserialize_with = "empty_string_or_null_as_none")]
     pub room_number: Option<String>,
-    pub detail_type: Option<DetailType>,
+    pub detail_type: Option<Vec<DetailType>>,
     pub create_time_star: Option<NaiveDateTime>,
     pub create_time_end: Option<NaiveDateTime>,
     pub update_time_star: Option<NaiveDateTime>,
@@ -46,7 +46,7 @@ pub struct OwnerFeeDetailUpdateDto {
     #[validate(custom(function = "common::tools::validator::validate_big_decimal"))]
     pub amount: Option<BigDecimal>,
     #[validate(length(min = 0, max = 100))]
-    #[serde(deserialize_with = "empty_string_or_null_as_none")]
+    #[serde(default, deserialize_with = "empty_string_or_null_as_none")]
     pub comment: Option<String>,
 }
 impl ToUpdatePO for OwnerFeeDetailUpdateDto {
