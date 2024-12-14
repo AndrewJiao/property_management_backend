@@ -99,6 +99,7 @@ async fn get_find(param: web::Query<OwnerInfoSearchType>) -> WebResult<HttpRespo
                     .filter(room_number.is_not_null())
                     .filter(room_number.ne(""))
                     .filter(room_number.like(format!("%{}%", value))), room_number)
+                    .filter(is_delete.eq(false))
                 .get_results::<String>(&mut db_get_connection())?;
             result_success!(result)
         },
@@ -111,6 +112,7 @@ async fn get_find(param: web::Query<OwnerInfoSearchType>) -> WebResult<HttpRespo
                     .filter(owner_name.is_not_null())
                     .filter(owner_name.ne(""))
                     .filter(owner_name.like(format!("%{}%", value))), owner_name)
+                    .filter(is_delete.eq(false))
                 .get_results::<Option<String>>(&mut db_get_connection())?
                 .into_iter().flat_map(|e|e).collect::<Vec<String>>();
                 result_success!(result)

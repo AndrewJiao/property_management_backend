@@ -42,7 +42,7 @@ impl OwnerBasicInfoPo {
     }
 
     pub fn by_room_number(param:&str,conn : &mut Conn)-> AppResult<OwnerBasicInfoPo>{
-        Ok(Self::all().filter(room_number.eq(param)).first(conn)?)
+        Ok(Self::all().filter(room_number.eq(param)).filter(is_delete.eq(false)).first(conn)?)
     }
 
     pub fn calculate_management_fee(&self, basic_config: &HashMap<BasicPriceType, PriceBasicPo>) -> Option<BigDecimal> {

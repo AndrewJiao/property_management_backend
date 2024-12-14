@@ -3,19 +3,19 @@ use bigdecimal::BigDecimal;
 use common::data_result::{AppError, AppResult};
 use common::db_config::auto_trait::AutoOperation;
 use common::db_config::db_get_connection;
-use common::error::{BUSINESS_ERROR, BUSINESS_ERROR_OWNER_FEE_DETAIL_EXIST, DATA_NOT_EXIST};
+use common::error::{BUSINESS_ERROR, DATA_NOT_EXIST};
 use common::tools::lock::LOCK_OWNER_FEE;
 use diesel::{Connection, SaveChangesDsl};
 use itertools::Itertools;
+use log::{debug, info };
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
-use repository::owner_fee::{create_new_owner_fee_detail_stream, DetailType, OwnerFeeDetailPo, OwnerFeeDetailRecordPo, OwnerFeeDetailUpdatePo};
+use repository::owner_fee::{create_new_owner_fee_detail_stream, AllRelativeStream, DetailType, OwnerFeeDetailPo, OwnerFeeDetailRecordPo, OwnerFeeDetailUpdatePo};
 use repository::owner_info::OwnerBasicInfoPo;
 use repository::property_fee::PropertyFeeDetailPo;
 use repository::tool_table::CountType;
 use repository::{owner_fee, owner_info};
 use std::collections::HashMap;
-use log::info;
 
 pub mod value_object;
 
@@ -67,6 +67,7 @@ pub fn new_data(mut value: StreamAddVal) -> AppResult<OwnerFeeDetailPo> {
 /// 根据stream_id重新从数据库取出相关的流水数据计算余额
 ///
 pub async fn re_calculate_amount_balance(stream_record_id: &Vec<&str>) -> AppResult<HashMap<String, BigDecimal>> {
+    debug!("re_calculate_amount_balance: {:?}", stream_record_id);
     let conn = &mut db_get_connection();
 
     let all_relative_stream = OwnerFeeDetailPo::get_by_stream_record_id_list(stream_record_id, conn)?;
@@ -74,8 +75,7 @@ pub async fn re_calculate_amount_balance(stream_record_id: &Vec<&str>) -> AppRes
 
     let all_relative_record = OwnerFeeDetailRecordPo::by_record_id_list(stream_record_id, conn)?;
     let record_amount_map = &all_relative_record.into_iter().map(|e| (e.record_id, e.amount_balance)).collect::<HashMap<String, BigDecimal>>();
-
-    //异步的批量将all_relative_stream的余额更新
+    debug!("record_amount_map: {:?}", record_amount_map);
     let result = all_relative_stream_map
         .into_par_iter()
         .map(|(k, e)| {
@@ -92,18 +92,19 @@ pub async fn re_calculate_amount_balance(stream_record_id: &Vec<&str>) -> AppRes
 
 
 fn calculate(mut relative_stream: Vec<OwnerFeeDetailPo>, p_amount: BigDecimal) -> HashMap<String, BigDecimal> {
+    debug!("relative_stream: {:?} record_amount: {:?}", relative_stream , p_amount);
     let mut p_amount_balance = p_amount;
     assert!(relative_stream.len() > 0);
     let mut map = HashMap::new();
     //根据时间倒序排序
     relative_stream.sort_by(|a, b| b.stream_id.cmp(&a.stream_id));
     for detail_po in relative_stream {
+        map.insert(detail_po.stream_id.clone(), p_amount_balance.clone());
         if detail_po.detail_type == DetailType::SettlementFee || detail_po.detail_type == DetailType::PreStoreFee {
             p_amount_balance = p_amount_balance + detail_po.amount;
         } else {
             p_amount_balance = p_amount_balance - detail_po.amount;
         }
-        map.insert(detail_po.stream_id.clone(), p_amount_balance.clone());
     }
     map
 }
@@ -111,13 +112,16 @@ fn calculate(mut relative_stream: Vec<OwnerFeeDetailPo>, p_amount: BigDecimal) -
 ///
 /// 根据房间号和版本生成指定的物业费
 ///
-pub fn add_assigned_data(param_room_number:&str,param_version:&str)->AppResult<OwnerFeeDetailPo>{
+pub fn add_data(param_room_number:&str, param_version:&str) ->AppResult<OwnerFeeDetailPo>{
+    debug!("add_data: {},{}", param_room_number, param_version);
     let conn = &mut db_get_connection();
     //查询是否有物业费
     let property_fee = PropertyFeeDetailPo::by_room_number_and_version(param_room_number, param_version,conn)?;
     let exist_owner_fees = OwnerFeeDetailPo::by_room_number_and_relative_order_numbers(&vec![(param_room_number, param_version)],conn)?;
+    debug!("exist_owner_fees: {:?}", exist_owner_fees);
+    //有就直接返回
     if exist_owner_fees.len() > 0 {
-        return Err(BUSINESS_ERROR_OWNER_FEE_DETAIL_EXIST());
+        return Ok(exist_owner_fees.into_iter().next().unwrap());
     }
     self::new_data(StreamAddVal {
         stream_type: DetailType::ManagementFee,
@@ -130,7 +134,8 @@ pub fn add_assigned_data(param_room_number:&str,param_version:&str)->AppResult<O
 /// 基于版本号生成数据
 ///
 
-pub fn add_assigned_datas(param_version:&str)->AppResult<()>{
+pub fn add_datas(param_version:&str) ->AppResult<()>{
+    debug!("add_datas: {}", param_version);
     let conn = &mut db_get_connection();
     //查询是否有物业费
     let property_fee = PropertyFeeDetailPo::by_version(param_version,conn)?;
@@ -168,3 +173,42 @@ impl Contains for Vec<OwnerFeeDetailPo>  {
     }
 }
 
+///
+/// 手动添加数据，预存
+///
+pub fn manually_add_data(amount:BigDecimal,room_number:String) -> AppResult<OwnerFeeDetailPo> {
+    debug!("manually_add_data: {}", amount);
+    let detail_type = DetailType::PreStoreFee;
+    //没有就抛出错
+    OwnerBasicInfoPo::by_room_number(&room_number, &mut db_get_connection())?;
+
+    let result = new_data(StreamAddVal {
+        stream_type: detail_type,
+        room_number,
+        amount: Some(amount),
+        //手动添添加没有单号，先固定-
+        relative_order_number: "-".to_string(),
+    })?;
+    Ok(result)
+}
+
+///
+/// 手动结算，生成指定流水的负向流水
+///
+pub fn manually_add_settle_data(p_stream_id:String) -> AppResult<OwnerFeeDetailPo> {
+    debug!("manually_add_settle_data: {}", p_stream_id);
+    let detail_type = DetailType::SettlementFee;
+    //查询要结算的流水判断状态是否可以结算(目前只有物业费和滞纳金可以结算)
+    let detail_types = vec![DetailType::ManagementFee, DetailType::LiquidatedDamages];
+    let AllRelativeStream{common_stream, deduction_streams } = OwnerFeeDetailPo::all_relative_stream_by_stream_id(p_stream_id, detail_types, &mut db_get_connection())?;
+   if !deduction_streams.is_empty(){
+         return Err(BUSINESS_ERROR("已有结算流水", 1001));
+    }
+    let result = new_data(StreamAddVal {
+        stream_type: detail_type,
+        room_number: common_stream.room_number,
+        amount: Some(common_stream.amount),
+        relative_order_number: common_stream.stream_id,
+    })?;
+    Ok(result)
+}

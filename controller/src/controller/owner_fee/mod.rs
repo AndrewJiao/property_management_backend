@@ -1,25 +1,27 @@
-use crate::dto::owner_fee::{OwnerFeeAssignedAddDto, OwnerFeeAssignedAddDtos, OwnerFeeDetailResultDto, OwnerFeeDetailSearchDto, OwnerFeeDetailUpdateDto};
+use crate::dto::owner_fee::{OwnerFeeDetailResultDto, OwnerFeeDetailSearchDto, OwnerFeeDetailUpdateDto, StreamAddDetailType};
 use crate::dto::ToUpdatePO;
 use actix_web::web::scope;
 use actix_web::{get, post, put, web, HttpResponse};
 use bigdecimal::{BigDecimal, Zero};
 use common::data_result::{PaginateSearch, WebResult};
 use common::db_config::db_get_connection;
+use common::error::BaseError::AnyhowError;
+use common::error::PARAM_NOT_SUPPORT;
 use common::{result_success, validate};
 use diesel::query_dsl::methods::OrderDsl;
 use diesel::ExpressionMethods;
+use log::debug;
 use repository::component::page::Paginate;
 use repository::owner_fee::OwnerFeeDetailPo;
 use repository::schema::basic::t_owner_fee_detail::*;
 use std::clone::Clone;
+use std::collections::HashSet;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(scope("/owner_fee")
-                    .service(get_data)
-                    .service(put_data)
-                    .service(add_data)
-                    .service(add_datas)
-                // .service(test_add_data)
+        .service(get_data)
+        .service(put_data)
+        .service(add_data)
     );
 }
 
@@ -44,15 +46,22 @@ async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpResponse> 
             .per_page(param.limit())
             .load_and_count_pages::<OwnerFeeDetailPo>(&mut db_get_connection())?;
 
-    let record_ids = &result.iter().map(|e| e.record_id.as_str()).collect::<Vec<&str>>();
-    let amount_map = &service::owner_fee::re_calculate_amount_balance(record_ids).await?;
+    let record_ids = result.iter().map(|e| e.record_id.as_str()).collect::<Vec<&str>>();
+    let amount_map = &service::owner_fee::re_calculate_amount_balance(&record_ids).await?;
+    debug!("amount_map = {:?}", amount_map);
+    //查询关联的流水
+    let stream_id_list = result.iter().map(|e| e.stream_id.as_str()).collect();
+    let all_relative_stream_data = OwnerFeeDetailPo::by_relative_order_number(&stream_id_list)?;
+    let all_hash_relative_stream_data_id:HashSet<String>  = all_relative_stream_data.into_iter()
+        .map(|e| (e.related_order_number ))
+        .collect();
 
     let result_dto = result.into_iter()
         .map(|e| {
             let v_amount_balance = amount_map.get(e.stream_id.as_str())
                 .unwrap_or(&BigDecimal::zero())
                 .clone();
-            OwnerFeeDetailResultDto::new(e, v_amount_balance)
+            OwnerFeeDetailResultDto::new(e, v_amount_balance,&all_hash_relative_stream_data_id)
         })
         .collect::<Vec<OwnerFeeDetailResultDto>>();
 
@@ -71,39 +80,34 @@ async fn put_data(path_param: web::Path<i64>, param: web::Json<OwnerFeeDetailUpd
     result_success!(result)
 }
 
-// #[derive(Deserialize)]
-// pub struct StreamAdd {
-//     amount: Option<BigDecimal>,
-//     detail_type: DetailType,
-//     room_number: String,
-// }
-
-// #[post("/test")]
-// async fn test_add_data(param: web::Json<StreamAdd>) -> WebResult<HttpResponse> {
-//     service::owner_fee::new_data(
-//         StreamAddVal {
-//             stream_type: param.detail_type.clone(),
-//             room_number: param.room_number.clone(),
-//             amount: param.amount.clone(),
-//             relative_order_number: "test".to_string(),
-//         }
-//     )?;
-//     result_success!()
-// }
-
-
 #[post("/data")]
-async fn add_data(param: web::Json<OwnerFeeAssignedAddDto>) -> WebResult<HttpResponse> {
-    let param = param.into_inner();
-    validate!(param);
-    let result = service::owner_fee::add_assigned_data(&param.room_number, &param.version)?;
-    result_success!(result)
-}
-
-#[post("/datas")]
-async fn add_datas(param: web::Json<OwnerFeeAssignedAddDtos>) -> WebResult<HttpResponse> {
-    let param = param.into_inner();
-    validate!(param);
-    let _ = service::owner_fee::add_assigned_datas(&param.version)?;
-    result_success!()
+async fn add_data(param: web::Json<serde_json::Value>) -> WebResult<HttpResponse>
+where
+{
+    let dto: StreamAddDetailType = param.into_inner().into();
+    match dto {
+        StreamAddDetailType::ManagementFee(e) => {
+            validate!(e);
+            let result = service::owner_fee::add_data(&e.room_number, &e.version)?;
+            result_success!(result)
+        }
+        StreamAddDetailType::ManagementFeeBatch(e) => {
+            validate!(e);
+            service::owner_fee::add_datas(&e.version)?;
+            result_success!()
+        }
+        StreamAddDetailType::PreStoreFee(e) => {
+            validate!(e);
+            let result = service::owner_fee::manually_add_data(e.amount, e.room_number)?;
+            result_success!(result)
+        }
+        StreamAddDetailType::SettlementFee(e) => {
+            validate!(e);
+            let result = service::owner_fee::manually_add_settle_data(e.stream_id)?;
+            result_success!(result)
+        }
+        StreamAddDetailType::NoMatch => {
+            Err(AnyhowError(PARAM_NOT_SUPPORT()))
+        }
+    }
 }

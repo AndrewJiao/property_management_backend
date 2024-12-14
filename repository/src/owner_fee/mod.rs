@@ -42,8 +42,40 @@ pub struct OwnerFeeDetailPo {
     pub update_time: chrono::NaiveDateTime,
     pub is_delete: bool,
     pub record_id: String,
+    //这里时版本号
     pub related_order_number: String,
 }
+
+pub struct AllRelativeStream{
+    pub common_stream:OwnerFeeDetailPo,
+    pub deduction_streams:Vec<OwnerFeeDetailPo>,
+}
+impl AllRelativeStream {
+    pub fn has_deduction(&self) -> bool {
+        !self.deduction_streams.is_empty()
+    }
+
+}
+
+impl OwnerFeeDetailPo {
+    pub fn all_relative_stream_by_stream_id(p_stream_id: String, p_detail_types: Vec<DetailType>,conn: &mut Conn) -> AppResult<AllRelativeStream> {
+        let common_stream = OwnerFeeDetailPo::all()
+            .filter(stream_id.eq(p_stream_id.as_str()))
+            .filter(detail_type.eq_any(p_detail_types))
+            .first::<OwnerFeeDetailPo>(conn)?;
+
+        //看看是否已有抵扣的流水
+        let deduction_stream = OwnerFeeDetailPo::all()
+            .filter(related_order_number.eq(p_stream_id.as_str()))
+            .load::<OwnerFeeDetailPo>(conn)?;
+        Ok(AllRelativeStream{
+            common_stream,
+            deduction_streams: deduction_stream,
+        })
+
+    }
+}
+
 common_type!();
 
 #[auto_type(no_type_alias)]
@@ -105,12 +137,22 @@ impl OwnerFeeDetailPo {
         let mut boxed_query= OwnerFeeDetailPo::all();
         boxed_query = params.iter().fold(boxed_query,|query,(p_room_number,p_related_order_number,)|{
             query.or_filter(room_number.eq(p_room_number).and(related_order_number.eq(p_related_order_number)))
-        });
+        }).filter(is_delete.eq(false));
         let result = boxed_query.get_results(conn)?;
         Ok(result)
     }
-}
 
+    pub fn by_relative_order_number(p_relative_number:&Vec<&str>) -> AppResult<Vec<OwnerFeeDetailPo>> {
+        let result = OwnerFeeDetailPo::all()
+            .filter(related_order_number.eq_any(p_relative_number))
+            .filter(is_delete.eq(false))
+            .get_results(&mut db_get_connection())?;
+        Ok(result)
+
+
+    }
+
+}
 impl Eq for OwnerFeeDetailPo {}
 
 impl PartialEq<Self> for OwnerFeeDetailPo {
@@ -204,6 +246,31 @@ pub enum DetailType {
 }
 
 
+impl DetailType{
+    pub fn desc(&self) ->&'static str{
+        match self {
+            DetailType::ManagementFee => "物业费",
+            DetailType::LiquidatedDamages => "滞纳金",
+            DetailType::PreStoreFee => "预存",
+            DetailType::SettlementFee => "结算",
+        }
+    }
+    pub fn calculate_type(&self) ->CalculateType{
+        match self {
+            DetailType::ManagementFee => CalculateType::Add,
+            DetailType::LiquidatedDamages => CalculateType::Add,
+            DetailType::PreStoreFee => CalculateType::Subtract,
+            DetailType::SettlementFee => CalculateType::Subtract,
+        }
+    }
+}
+#[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub enum CalculateType{
+    Add,
+    Subtract,
+}
+
 
 const STREAM_ID_PREFIX: &'static str = "HSMZ";
 #[derive(Debug, Deserialize, Serialize, FromSqlRow)]
@@ -239,13 +306,6 @@ impl ToSql<Text, Pg> for StreamId {
         ToSql::<Text, Pg>::to_sql(&self.content, out)
     }
 }
-
-// impl FromSqlRow<Text, Pg> for StreamId {
-//     fn build_from_row<'a>(row: &impl Row<'a, Pg, Field<'a> = Text>) -> diesel::deserialize::Result<Self> {
-//         row.get(1)?
-//         Ok(stream_id_str.into())
-//     }
-// }
 
 impl Expression for StreamId {
     type SqlType = Text;

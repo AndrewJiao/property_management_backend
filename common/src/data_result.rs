@@ -105,4 +105,5 @@ impl AppBusinessError {
 
 pub type AppResult<T> = anyhow::Result<T, anyhow::Error>;
 pub type AppError = anyhow::Error;
+
 pub type WebResult<T> = Result<T, BaseError>;

@@ -18,8 +18,11 @@ impl StreamAddVal {
                 self.amount = Some(amount.clone());
                 amount_balance + &amount
             }
-            DetailType::ManagementFee | DetailType::SettlementFee | DetailType::PreStoreFee => {
+            DetailType::ManagementFee => {
                 amount_balance + self.amount.as_ref().expect("need amount")
+            }
+            DetailType::PreStoreFee | DetailType::SettlementFee => {
+                amount_balance - self.amount.as_ref().expect("need amount")
             }
         }
     }

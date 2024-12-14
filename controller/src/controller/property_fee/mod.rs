@@ -1,12 +1,18 @@
-use crate::dto::property_fee::{PropertyFeeDetailInitDto, PropertyFeeDetailSearchDto, PropertyFeeDetailUpdateDto};
+use crate::dto::property_fee::{PropertyFeeDetailInitDto, PropertyFeeDetailResultDto, PropertyFeeDetailSearchDto, PropertyFeeDetailUpdateDto};
 use actix_web::web::scope;
 use actix_web::{delete, get, post, put, web, HttpResponse};
 use common::data_result::{PaginateSearch, WebResult};
 use common::db_config::db_get_connection;
+use common::error::BaseError::AnyhowError;
+use common::error::{BUSINESS_ERROR_OWNER_FEE_DETAIL_EXIST };
 use common::{result_success, validate};
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper, TextExpressionMethods};
+use log::debug;
 use repository::component::page::Paginate;
+use repository::owner_fee::OwnerFeeDetailPo;
 use repository::property_fee::PropertyFeeDetailPo;
+use std::collections::HashMap;
+use std::ops::Deref;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(scope("/property_fee")
@@ -47,7 +53,20 @@ async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpResponse> 
             statement.select(PropertyFeeDetailPo::as_select()), update_time.desc())
             .paginate(param.current_page()).per_page(param.limit())
             .load_and_count_pages(&mut db_get_connection())?;
-    result_success!(result, param.produce_page_result(total))
+    // 获取关联单号
+    let owner_fee_param = result.iter()
+        .flat_map(|e| {
+            match (&e.room_number, &e.record_version) {
+                (Some(p_room_number), Some(p_record_version)) => Some((p_room_number.as_ref(), p_record_version.as_ref())),
+                _ => None
+            }
+        }).collect();
+    let relative_owner_fee: HashMap<String, String> = OwnerFeeDetailPo::by_room_number_and_relative_order_numbers(&owner_fee_param, &mut db_get_connection())?
+        .into_iter().map(|e| (format!("{}-{}", e.room_number, e.related_order_number), e.stream_id)).collect();
+
+    let result_dto = PropertyFeeDetailResultDto::from_vec(result, &relative_owner_fee);
+
+    result_success!(result_dto, param.produce_page_result(total))
 }
 
 ///
@@ -75,9 +94,19 @@ async fn init_data(param: web::Json<PropertyFeeDetailInitDto>) -> WebResult<Http
 ///
 #[delete("/data/{data_id}")]
 async fn delete_data(path_param: web::Path<i64>) -> WebResult<HttpResponse> {
+    let conn = &mut db_get_connection();
+    let p_id = path_param.into_inner();
+    let po = PropertyFeeDetailPo::by_id(p_id).first::<PropertyFeeDetailPo>(conn)?;
+    let exist_owner_fees = OwnerFeeDetailPo::by_room_number_and_relative_order_numbers(&vec![(po.room_number.unwrap().deref(), po.record_version.unwrap().deref())],conn)?
+        .into_iter().next();
+    debug!("exist_owner_fees: {:?}", exist_owner_fees);
+    if exist_owner_fees.is_some() {
+        return Err(AnyhowError(BUSINESS_ERROR_OWNER_FEE_DETAIL_EXIST()));
+    }
+
     diesel::update(table)
-        .filter(id.eq(path_param.into_inner()))
+        .filter(id.eq(p_id))
         .set((is_delete.eq(true), delete_at.eq(chrono::Local::now().naive_local())))
-        .execute(&mut db_get_connection())?;
+        .execute(conn)?;
     result_success!()
 }

@@ -16,7 +16,6 @@ common_type!();
 #[derive(Selectable, Queryable, Serialize, Deserialize)]
 #[diesel(table_name = t_property_fee_detail)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
-#[serde(rename_all = "camelCase")]
 pub struct PropertyFeeDetailPo {
     pub id: i64,
     pub room_number: Option<String>,
@@ -40,23 +39,15 @@ pub struct PropertyFeeDetailPo {
     pub comment: Option<String>,
     pub total_fee: Option<BigDecimal>,
 }
-// define_sql_function! {fn canon_room_number(x:Option<Text>)->Option<Text>}
-// #[auto_type(no_type_alias)]
-// fn with_room_number(value:&str)->_{
-//     canon_room_number(room_number).eq(value)
-// }
-
-// define_sql_function! {fn canon_version(x:Text)->Text}
-// #[auto_type(no_type_alias)]
-// fn with_version(value:&str)->_{
-//     canon_version(record_version).eq(value)
-// }
 
 
 type BoxedQuery<'a> = t_property_fee_detail::BoxedQuery<'a,Pg,crate::SqlType<PropertyFeeDetailPo>>;
 impl PropertyFeeDetailPo{
     fn all<'a>() -> BoxedQuery<'a>{
         table.select(PropertyFeeDetailPo::as_select()).into_boxed()
+    }
+    pub fn by_id<'a>(p_id:i64) -> BoxedQuery<'a> {
+        Self::all().filter(with_id_filter(p_id))
     }
 
     ///

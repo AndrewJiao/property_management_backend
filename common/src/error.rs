@@ -37,10 +37,15 @@ pub enum BaseError {
     #[error("business error : {0}")]
     BusinessError(#[from] AppBusinessError),
 
-    #[error("anyhow error :{0}")]
+    #[error("error :{0}")]
     AnyhowError(#[from] anyhow::Error),
 }
 
+// impl From<anyhow::Error> for BaseError {
+//     fn from(value: Error) -> Self {
+//         BaseError::AnyhowError(value)
+//     }
+// }
 
 impl error::ResponseError for BaseError {
     fn error_response(&self) -> HttpResponse<BoxBody> {
@@ -68,5 +73,6 @@ pub const BUSINESS_ERROR_OWNER_FEE_DETAIL_EXIST: fn() -> anyhow::Error = || anyh
 pub const APP_ERROR: fn(&str) -> anyhow::Error = |msg| anyhow!("system_error = {}",msg);
 //common
 pub const DATA_NOT_EXIST: fn() -> anyhow::Error = || anyhow!("errorMsg = 数据不存在 code = 00001");
+pub const DATA_HAS_EXIST: fn() -> anyhow::Error = || anyhow!("errorMsg = 数据已存在 code = 00002");
 
 
