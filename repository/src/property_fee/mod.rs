@@ -16,6 +16,7 @@ common_type!();
 #[derive(Selectable, Queryable, Serialize, Deserialize)]
 #[diesel(table_name = t_property_fee_detail)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
+#[serde(rename_all = "camelCase")]
 pub struct PropertyFeeDetailPo {
     pub id: i64,
     pub room_number: Option<String>,

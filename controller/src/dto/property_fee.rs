@@ -148,7 +148,6 @@ impl PropertyFeeDetailResultDto{
                 let key = &format!("{}-{}", room_num, record);
                 e.related_order_number = stream_map.get(key) .map(|e| e.to_string());
             }
-
         });
         results
     }
