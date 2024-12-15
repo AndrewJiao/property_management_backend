@@ -1,10 +1,10 @@
 use crate::dto::property_fee::{PropertyFeeDetailInitDto, PropertyFeeDetailResultDto, PropertyFeeDetailSearchDto, PropertyFeeDetailUpdateDto};
 use actix_web::web::scope;
 use actix_web::{delete, get, post, put, web, HttpResponse};
-use common::data_result::{PaginateSearch, WebResult};
+use common::data_result::{AppResult, PaginateSearch, WebResult};
 use common::db_config::db_get_connection;
 use common::error::BaseError::AnyhowError;
-use common::error::{BUSINESS_ERROR_OWNER_FEE_DETAIL_EXIST };
+use common::error::BUSINESS_ERROR_OWNER_FEE_DETAIL_EXIST;
 use common::{result_success, validate};
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper, TextExpressionMethods};
 use log::debug;
@@ -20,6 +20,7 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         .service(put_data)
         .service(init_data)
         .service(delete_data)
+        .service(export_data)
     );
 }
 
@@ -31,7 +32,26 @@ use service::property_fee::do_edit_update;
 #[get("/data")]
 async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpResponse> {
     let search_param: PropertyFeeDetailSearchDto = param.convert_param()?;
-    validate!(param,search_param);
+    validate!(param, search_param);
+
+    let (result, total) = do_search(param.current_page(), param.limit(), &search_param)?;
+    // 获取关联单号
+    let owner_fee_param = result.iter()
+        .flat_map(|e| {
+            match (&e.room_number, &e.record_version) {
+                (Some(p_room_number), Some(p_record_version)) => Some((p_room_number.as_ref(), p_record_version.as_ref())),
+                _ => None
+            }
+        }).collect();
+    let relative_owner_fee: HashMap<String, String> = OwnerFeeDetailPo::by_room_number_and_relative_order_numbers(&owner_fee_param, &mut db_get_connection())?
+        .into_iter().map(|e| (format!("{}-{}", e.room_number, e.related_order_number), e.stream_id)).collect();
+
+    let result_dto = PropertyFeeDetailResultDto::from_vec(result, &relative_owner_fee);
+
+    result_success!(result_dto, param.produce_page_result(total))
+}
+
+fn do_search(current_page: i64, page_size: i64, search_param: &PropertyFeeDetailSearchDto) -> AppResult<(Vec<PropertyFeeDetailPo>, i64)> {
     let mut statement = table.into_boxed();
     statement = statement
         .if_filter_tow_param(
@@ -51,22 +71,9 @@ async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpResponse> 
     let (result, total) =
         QueryDsl::order(
             statement.select(PropertyFeeDetailPo::as_select()), update_time.desc())
-            .paginate(param.current_page()).per_page(param.limit())
+            .paginate(current_page).per_page(page_size)
             .load_and_count_pages(&mut db_get_connection())?;
-    // 获取关联单号
-    let owner_fee_param = result.iter()
-        .flat_map(|e| {
-            match (&e.room_number, &e.record_version) {
-                (Some(p_room_number), Some(p_record_version)) => Some((p_room_number.as_ref(), p_record_version.as_ref())),
-                _ => None
-            }
-        }).collect();
-    let relative_owner_fee: HashMap<String, String> = OwnerFeeDetailPo::by_room_number_and_relative_order_numbers(&owner_fee_param, &mut db_get_connection())?
-        .into_iter().map(|e| (format!("{}-{}", e.room_number, e.related_order_number), e.stream_id)).collect();
-
-    let result_dto = PropertyFeeDetailResultDto::from_vec(result, &relative_owner_fee);
-
-    result_success!(result_dto, param.produce_page_result(total))
+    Ok((result,total))
 }
 
 ///
@@ -109,4 +116,31 @@ async fn delete_data(path_param: web::Path<i64>) -> WebResult<HttpResponse> {
         .set((is_delete.eq(true), delete_at.eq(chrono::Local::now().naive_local())))
         .execute(conn)?;
     result_success!()
+}
+
+///
+/// 导出
+///
+#[get("/export")]
+async fn export_data(param: web::Query<PaginateSearch>) -> WebResult<HttpResponse> {
+    let search_param: PropertyFeeDetailSearchDto = param.convert_param()?;
+    validate!(param, search_param);
+
+    let mut all_result = Vec::new();
+    let mut current_page = 1;
+    while let Ok((result, _)) = do_search(current_page, 10, &search_param) {
+        if result.is_empty() {
+            break;
+        }
+        all_result.extend(result);
+        current_page += 1;
+    }
+
+        let buffer = service::property_fee::excel::build_work_book(all_result).unwrap();
+
+
+    Ok(HttpResponse::Ok()
+        .content_type("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        .insert_header(("Content-Disposition", "attachment; filename=\"example.xlsx\""))
+        .body(buffer))
 }

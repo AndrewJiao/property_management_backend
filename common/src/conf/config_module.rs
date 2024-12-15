@@ -30,6 +30,12 @@ pub struct AppConfig {
     pub liquidated_damages_rate: BigDecimal
 }
 
+#[derive(Debug, Deserialize)]
+pub struct ExcelConfig {
+    pub basic_height: u32,
+    pub basic_width: u32,
+}
+
 ///
 /// 数据库配置
 ///
@@ -51,6 +57,7 @@ pub struct Settings {
     pub web_config: WebConfig,
     pub databases: DatabasesConfig,
     pub app_config: AppConfig,
+    pub excel_config: ExcelConfig,
 }
 impl Settings {
     pub fn new() -> Result<Self, ConfigError> {

@@ -46,3 +46,6 @@ base64 = "0.22.1"
 itertools = "0.13.0"
 tokio = { version = "1.42.0", features = ["full"] }
 rayon = { version = "1.8"}
+#xlsxwriter = "0.6.1"
+rust_xlsxwriter = "0.80.0"
+futures = "0.3.31"

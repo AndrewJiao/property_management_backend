@@ -18,3 +18,9 @@ serde_json.workspace = true
 itertools.workspace = true
 rayon.workspace = true
 tokio.workspace = true
+
+#xlsxwriter.workspace = true
+rust_xlsxwriter.workspace = true
+futures.workspace = true
+
+lazy_static.workspace = true

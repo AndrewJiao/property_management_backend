@@ -21,3 +21,6 @@ app_config:
   number_min: -100000000
   record_max: 2 #生成多少条流水就创建新的记录
   liquidated_damages_rate: 0.1 #违约金比例
+excel_config:
+  basic_height: 31.5
+  basic_width: 9
