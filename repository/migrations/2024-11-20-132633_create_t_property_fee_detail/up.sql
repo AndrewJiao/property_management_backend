@@ -7,6 +7,7 @@ create table if not exists t_property_fee_detail
     room_owner_name             varchar,
     management_fee              numeric(10, 2),
     part_fee                    numeric(10, 2),
+    lift_fee                    numeric(10, 2)
     machine_room_renovation_fee numeric(10, 2),
     electric_fee                numeric(10, 2),
     electric_share_fee          numeric(10, 2),
@@ -22,7 +23,7 @@ create table if not exists t_property_fee_detail
     is_delete                   boolean   default false not null,
     delete_at                   timestamp,
     comment                     text,
-    total_fee                   numeric(10, 2)
+    total_fee                   numeric(10, 2),
     );
 
 comment on column t_property_fee_detail.room_number is '房间号';

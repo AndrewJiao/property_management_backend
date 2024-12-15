@@ -15,6 +15,8 @@ pub struct PropertyFeeDetailUpdateDto {
     #[validate(custom(function = "common::tools::validator::validate_big_decimal"))]
     pub part_fee: Option<BigDecimal>,
     #[validate(custom(function = "common::tools::validator::validate_big_decimal"))]
+    pub lift_fee: Option<BigDecimal>,
+    #[validate(custom(function = "common::tools::validator::validate_big_decimal"))]
     pub machine_room_renovation_fee: Option<BigDecimal>,
     #[validate(custom(function = "common::tools::validator::validate_big_decimal"))]
     pub electric_fee: Option<BigDecimal>,
@@ -57,6 +59,7 @@ impl ToUpdatePO for PropertyFeeDetailUpdateDto {
             management_fee: self.management_fee.as_ref(),
             part_fee: self.part_fee.as_ref(),
             machine_room_renovation_fee: self.machine_room_renovation_fee.as_ref(),
+            lift_fee: self.lift_fee.as_ref(),
             electric_fee: self.electric_fee.as_ref(),
             electric_share_fee: self.electric_share_fee.as_ref(),
             water_fee: self.water_fee.as_ref(),
@@ -89,6 +92,7 @@ pub struct PropertyFeeDetailResultDto {
     pub room_owner_name: Option<String>,
     pub management_fee: Option<BigDecimal>,
     pub part_fee: Option<BigDecimal>,
+    pub lift_fee: Option<BigDecimal>,
     pub machine_room_renovation_fee: Option<BigDecimal>,
     pub electric_fee: Option<BigDecimal>,
     pub electric_share_fee: Option<BigDecimal>,
@@ -115,6 +119,7 @@ impl From<PropertyFeeDetailPo> for PropertyFeeDetailResultDto{
             room_owner_name: po.room_owner_name,
             management_fee: po.management_fee,
             part_fee: po.part_fee,
+            lift_fee: po.lift_fee,
             machine_room_renovation_fee: po.machine_room_renovation_fee,
             electric_fee: po.electric_fee,
             electric_share_fee: po.electric_share_fee,

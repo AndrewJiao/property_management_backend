@@ -8,9 +8,12 @@ common = { path = "../common" }
 management_macro = { path = "../management_macro" }
 diesel.workspace = true
 diesel-derive-enum.workspace = true
-log.workspace = true
 chrono.workspace = true
 bigdecimal.workspace = true
 pg_bigdecimal.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+
+regex.workspace = true
+
+log.workspace = true

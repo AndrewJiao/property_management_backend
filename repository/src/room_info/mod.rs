@@ -4,8 +4,11 @@ use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use diesel::{AsChangeset, Identifiable, Insertable, Queryable, Selectable};
 use management_macro::AutoOperation;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::str::FromStr;
+use log::debug;
 
 #[derive(Queryable, Selectable, Deserialize, Serialize)]
 #[diesel(table_name = t_room_info_detail)]
@@ -29,6 +32,24 @@ pub struct RoomInfoDetailPo {
     pub is_delete: bool,
     pub room_owner_name: Option<String>,
     pub delete_at: Option<NaiveDateTime>,
+}
+
+impl RoomInfoDetailPo {
+    pub fn calculate_lift(&self, basic: Option<BigDecimal>, plus: Option<BigDecimal>) -> Option<BigDecimal> {
+        //写一个正则，匹配A081,B203这种门牌号
+        let pattern = &Regex::new(r"[A-Z](?P<floor>\d)\d{2}").unwrap();
+
+        if let (Some(basic), Some(plus)) = (basic, plus) {
+            if let Some(ref room_num) = self.room_number {
+                if let Some(ref capture) = pattern.captures(room_num) {
+                    let floor_num = i32::from_str(&capture["floor"]).unwrap();
+                    debug!("room_number:{} floor_num:{} plus:{} basic:{}", room_num,floor_num, plus, basic);
+                    return Some(basic * (floor_num * plus));
+                }
+            }
+        }
+        None
+    }
 }
 
 #[derive(Insertable, Serialize, AutoOperation)]
@@ -80,19 +101,21 @@ impl<'a> RoomInfoDetailUpdatePo<'a> {
 }
 
 impl RoomInfoDetailPo {
-    pub fn calculate_electric(&self, basic_config: &HashMap<BasicPriceType, PriceBasicPo>) -> Option<(BigDecimal, BigDecimal)> {
+    pub fn calculate_electric(&self, basic_config: &HashMap<BasicPriceType, PriceBasicPo>, room_square: Option<&BigDecimal>) -> (Option<BigDecimal>, Option<BigDecimal>) {
         let electric_price = basic_config.get(&BasicPriceType::ElectricFee).map(|info| info.basic_number.clone()).flatten();
         let electric_share_price = basic_config.get(&BasicPriceType::ElectricShareFee).map(|info| info.basic_number.clone()).flatten();
 
-        if let (Some(electric_num), Some(electric_pri), Some(electric_share_pri))
-            = (self.electricity_meter_sub, electric_price, electric_share_price)
+        let mut ele_total = None;
+        if let (Some(electric_num), Some(electric_pri)) = (self.electricity_meter_sub, electric_price)
         {
-            let ele_total = electric_pri * electric_num;
-            let ele_share = ele_total.clone() * electric_share_pri;
-            Some((ele_total, ele_share))
-        } else {
-            None
+            ele_total =  Some(electric_pri * electric_num)
         }
+        let mut ele_share =None;
+        if let (Some(share_price), Some(square)) = (electric_share_price, room_square)
+        {
+            ele_share = Some(share_price * square);
+        };
+        (ele_total, ele_share)
     }
 
     pub fn calculate_water(&self, basic_config: &HashMap<BasicPriceType, PriceBasicPo>) -> Option<(BigDecimal, BigDecimal)> {

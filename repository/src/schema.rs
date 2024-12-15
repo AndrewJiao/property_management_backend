@@ -118,6 +118,7 @@ pub mod basic {
             delete_at -> Nullable<Timestamp>,
             comment -> Nullable<Text>,
             total_fee -> Nullable<Numeric>,
+            lift_fee -> Nullable<Numeric>,
         }
     }
 

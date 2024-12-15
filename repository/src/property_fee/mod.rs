@@ -38,6 +38,7 @@ pub struct PropertyFeeDetailPo {
     pub delete_at: Option<NaiveDateTime>,
     pub comment: Option<String>,
     pub total_fee: Option<BigDecimal>,
+    pub lift_fee: Option<BigDecimal>,
 }
 
 
@@ -79,6 +80,7 @@ pub struct PropertyFeeDetailUpdatePo<'a> {
     pub management_fee: Option<&'a BigDecimal>,
     pub part_fee: Option<&'a BigDecimal>,
     pub machine_room_renovation_fee: Option<&'a BigDecimal>,
+    pub lift_fee: Option<&'a BigDecimal>,
     pub electric_fee: Option<&'a BigDecimal>,
     pub electric_share_fee: Option<&'a BigDecimal>,
     pub water_fee: Option<&'a BigDecimal>,
@@ -101,6 +103,9 @@ impl FeeCalculator for PropertyFeeDetailUpdatePo<'_> {
         }
         if let Some(v_part_fee) = self.part_fee {
             v_total_fee += v_part_fee;
+        }
+        if let Some(v_lift_fee) = self.lift_fee {
+            v_total_fee += v_lift_fee;
         }
         if let Some(v_machine_room_renovation_fee) = self.machine_room_renovation_fee {
             v_total_fee += v_machine_room_renovation_fee;
@@ -134,6 +139,7 @@ pub struct PropertyFeeDetailInsertPo<'a> {
     pub room_owner_name: Option<&'a str>,
     pub management_fee: Option<BigDecimal>,
     pub part_fee: Option<BigDecimal>,
+    pub lift_fee: Option<BigDecimal>,
     pub machine_room_renovation_fee: Option<BigDecimal>,
     pub electric_fee: Option<BigDecimal>,
     pub electric_share_fee: Option<BigDecimal>,
@@ -160,6 +166,9 @@ impl PropertyFeeDetailInsertPo<'_>{
         }
         if let Some(ref v_part_fee) = self.part_fee {
             v_total_fee += v_part_fee;
+        }
+        if let Some(ref v_lift_fee) = self.lift_fee {
+            v_total_fee += v_lift_fee;
         }
         if let Some(ref v_machine_room_renovation_fee) = self.machine_room_renovation_fee {
             v_total_fee += v_machine_room_renovation_fee;

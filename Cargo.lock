@@ -2039,6 +2039,7 @@ dependencies = [
  "log",
  "management_macro",
  "pg_bigdecimal",
+ "regex",
  "serde",
  "serde_json",
 ]

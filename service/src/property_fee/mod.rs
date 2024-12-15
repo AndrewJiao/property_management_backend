@@ -11,6 +11,7 @@ use repository::price_basic::{BasicPriceType, PriceBasicConfigGet, PriceBasicPo}
 use repository::property_fee::{PropertyFeeDetailInsertPo, PropertyFeeDetailPo, PropertyFeeDetailUpdatePo};
 use repository::room_info::RoomInfoDetailPo;
 use std::collections::{HashMap, HashSet};
+use bigdecimal::BigDecimal;
 
 ///
 /// 编辑的过程中尝试重新计算
@@ -78,13 +79,19 @@ pub fn init_data(version: Option<&str>) -> AppResult<()> {
                 None => { None }
                 Some(owner_info) => {
                     let machine_room_fee = basic_price_config.get(&BasicPriceType::MachineRoomRenovationFee).map(|info| info.basic_number.clone()).flatten();
-                    let (ele_total, ele_share) = info.calculate_electric(&basic_price_config).unzip();
+
+                    let (ele_total, ele_share) = info.calculate_electric(&basic_price_config, owner_info.room_square.as_ref());
                     let (water_total, water_share) = info.calculate_water(&basic_price_config).unzip();
+
+                    let lift_fee_basic = basic_price_config.get(&BasicPriceType::LiftFeeBasic).map(|info| info.basic_number.clone()).flatten();
+                    let lift_fee_plus = basic_price_config.get(&BasicPriceType::LiftFeePlus).map(|info| info.basic_number.clone()).flatten();
+                    let lift_fee: Option<BigDecimal> = info.calculate_lift(lift_fee_basic, lift_fee_plus);
                     Some(PropertyFeeDetailInsertPo {
                         room_number: info.room_number.as_deref().unwrap(),
                         room_owner_name: owner_info.owner_name.as_deref(),
                         management_fee: owner_info.calculate_management_fee(&basic_price_config),
                         part_fee: owner_info.calculate_part_fee(&basic_price_config),
+                        lift_fee,
                         machine_room_renovation_fee: machine_room_fee,
                         electric_fee: ele_total,
                         electric_share_fee: ele_share,
@@ -217,7 +224,7 @@ pub mod excel{
 
             let end = current_row.clone();
             let star = end - per_form_row.clone();
-            self.write_string_with_format(*current_row, COL_A, "合计：", &BASIC_FORMATTER)?;
+            self.write_string_with_format(*current_row, COL_A, "合计：", &BOLD_FORMATTER)?;
             self.write_formula_with_format(*current_row, COL_B, format!("=SUM(B{}:B{})", star, end).as_str(), &NUM_FORMATTER)?;
             self.write_formula_with_format(*current_row, COL_C, format!("=SUM(C{}:C{})", star, end).as_str(), &NUM_FORMATTER)?;
             self.write_formula_with_format(*current_row, COL_D, format!("=SUM(D{}:D{})", star, end).as_str(), &NUM_FORMATTER)?;
@@ -228,7 +235,7 @@ pub mod excel{
             self.write_formula_with_format(*current_row, COL_I, format!("=SUM(I{}:I{})", star, end).as_str(), &NUM_FORMATTER)?;
             self.write_formula_with_format(*current_row, COL_J, format!("=SUM(J{}:J{})", star, end).as_str(), &NUM_FORMATTER)?;
             self.write_formula_with_format(*current_row, COL_K, format!("=SUM(K{}:K{})", star, end).as_str(), &NUM_FORMATTER)?;
-            self.write_formula_with_format(*current_row, COL_L, format!("=SUM(B{}:I{})", *current_row, *current_row).as_str(), &NUM_FORMATTER)?;
+            self.write_formula_with_format(*current_row, COL_L, format!("=SUM(B{}:I{})", end + 1, end + 1).as_str(), &NUM_FORMATTER)?;
             self.set_row_height(current_row.clone(), SETTINGS.excel_config.basic_height)?;
 
             *current_row += 1;
@@ -239,12 +246,22 @@ pub mod excel{
 
 
         fn build_form_detail(&mut self, part_result: &Vec<&PropertyFeeDetailPo>, current_row: &mut u32, per_form_row: u32) -> AppResult<()> {
-
             let form_star_row = current_row.clone();
             let form_star_col = 0;
+            //设置表格的全局样式
+            let form_end_row = form_star_row + per_form_row;
+            let form_end_col = COL_L;
+
+            self.set_range_format(form_star_row, form_star_col, form_end_row, form_end_col, &Format::new()
+                .set_border(FormatBorder::Thin)
+                .set_align(FormatAlign::Center)
+                .set_align(FormatAlign::VerticalCenter)
+                .set_font_name("宋体")
+                .set_font_size(10)
+            )?;
             for index in 0..per_form_row {
                 if let Some(data) = part_result.get(index as usize) {
-                    self.write_string(*current_row, 0, data.room_number.as_deref().unwrap_or(""))?;
+                    self.write_string_with_format(*current_row, 0, data.room_number.as_deref().unwrap_or(""), &BOLD_FORMATTER)?;
                     if let Some(fee) = data.management_fee.as_ref() {
                         self.write_number_with_format(*current_row, 1, fee.to_f64().unwrap_or(0.0), &NUM_FORMATTER)?;
                     }
@@ -273,10 +290,10 @@ pub mod excel{
                         self.write_number_with_format(*current_row, 10, fee.to_f64().unwrap_or(0.0), &NUM_FORMATTER)?;
                     }
                     //=SUM(B2:I2)
-                    self.write_formula(*current_row, 11, format!("=SUM(B{}:I{})", current_row.clone() + 1, current_row.clone() + 1).as_str())?;
+                    self.write_formula_with_format(*current_row, 11, format!("=SUM(B{}:I{})", current_row.clone() + 1, current_row.clone() + 1).as_str(), &NUM_FORMATTER)?;
                 } else {
                     //=SUM(B2:I2)
-                    self.write_formula(*current_row, 11, format!("=SUM(B{}:I{})", current_row.clone() + 1, current_row.clone() + 1).as_str())?;
+                    self.write_formula_with_format(*current_row, 11, format!("=SUM(B{}:I{})", current_row.clone() + 1, current_row.clone() + 1).as_str(), &NUM_FORMATTER)?;
                 }
 
                 self.set_row_height(current_row.clone(), SETTINGS.excel_config.basic_height)?;
@@ -284,17 +301,6 @@ pub mod excel{
                 *current_row += 1;
             }
 
-            //设置表格的全局样式
-            let form_end_row = current_row.clone() - 1;
-            let form_end_col = COL_L;
-
-            self.set_range_format(form_star_row, form_star_col, form_end_row, form_end_col, &Format::new()
-                    .set_border(FormatBorder::Thin)
-                    .set_align(FormatAlign::Center)
-                    .set_align(FormatAlign::VerticalCenter)
-                    .set_font_name("宋体")
-                    .set_font_size(10)
-            )?;
             Ok(())
         }
     }

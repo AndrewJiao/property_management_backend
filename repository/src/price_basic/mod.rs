@@ -63,6 +63,8 @@ pub enum BasicPriceType {
     WaterShareFee,
     LiquidateFee,
     PreStoreFee,
+    LiftFeeBasic,
+    LiftFeePlus,
 }
 
 impl FromSql<diesel::sql_types::Text, Pg> for BasicPriceType {
@@ -79,6 +81,8 @@ impl FromSql<diesel::sql_types::Text, Pg> for BasicPriceType {
             "WaterShareFee" => { Ok(BasicPriceType::WaterShareFee) }
             "LiquidateFee" => { Ok(BasicPriceType::LiquidateFee) }
             "PreStoreFee" => { Ok(BasicPriceType::PreStoreFee) }
+            "LiftFeeBasic" => { Ok(BasicPriceType::LiftFeeBasic) }
+            "LiftFeePlus" => { Ok(BasicPriceType::LiftFeePlus) }
             _ => { Err(Box::from(format!("Invalid BasicPriceType for type {}", str))) }
         }
     }
