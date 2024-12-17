@@ -8,15 +8,16 @@ use thiserror::Error;
 use validator::Validate;
 
 //region 分页
-#[derive(Deserialize, Validate)]
+#[derive(Deserialize, Validate,Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PaginateSearch {
     #[validate(range(min = 1))]
     current_page: i64,
     #[validate(range(min = 1, max = 100))]
     page_size: i64,
-    #[allow(dead_code)]
-    order_type: Option<OrderType>,
+    #[validate(length(min = 0, max = 1000))]
+    pub order_type: Option<String>,
+    #[validate(length(min = 0, max = 1000))]
     pub param: Option<String>,
 }
 
@@ -48,7 +49,15 @@ impl PaginateSearch {
             Ok(T::default())
         }
     }
-
+    pub fn convert_order(&self)->AppResult<Option<Vec<Order>>>{
+        if let Some(ref e) = self.order_type {
+            let decode = general_purpose::STANDARD.decode(e).map_err(BaseError::Base64Error)?;
+            let decode_str = String::from_utf8(decode).map_err(BaseError::FromUtf8Error)?;
+            Ok(Some(serde_json::from_str::<Vec<Order>>(&decode_str).map_err(BaseError::JsonError)?))
+        } else {
+            Ok(None)
+        }
+    }
 
     pub fn produce_page_result(&self, total: i64) -> Option<PaginateResult> {
         Some(PaginateResult {
@@ -60,8 +69,16 @@ impl PaginateSearch {
 }
 
 
-#[derive(Deserialize, Serialize)]
-pub enum OrderType { DESC, ASC }
+#[derive(Deserialize, Serialize,Debug)]
+pub enum OrderType { Desc, Asc }
+
+#[derive(Deserialize, Validate,Serialize,Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct Order{
+    #[validate(length(min = 1,max = 100))]
+    pub field_name:String,
+    pub order_type:OrderType,
+}
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]

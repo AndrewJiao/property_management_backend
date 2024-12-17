@@ -541,12 +541,14 @@ name = "controller"
 version = "0.1.0"
 dependencies = [
  "actix-web",
+ "base64 0.22.1",
  "bigdecimal 0.4.6",
  "chrono",
  "common",
  "diesel",
  "futures",
  "log",
+ "regex",
  "repository",
  "serde",
  "serde_json",
@@ -2042,6 +2044,7 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
+ "validator",
 ]
 
 [[package]]

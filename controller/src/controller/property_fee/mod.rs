@@ -1,13 +1,18 @@
 use crate::dto::property_fee::{PropertyFeeDetailInitDto, PropertyFeeDetailResultDto, PropertyFeeDetailSearchDto, PropertyFeeDetailUpdateDto};
+use actix_web::error::ParseError::Utf8;
+use actix_web::http::header::http_percent_encode;
 use actix_web::web::scope;
 use actix_web::{delete, get, post, put, web, HttpResponse};
-use common::data_result::{AppResult, PaginateSearch, WebResult};
+use base64::engine::general_purpose;
+use base64::Engine;
+use common::data_result::{AppResult, Order, OrderType, PaginateSearch, WebResult};
 use common::db_config::db_get_connection;
 use common::error::BaseError::AnyhowError;
-use common::error::BUSINESS_ERROR_OWNER_FEE_DETAIL_EXIST;
+use common::error::{BaseError, BUSINESS_ERROR_OWNER_FEE_DETAIL_EXIST};
 use common::{result_success, validate};
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper, TextExpressionMethods};
 use log::debug;
+use regex::Regex;
 use repository::component::page::Paginate;
 use repository::owner_fee::OwnerFeeDetailPo;
 use repository::property_fee::PropertyFeeDetailPo;
@@ -32,9 +37,11 @@ use service::property_fee::do_edit_update;
 #[get("/data")]
 async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpResponse> {
     let search_param: PropertyFeeDetailSearchDto = param.convert_param()?;
+    let search_order = param.convert_order()?;
     validate!(param, search_param);
 
-    let (result, total) = do_search(param.current_page(), param.limit(), &search_param)?;
+    let (result, total) = do_search(param.current_page(), param.limit(),&search_order, &search_param)?;
+
     // 获取关联单号
     let owner_fee_param = result.iter()
         .flat_map(|e| {
@@ -51,7 +58,8 @@ async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpResponse> 
     result_success!(result_dto, param.produce_page_result(total))
 }
 
-fn do_search(current_page: i64, page_size: i64, search_param: &PropertyFeeDetailSearchDto) -> AppResult<(Vec<PropertyFeeDetailPo>, i64)> {
+fn do_search(current_page: i64, page_size: i64, order_types: &Option<Vec<Order>>, search_param: &PropertyFeeDetailSearchDto) -> AppResult<(Vec<PropertyFeeDetailPo>, i64)> {
+    debug!("search_param: {:?} order: {:?}", search_param, order_types);
     let mut statement = table.into_boxed();
     statement = statement
         .if_filter_tow_param(
@@ -67,10 +75,27 @@ fn do_search(current_page: i64, page_size: i64, search_param: &PropertyFeeDetail
         .if_filter(&search_param.record_version, |sub_statement, value| sub_statement.filter(record_version.eq(value)))
         .filter(is_delete.eq(false));
 
-
+    if let Some(order_types) = order_types{
+        for order in order_types {
+            statement = match order.field_name.as_str() {
+                "roomNumber" => match order.order_type {
+                    OrderType::Desc => statement.order(room_number.desc()),
+                    OrderType::Asc => statement.order(room_number.asc()),
+                },
+                "createTime" => match order.order_type {
+                    OrderType::Desc => statement.order(create_time.desc()),
+                    OrderType::Asc => statement.order(create_time.asc()),
+                },
+                "updateTime" => match order.order_type {
+                    OrderType::Desc => statement.order(update_time.desc()),
+                    OrderType::Asc => statement.order(update_time.asc()),
+                },
+                _ => statement,
+            };
+        }
+    }
     let (result, total) =
-        QueryDsl::order(
-            statement.select(PropertyFeeDetailPo::as_select()), update_time.desc())
+            statement.select(PropertyFeeDetailPo::as_select())
             .paginate(current_page).per_page(page_size)
             .load_and_count_pages(&mut db_get_connection())?;
     Ok((result,total))
@@ -124,23 +149,35 @@ async fn delete_data(path_param: web::Path<i64>) -> WebResult<HttpResponse> {
 #[get("/export")]
 async fn export_data(param: web::Query<PaginateSearch>) -> WebResult<HttpResponse> {
     let search_param: PropertyFeeDetailSearchDto = param.convert_param()?;
+    let search_order = param.convert_order()?;
     validate!(param, search_param);
 
     let mut all_result = Vec::new();
     let mut current_page = 1;
-    while let Ok((result, _)) = do_search(current_page, 10, &search_param) {
+    while let Ok((result, _)) = do_search(current_page, 2, &search_order, &search_param) {
         if result.is_empty() {
             break;
         }
         all_result.extend(result);
         current_page += 1;
     }
+    let buffer = service::property_fee::excel::build_work_book(all_result)?;
 
-        let buffer = service::property_fee::excel::build_work_book(all_result).unwrap();
+    let mut file_name = String::from("海上明珠");
+    let file_tail = ".xlsx";
+    if let Some(p_record_version) = search_param.record_version{
+        Regex::new(r"\w+-(?P<version>\S+)").unwrap().captures(&p_record_version).map(|cap| {
+            let version = cap.name("version").unwrap().as_str();
+            file_name.push_str(format!("-{version}").as_str());
+        });
+    }
+    file_name.push_str(file_tail);
 
-
+    debug!("write with file_name: {file_name}");
+    let encode_file_name = general_purpose::STANDARD.encode(file_name);
     Ok(HttpResponse::Ok()
-        .content_type("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-        .insert_header(("Content-Disposition", "attachment; filename=\"example.xlsx\""))
+        .content_type("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet; charset=utf-8")
+        .append_header(("Access-Control-Expose-Headers", "Content-Disposition"))
+        .append_header(("Content-Disposition", format!("attachment; filename={encode_file_name}")))
         .body(buffer))
 }
