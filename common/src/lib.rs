@@ -1,4 +1,5 @@
 pub mod error;
+pub mod http;
 pub mod conf;
 pub mod const_value;
 pub mod web_config;

@@ -42,11 +42,19 @@ pg_bigdecimal = "0.1.5"
 validator = { version = "0.19", features = ["derive"] }
 actix-cors = "0.7.0"
 tracing-actix-web = "0.7.15"
+
 base64 = "0.22.1"
+sha256 = "1.5.0"
+base16 = "0.2.1"
+hmac = "0.12.1"
+sha2 = "0.10.8"
+hex = "0.4.3"
+
 itertools = "0.13.0"
 tokio = { version = "1.42.0", features = ["full"] }
+reqwest = { version = "0.12.9", features = ["json"] }
 rayon = { version = "1.8"}
-#xlsxwriter = "0.6.1"
+
 rust_xlsxwriter = "0.80.0"
 futures = "0.3.31"
 regex = "1.11.1"

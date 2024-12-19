@@ -21,6 +21,15 @@ app_config:
   number_min: -100000000
   record_max: 2 #生成多少条流水就创建新的记录
   liquidated_damages_rate: 0.1 #违约金比例
+
 excel_config:
   basic_height: 31.5
   basic_width: 9
+
+aliyun_oss_config:
+  oss_host: "property-manager-form.oss-cn-heyuan.aliyuncs.com"
+  sts_host: "sts.cn-hangzhou.aliyuncs.com"
+  access_key_id: "LTAI5tLypk7Hwq2bL4tpDHTc"
+  access_key_secret: "VhqnvU7PunW0kwJqmbIHt1gxFoXPnS"
+  sts_role_arn: "acs:ram::1957570988142134:role/temp-role-backend"
+

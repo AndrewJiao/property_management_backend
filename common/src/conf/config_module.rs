@@ -50,6 +50,17 @@ pub struct DatabasesConfig {
     pub database_url: String,
 }
 
+///
+/// 阿里云oss配置
+///
+#[derive(Debug, Deserialize)]
+pub struct AliyunOssConfig{
+    pub sts_host: String,
+    pub oss_host: String,
+    pub access_key_id: String,
+    pub access_key_secret: String,
+    pub sts_role_arn: String,
+}
 
 #[derive(Debug, Deserialize)]
 #[allow(unused)]
@@ -58,6 +69,7 @@ pub struct Settings {
     pub databases: DatabasesConfig,
     pub app_config: AppConfig,
     pub excel_config: ExcelConfig,
+    pub aliyun_oss_config: AliyunOssConfig,
 }
 impl Settings {
     pub fn new() -> Result<Self, ConfigError> {
