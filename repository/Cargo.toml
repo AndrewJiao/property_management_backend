@@ -17,3 +17,5 @@ serde_json.workspace = true
 regex.workspace = true
 validator.workspace = true
 log.workspace = true
+
+uuid.workspace = true

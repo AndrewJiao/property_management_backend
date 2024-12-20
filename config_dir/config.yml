@@ -28,8 +28,8 @@ excel_config:
 
 aliyun_oss_config:
   oss_host: "property-manager-form.oss-cn-heyuan.aliyuncs.com"
-  sts_host: "sts.cn-hangzhou.aliyuncs.com"
-  access_key_id: "LTAI5tLypk7Hwq2bL4tpDHTc"
-  access_key_secret: "VhqnvU7PunW0kwJqmbIHt1gxFoXPnS"
+  sts_host: "sts.cn-heyuan.aliyuncs.com"
+  access_key_id: "LTAI5tBGS6Pz2sQX7xrMGFzq"
+  access_key_secret: "B5m0aZAJpDEtQKzP3lTTHATeXdNjNd"
   sts_role_arn: "acs:ram::1957570988142134:role/temp-role-backend"
 

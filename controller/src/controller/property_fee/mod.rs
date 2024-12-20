@@ -1,6 +1,4 @@
 use crate::dto::property_fee::{PropertyFeeDetailInitDto, PropertyFeeDetailResultDto, PropertyFeeDetailSearchDto, PropertyFeeDetailUpdateDto};
-use actix_web::error::ParseError::Utf8;
-use actix_web::http::header::http_percent_encode;
 use actix_web::web::scope;
 use actix_web::{delete, get, post, put, web, HttpResponse};
 use base64::engine::general_purpose;
@@ -8,7 +6,7 @@ use base64::Engine;
 use common::data_result::{AppResult, Order, OrderType, PaginateSearch, WebResult};
 use common::db_config::db_get_connection;
 use common::error::BaseError::AnyhowError;
-use common::error::{BaseError, BUSINESS_ERROR_OWNER_FEE_DETAIL_EXIST};
+use common::error::{BUSINESS_ERROR_OWNER_FEE_DETAIL_EXIST};
 use common::{result_success, validate};
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper, TextExpressionMethods};
 use log::debug;

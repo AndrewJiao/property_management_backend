@@ -27,11 +27,11 @@ actix-cors.workspace = true
 tracing-actix-web.workspace = true
 
 base64.workspace = true
-sha256.workspace = true
 base16.workspace = true
 hmac.workspace = true
 sha2.workspace = true
-hex.workspace = true
+hmac-sha1.workspace = true
+urlencoding.workspace = true
 
 diesel_logger.workspace = true
 parking_lot.workspace = true

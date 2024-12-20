@@ -3,6 +3,10 @@
 pub mod basic {
     pub mod sql_types {
         #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
+        #[diesel(postgres_type(name = "attachment_state"))]
+        pub struct AttachmentState;
+
+        #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
         #[diesel(postgres_type(name = "calculate_operation"))]
         pub struct CalculateOperation;
 
@@ -17,6 +21,25 @@ pub mod basic {
             title -> Varchar,
             body -> Text,
             published -> Bool,
+        }
+    }
+
+    diesel::table! {
+        use diesel::sql_types::*;
+        use super::sql_types::AttachmentState;
+
+        basic.t_attachment (id) {
+            id -> Int8,
+            attachment_id -> Varchar,
+            attachment_file_name -> Nullable<Varchar>,
+            oss_file_name -> Nullable<Varchar>,
+            comment -> Nullable<Text>,
+            status -> AttachmentState,
+            create_by -> Varchar,
+            update_by -> Varchar,
+            create_time -> Timestamp,
+            update_time -> Timestamp,
+            is_delete -> Bool,
         }
     }
 
@@ -155,6 +178,7 @@ pub mod basic {
 
     diesel::allow_tables_to_appear_in_same_query!(
         posts,
+        t_attachment,
         t_owner_basic_info,
         t_owner_fee_detail,
         t_owner_fee_detail_record,

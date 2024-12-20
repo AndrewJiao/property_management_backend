@@ -1,6 +1,7 @@
 use diesel::dsl::{AsSelect, SqlTypeOf};
 use diesel::pg::Pg;
 
+pub mod attachment;
 pub mod models;
 pub mod schema;
 pub mod price_basic;

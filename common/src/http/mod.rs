@@ -129,6 +129,7 @@ impl AppHttpClient<BeforeReq, RequestBuilder> {
     pub async fn send(self) -> AppResult<AfterResponse>
     {
         let response = self.driver.send().await?;
+        println!("url = {}",response.url().to_string());
         Ok(AppHttpClient {
             driver: Empty,
             result: response,
