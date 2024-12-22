@@ -1,4 +1,4 @@
-# This is a sample configuration file for the application
+# This is a sample configuration picture_extract for the application
 web_config:
   port: 8080
   host: "127.0.0.1"
@@ -26,10 +26,17 @@ excel_config:
   basic_height: 31.5
   basic_width: 9
 
+# 阿里云OSS配置
 aliyun_oss_config:
   oss_host: "property-manager-form.oss-cn-heyuan.aliyuncs.com"
   sts_host: "sts.cn-heyuan.aliyuncs.com"
+  region: "oss-cn-heyuan"
   access_key_id: "LTAI5tBGS6Pz2sQX7xrMGFzq"
   access_key_secret: "B5m0aZAJpDEtQKzP3lTTHATeXdNjNd"
   sts_role_arn: "acs:ram::1957570988142134:role/temp-role-backend"
+  bucket: "property-manager-form"
 
+
+attachment_config:
+  picture_suffix: [ "jpg", "jpeg", "png", "gif", "bmp" ]
+  temp_output_dir: "./temp_output"

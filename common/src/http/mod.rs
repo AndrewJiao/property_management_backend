@@ -6,6 +6,7 @@ use serde::Serialize;
 use std::marker::PhantomData;
 use reqwest::header::HeaderMap;
 
+#[cfg(feature = "oss")]
 pub mod oss;
 
 #[allow(unused)]

@@ -67,10 +67,10 @@ pub fn init_room_data() -> AppResult<()> {
             RoomInfoDetailInsertPo {
                 room_number: Some(owner_info.room_number.as_str()),
                 room_owner_name: owner_info.owner_name.as_deref(),
-                water_meter_num_before: last_room_data.map(|e| e.water_meter_num.as_ref()).flatten(),
+                water_meter_num_before: last_room_data.map(|e| e.water_meter_num).flatten(),
                 water_meter_num: None,
                 water_meter_sub: None,
-                electricity_meter_num_before: last_room_data.map(|e| e.electricity_meter_num.as_ref()).flatten(),
+                electricity_meter_num_before: last_room_data.map(|e| e.electricity_meter_num).flatten(),
                 electricity_meter_num: None,
                 electricity_meter_sub: None,
                 month_version: Some(current_version.as_str()),

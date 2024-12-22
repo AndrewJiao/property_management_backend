@@ -1,14 +1,18 @@
 use crate::price_basic::{BasicPriceType, PriceBasicPo};
-use crate::schema::basic::t_room_info_detail;
+use crate::schema::basic::t_room_info_detail::*;
+use crate::schema::basic::{t_room_info_detail};
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
-use diesel::{AsChangeset, Identifiable, Insertable, Queryable, Selectable};
+use common::data_result::AppResult;
+use common::db_config::{db_get_connection, Conn};
+use diesel::pg::Pg;
+use diesel::{AsChangeset, ExpressionMethods, Identifiable, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper};
+use log::debug;
 use management_macro::AutoOperation;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::str::FromStr;
-use log::debug;
 
 #[derive(Queryable, Selectable, Deserialize, Serialize)]
 #[diesel(table_name = t_room_info_detail)]
@@ -34,6 +38,25 @@ pub struct RoomInfoDetailPo {
     pub delete_at: Option<NaiveDateTime>,
 }
 
+
+type BoxedQuery<'a> = t_room_info_detail::BoxedQuery<'a,Pg,crate::SqlType<RoomInfoDetailPo>>;
+impl RoomInfoDetailPo {
+    pub fn all<'a>() -> BoxedQuery<'a>{
+        table.select(RoomInfoDetailPo::as_select()).into_boxed()
+    }
+
+    pub fn by_room_number_and_version(p_room_number: &str, p_version: &str) -> AppResult<Option<RoomInfoDetailPo>> {
+         let result = table
+            .select(RoomInfoDetailPo::as_select())
+            .filter(room_number.eq(p_room_number))
+            .filter(month_version.eq(p_version))
+            .filter(is_delete.eq(false))
+            .get_result(&mut db_get_connection()).ok();
+        Ok(result)
+    }
+}
+
+
 impl RoomInfoDetailPo {
     pub fn calculate_lift(&self, basic: Option<BigDecimal>, plus: Option<BigDecimal>) -> Option<BigDecimal> {
         //写一个正则，匹配A081,B203这种门牌号
@@ -56,12 +79,12 @@ impl RoomInfoDetailPo {
 #[diesel(table_name = t_room_info_detail)]
 pub struct RoomInfoDetailInsertPo<'a> {
     pub room_number: Option<&'a str>,
-    pub water_meter_num_before: Option<&'a i64>,
-    pub water_meter_num: Option<&'a i64>,
-    pub water_meter_sub: Option<&'a i64>,
-    pub electricity_meter_num_before: Option<&'a i64>,
-    pub electricity_meter_num: Option<&'a i64>,
-    pub electricity_meter_sub: Option<&'a i64>,
+    pub water_meter_num_before: Option<i64>,
+    pub water_meter_num: Option<i64>,
+    pub water_meter_sub: Option<i64>,
+    pub electricity_meter_num_before: Option<i64>,
+    pub electricity_meter_num: Option<i64>,
+    pub electricity_meter_sub: Option<i64>,
     pub month_version: Option<&'a str>,
     pub comment: Option<&'a str>,
     pub create_by: Option<&'a str>,
@@ -71,6 +94,15 @@ pub struct RoomInfoDetailInsertPo<'a> {
     pub room_owner_name: Option<&'a str>,
     pub delete_at: Option<NaiveDateTime>,
 }
+impl RoomInfoDetailInsertPo<'_>{
+    pub fn save(self, conn: &mut Conn) -> AppResult<()> {
+        let _ = diesel::insert_into(t_room_info_detail::table)
+            .values(self)
+            .execute(conn)?;
+        Ok(()) 
+    }
+}
+
 
 #[derive(Identifiable, AsChangeset, Serialize, AutoOperation)]
 #[diesel(table_name = t_room_info_detail)]
@@ -134,8 +166,12 @@ impl RoomInfoDetailPo {
     }
 }
 
-impl RoomInfoDetailUpdatePo<'_> {
-    pub fn re_calculate(mut self) -> Self {
+
+pub trait ReCalculator{
+    fn re_calculate(self) -> Self;
+}
+impl ReCalculator for RoomInfoDetailUpdatePo<'_> {
+    fn re_calculate(mut self) -> Self {
         if let (Some(before), Some(now)) = (self.water_meter_num_before, self.water_meter_num) {
             self.water_meter_sub = Some(now - before);
         } else if let (None, Some(now)) = (self.water_meter_num_before, self.water_meter_num) {
@@ -154,3 +190,22 @@ impl RoomInfoDetailUpdatePo<'_> {
     }
 }
 
+impl ReCalculator for RoomInfoDetailInsertPo<'_> {
+    fn re_calculate(mut self) -> Self {
+        if let (Some(before), Some(now)) = (self.water_meter_num_before, self.water_meter_num) {
+            self.water_meter_sub = Some(now - before);
+        } else if let (None, Some(now)) = (self.water_meter_num_before, self.water_meter_num) {
+            self.water_meter_sub = Some(now.clone());
+        }else{
+            self.water_meter_sub = None;
+        }
+
+        self.electricity_meter_sub = match
+        (self.electricity_meter_num_before, self.electricity_meter_num) {
+            (Some(before), Some(now)) => Some(now - before),
+            (None, Some(now)) => Some(now.clone()),
+            _ => None,
+        };
+        self
+    }
+}

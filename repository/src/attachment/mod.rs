@@ -44,7 +44,7 @@ impl AttachmentPo {
 #[derive(Deserialize, Serialize, DbEnum,Debug)]
 #[ExistingTypePath = "crate::schema::basic::sql_types::AttachmentState"]
 #[serde(rename_all = "PascalCase")]
-enum AttachmentStatus {
+pub enum AttachmentStatus {
     Init,
     Done,
 }
@@ -60,21 +60,27 @@ pub struct AttachmentInsertPo<'a> {
     pub status: AttachmentStatus,
     pub create_by: &'a str,
     pub update_by: &'a str,
-    pub create_time: chrono::NaiveDateTime,
-    pub update_time: chrono::NaiveDateTime,
+    pub create_time: Option<chrono::NaiveDateTime>,
+    pub update_time: Option<chrono::NaiveDateTime>,
     pub is_delete: bool,
 }
 
-impl AttachmentPo {
+impl AttachmentInsertPo<'_> {
     pub fn save(&self, conn: &mut Conn) -> AppResult<AttachmentPo> {
         let result = diesel::insert_into(table).values(self).get_result(conn)?;
         Ok(result)
     }
+
+    pub fn uuid_v7() -> String {
+        uuid_v7::gen_uuid_v7().to_string()
+    }
 }
+
 #[derive(Identifiable, AutoOperation, Serialize, AsChangeset)]
 #[diesel(table_name = t_attachment)]
 #[serde(rename_all = "camelCase")]
 pub struct AttachmentUpdatePo<'a> {
+    pub id: i64,
     pub attachment_file_name: Option<&'a str>,
     pub oss_file_name: Option<&'a str>,
     pub comment: Option<&'a str>,

@@ -31,12 +31,12 @@ fn main() {
         let entry = entry.expect("Failed to read entry");
         let src_path = entry.path();
         if src_path.is_file() {
-            let file_name = src_path.file_name().expect("Failed to get file name");
-            println!("Copying file: {:?}", file_name);
+            let file_name = src_path.file_name().expect("Failed to get picture_extract name");
+            println!("Copying picture_extract: {:?}", file_name);
             let dest_path = Path::new(&out_dir).join("config_dir").join(file_name);
             println!("Copying to: {:?}", dest_path);
             fs::copy(&src_path, &dest_path)
-                .expect(&format!("Failed to copy file: {:?}", src_path));
+                .expect(&format!("Failed to copy picture_extract: {:?}", src_path));
         }
     }
 

@@ -19,3 +19,4 @@ validator.workspace = true
 log.workspace = true
 
 uuid.workspace = true
+uuid_v7.workspace = true

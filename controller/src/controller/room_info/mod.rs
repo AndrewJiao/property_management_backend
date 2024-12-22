@@ -1,5 +1,5 @@
-use crate::dto::room_info::{RoomInfoDetailSearchDto, RoomInfoDetailUpdateDto, RoomInfoSearchType};
-use crate::dto::ToUpdatePO;
+use crate::dto::room_info::{RoomInfoDetailSearchDto, RoomInfoDetailUpdateDto, RoomInfoManuallyInsertDto, RoomInfoSearchType};
+use crate::dto::{ToInsertPO, ToUpdatePO};
 use actix_web::web::scope;
 use actix_web::{get, post, put, web, HttpResponse};
 use common::data_result::{PaginateSearch, WebResult};
@@ -7,10 +7,11 @@ use common::db_config::auto_trait::AutoOperation;
 use common::db_config::db_get_connection;
 use common::{result_success, validate};
 use diesel::query_dsl::methods::GroupByDsl;
-use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SaveChangesDsl, SelectableHelper, TextExpressionMethods};
+use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SaveChangesDsl, SelectableHelper, Table, TextExpressionMethods};
 use log::info;
+use common::error::{BaseError, DATA_HAS_EXIST};
 use repository::component::page::Paginate;
-use repository::room_info::RoomInfoDetailPo;
+use repository::room_info::{ReCalculator, RoomInfoDetailPo};
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(scope("/room_info")
@@ -18,11 +19,13 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         .service(put_data)
         .service(get_find)
         .service(init_data)
+        .service(post_data)
     );
 }
 
 use crate::controller::IfFilter;
 use repository::schema::basic::t_room_info_detail::*;
+use repository::schema::basic::t_room_info_detail::dsl::t_room_info_detail;
 use service::room_info::init_room_data;
 
 ///
@@ -93,6 +96,16 @@ async fn get_find(param: web::Query<RoomInfoSearchType>) -> WebResult<HttpRespon
 
             result_success!(result)
         }
+        RoomInfoSearchType::PreSearchBefore(ref p_room_number) => {
+                if p_room_number.is_empty() {
+                    return result_success!(Vec::<String>::new());
+                }
+                let result = table.select(t_room_info_detail::all_columns())
+                    .filter(room_number.eq(p_room_number))
+                    .filter(is_delete.eq(false))
+                    .get_result::<RoomInfoDetailPo>(&mut db_get_connection())?;
+                result_success!(result)
+        }
     }
 }
 
@@ -103,6 +116,22 @@ async fn get_find(param: web::Query<RoomInfoSearchType>) -> WebResult<HttpRespon
 #[post("/init")]
 async fn init_data() -> WebResult<HttpResponse> {
     init_room_data()?;
+    result_success!()
+}
+///
+/// 手动新增
+///
+#[post("/data")]
+async fn post_data(query_param: actix_web::web::Json<RoomInfoManuallyInsertDto>) -> WebResult<HttpResponse> {
+    let param = query_param.into_inner();
+    validate!(param);
+    if RoomInfoDetailPo::by_room_number_and_version(&param.room_number, &param.month_version)?.is_some(){
+        return Err(BaseError::AnyhowError(DATA_HAS_EXIST()));
+    }
+
+    let _ = param.to_insert_po()
+        .re_calculate()
+        .update_time().save(&mut db_get_connection());
     result_success!()
 }
 

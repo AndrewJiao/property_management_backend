@@ -1,3 +1,4 @@
+pub mod oss_uploader;
 use crate::const_value::SETTINGS;
 use crate::http::AppHttpClient;
 use crate::tools::time::now_utc_date_str;

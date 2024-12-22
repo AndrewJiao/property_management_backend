@@ -10,3 +10,5 @@ lazy_static! {
 lazy_static!(
     pub static ref DB_CONNECTION :Pool<AppConn> = establish_connection();
 );
+
+pub const SYSTEM: &str = "System";

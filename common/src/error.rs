@@ -14,6 +14,9 @@ pub enum BaseError {
     #[error("io error: {0}")]
     IoError(#[from] std::io::Error),
 
+    #[error("actix error : {0}")]
+    ActorError(#[from] actix::MailboxError),
+
     #[error("var error : {0}")]
     VarError(#[from] VarError),
 

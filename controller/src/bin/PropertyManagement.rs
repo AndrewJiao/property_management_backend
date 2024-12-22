@@ -1,7 +1,10 @@
+use actix::{Actor, Addr};
+use actix_web::web;
 use common::conf::log4::init_log4j;
 use common::const_value::DB_CONNECTION;
 use common::data_result::AppResult;
-use common::web_config::build_service;
+use common::web_config::{build_service, DataTrait};
+use service::picture_extract::PictureExtractor;
 
 #[path = "../controller/mod.rs"]
 mod controller;
@@ -18,12 +21,37 @@ async fn main() -> AppResult<()> {
         controller::hello::config,
         controller::room_info::config,
         controller::property_fee::config,
-        controller::owner_fee::config
+        controller::owner_fee::config,
+        // controller::attachment::config,
     ];
-    Ok(build_service(
-        configs,
-    )?.await?)
+    let data = build_web_data();
+    Ok(build_service(configs, data)?.await?)
 }
+
+
+fn build_web_data() -> web::Data<AppData> {
+    web::Data::new(AppData::new())
+}
+
+#[derive(Clone)]
+pub struct AppData {
+    actors: Actors,
+}
+impl DataTrait for AppData {}
+
+#[derive(Clone)]
+pub struct Actors {
+    picture_extractor: Addr<PictureExtractor>,
+}
+
+impl AppData {
+    fn new() -> Self {
+        AppData {
+            actors: Actors { picture_extractor: PictureExtractor.start() },
+        }
+    }
+}
+
 
 
 fn before_init() {

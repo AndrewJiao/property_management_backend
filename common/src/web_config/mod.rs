@@ -8,11 +8,13 @@ use actix_web::{web, App, HttpServer};
 use std::time::Duration;
 use tracing_actix_web::TracingLogger;
 
-pub fn build_service<F>(service_config: &'static [F; 6]) -> AppResult<Server>
+pub trait DataTrait{}
+
+pub fn build_service<F, T>(service_config: &'static [F; 6], data: web::Data<T>) -> AppResult<Server>
 where
     F: FnOnce(&mut ServiceConfig) + Sync + Clone + Send,
+    T: DataTrait + Send + Sync + Clone + 'static,
 {
-    let data = web::Data::new({});
     let config = &SETTINGS.web_config;
     let server = HttpServer::new(
         move || {
@@ -33,13 +35,6 @@ where
         .run();
     Ok(server)
 }
-
-pub enum ServiceType {
-    Web,
-    Rpc,
-    Grpc,
-}
-
 
 fn create_cors() -> actix_cors::Cors {
     actix_cors::Cors::default()

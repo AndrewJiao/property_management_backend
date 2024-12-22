@@ -27,7 +27,7 @@ pub struct AppConfig {
     pub number_max: i32,
     pub number_min: i32,
     pub record_max: i32,
-    pub liquidated_damages_rate: BigDecimal
+    pub liquidated_damages_rate: BigDecimal,
 }
 
 #[derive(Debug, Deserialize)]
@@ -54,12 +54,19 @@ pub struct DatabasesConfig {
 /// 阿里云oss配置
 ///
 #[derive(Debug, Deserialize)]
-pub struct AliyunOssConfig{
+pub struct AliyunOssConfig {
     pub sts_host: String,
     pub oss_host: String,
     pub access_key_id: String,
     pub access_key_secret: String,
     pub sts_role_arn: String,
+    pub region: String,
+    pub bucket: String,
+}
+#[derive(Debug, Deserialize)]
+pub struct AttachmentConfig {
+    pub picture_suffix: Vec<String>,
+    pub temp_output_dir: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -70,6 +77,7 @@ pub struct Settings {
     pub app_config: AppConfig,
     pub excel_config: ExcelConfig,
     pub aliyun_oss_config: AliyunOssConfig,
+    pub attachment_config: AttachmentConfig,
 }
 impl Settings {
     pub fn new() -> Result<Self, ConfigError> {

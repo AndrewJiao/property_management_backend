@@ -8,18 +8,23 @@ build = "../build.rs"
 common = { path = "../common" }
 repository = { path = "../repository" }
 service = { path = "../service" }
+
+actix.workspace = true
 actix-web.workspace = true
+actix-multipart.workspace = true
+lazy_static.workspace = true
+
 diesel.workspace = true
 chrono.workspace = true
 bigdecimal.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 validator.workspace = true
-log = { version = "0.4.22", features = [] }
+log.workspace = true
 futures.workspace = true
 regex.workspace = true
 base64.workspace = true
-
+uuid_v7.workspace = true
 [[bin]]
 name = "PropertyManagement"
 path = "src/bin/PropertyManagement.rs"

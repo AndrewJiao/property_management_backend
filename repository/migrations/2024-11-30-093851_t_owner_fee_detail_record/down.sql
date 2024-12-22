@@ -1,2 +1,2 @@
--- This file should undo anything in `up.sql`
+-- This picture_extract should undo anything in `up.sql`
 drop t_owner_fee_detail_record;

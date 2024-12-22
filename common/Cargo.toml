@@ -32,8 +32,11 @@ hmac.workspace = true
 sha2.workspace = true
 hmac-sha1.workspace = true
 urlencoding.workspace = true
+md5.workspace = true
 
 diesel_logger.workspace = true
 parking_lot.workspace = true
 reqwest.workspace = true
 tokio = "1.42.0"
+
+actix.workspace = true
