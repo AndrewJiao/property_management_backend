@@ -28,6 +28,7 @@ pub struct AppConfig {
     pub number_min: i32,
     pub record_max: i32,
     pub liquidated_damages_rate: BigDecimal,
+    pub password_sec_key: String,
 }
 
 #[derive(Debug, Deserialize)]

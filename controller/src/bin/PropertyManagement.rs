@@ -24,6 +24,7 @@ async fn main() -> AppResult<()> {
         controller::room_info::config,
         controller::property_fee::config,
         controller::owner_fee::config,
+        controller::user::config,
         // controller::attachment::config,
     ];
     let data = build_web_data();

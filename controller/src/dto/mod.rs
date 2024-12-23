@@ -3,6 +3,7 @@ pub mod room_info;
 pub mod owner_info;
 pub mod property_fee;
 pub mod owner_fee;
+pub mod user;
 
 pub trait ToUpdatePO {
     type PO<'a>

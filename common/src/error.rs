@@ -77,5 +77,9 @@ pub const APP_ERROR: fn(&str) -> anyhow::Error = |msg| anyhow!("system_error = {
 //common
 pub const DATA_NOT_EXIST: fn() -> anyhow::Error = || anyhow!("errorMsg = 数据不存在 code = 00001");
 pub const DATA_HAS_EXIST: fn() -> anyhow::Error = || anyhow!("errorMsg = 数据已存在 code = 00002");
+//user
+pub const USER_NOT_EXIST: fn() -> anyhow::Error = || anyhow!("errorMsg = 用户不存在 code = 10001");
+pub const USER_PASSWORD_ERROR: fn() -> anyhow::Error = || anyhow!("errorMsg = 用户密码错误 code = 10002");
+pub const USER_ACCOUNT_EXIST: fn() -> anyhow::Error = || anyhow!("errorMsg = 用户账号已存在 code = 10003");
 
 

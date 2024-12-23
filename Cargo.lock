@@ -2724,12 +2724,14 @@ name = "service"
 version = "0.1.0"
 dependencies = [
  "actix",
+ "base64 0.22.1",
  "bigdecimal 0.4.6",
  "chrono",
  "common",
  "diesel",
  "encoding_rs",
  "futures",
+ "hmac",
  "itertools",
  "lazy_static",
  "log",
@@ -2741,8 +2743,10 @@ dependencies = [
  "rust_xlsxwriter",
  "serde",
  "serde_json",
+ "sha2",
  "tempfile",
  "tokio",
+ "uuid_v7",
 ]
 
 [[package]]

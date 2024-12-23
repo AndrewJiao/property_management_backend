@@ -11,6 +11,7 @@ pub mod room_info;
 pub mod property_fee;
 pub mod owner_fee;
 pub mod tool_table;
+pub mod user;
 
 
 type SqlType<T> = SqlTypeOf<AsSelect<T, Pg>>;
@@ -27,6 +28,11 @@ macro_rules! soft_delete_by_id {
 
 #[macro_export]
 macro_rules! if_filter {
+    ($statement:ident = $column:ident.$method:ident($param:ident) ) => {
+        if let Some(value) =  $param{
+            $statement = $statement.filter($column.$method(value));
+        }
+    };
     ($statement:ident = $method:ident($param:ident) ) => {
         if let Some(value) =  $param{
             $statement = $statement.filter($method(value));

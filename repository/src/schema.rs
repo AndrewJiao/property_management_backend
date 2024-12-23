@@ -13,6 +13,10 @@ pub mod basic {
         #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
         #[diesel(postgres_type(name = "detail_type", schema = "basic"))]
         pub struct DetailType;
+
+        #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
+        #[diesel(postgres_type(name = "role_type", schema = "basic"))]
+        pub struct RoleType;
     }
 
     diesel::table! {
@@ -176,6 +180,27 @@ pub mod basic {
         }
     }
 
+    diesel::table! {
+        use diesel::sql_types::*;
+        use super::sql_types::RoleType;
+
+        basic.t_user (id) {
+            id -> Int8,
+            account_id -> Varchar,
+            account -> Varchar,
+            password -> Varchar,
+            name -> Varchar,
+            role -> RoleType,
+            create_by -> Varchar,
+            update_by -> Varchar,
+            create_time -> Timestamp,
+            update_time -> Timestamp,
+            comment -> Nullable<Text>,
+            is_delete -> Bool,
+            binding_room_number -> Nullable<Varchar>,
+        }
+    }
+
     diesel::allow_tables_to_appear_in_same_query!(
         posts,
         t_attachment,
@@ -186,5 +211,6 @@ pub mod basic {
         t_property_fee_detail,
         t_room_info_detail,
         t_tool_table,
+        t_user,
     );
 }
