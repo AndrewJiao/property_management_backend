@@ -122,7 +122,7 @@ async fn init_data() -> WebResult<HttpResponse> {
 /// 手动新增
 ///
 #[post("/data")]
-async fn post_data(query_param: actix_web::web::Json<RoomInfoManuallyInsertDto>) -> WebResult<HttpResponse> {
+async fn post_data(query_param: web::Json<RoomInfoManuallyInsertDto>) -> WebResult<HttpResponse> {
     let param = query_param.into_inner();
     validate!(param);
     if RoomInfoDetailPo::by_room_number_and_version(&param.room_number, &param.month_version)?.is_some(){

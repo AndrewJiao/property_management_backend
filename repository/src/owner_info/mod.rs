@@ -110,6 +110,7 @@ pub struct InsertOwnerBasicInfoPo<'a> {
     pub comment: Option<&'a str>,
     pub other_basic: Option<serde_json::Value>,
     pub delete_at: Option<NaiveDateTime>,
+    pub amount_balance: BigDecimal,
 }
 
 pub fn update_amount(param_id:i32, amount:&BigDecimal, conn:&mut Conn)->AppResult<()>{

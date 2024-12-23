@@ -97,7 +97,8 @@ impl ToInsertPO for OwnerInfoInsertDto {
             is_delete: false,
             comment: self.comment.as_deref(),
             other_basic: self.other_basic.clone(),
-            delete_at: Some(NaiveDateTime::UNIX_EPOCH)
+            delete_at: Some(NaiveDateTime::UNIX_EPOCH),
+            amount_balance: BigDecimal::from(0),
         }
     }
 }

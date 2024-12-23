@@ -67,7 +67,7 @@ impl RoomInfoDetailPo {
                 if let Some(ref capture) = pattern.captures(room_num) {
                     let floor_num = i32::from_str(&capture["floor"]).unwrap();
                     debug!("room_number:{} floor_num:{} plus:{} basic:{}", room_num,floor_num, plus, basic);
-                    return Some(basic * (floor_num * plus));
+                    return Some(basic + (floor_num * plus));
                 }
             }
         }
