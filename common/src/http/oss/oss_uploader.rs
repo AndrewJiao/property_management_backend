@@ -3,6 +3,7 @@ use crate::const_value::SETTINGS;
 use crate::http::oss::{StsTempSignature, CUSTOM_ENGINE};
 use crate::tools::time::now_utc_date_str;
 use base64::Engine;
+use chrono::{DateTime, Utc};
 use hmac::Mac;
 use serde_json::{Map, Value};
 use crate::data_result::AppResult;
@@ -16,9 +17,9 @@ pub fn generate_expiration(seconds: u64) -> String {
     // 计算过期时间的时间戳
     let expiration_time = now + seconds as i64;
     // 将时间戳转换为DateTime对象，并格式化为ISO8601格式
-    let expiration_datetime = chrono::NaiveDateTime::from_timestamp(expiration_time, 0);
+    let expiration_datetime = chrono::DateTime::from_timestamp(expiration_time, 0);
     // 定义时区
-    let expiration_utc = chrono::DateTime::<chrono::Utc>::from_utc(expiration_datetime, chrono::Utc);
+    let expiration_utc: DateTime<Utc> = chrono::DateTime::from_naive_utc_and_offset(expiration_datetime.map(|e| e.naive_utc()).unwrap(), chrono::Utc);
     // 定义日期时间格式，例如2023-12-03T13:00:00.000Z
     let formatted_date = expiration_utc.format("%Y-%m-%dT%H:%M:%S%.3fZ").to_string();
     // 输出结果

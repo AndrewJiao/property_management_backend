@@ -29,3 +29,7 @@ uuid_v7.workspace = true
 name = "PropertyManagement"
 path = "src/bin/PropertyManagement.rs"
 
+
+[features]
+picture_extract = []
+oss = []

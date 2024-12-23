@@ -1,14 +1,22 @@
+#[cfg(feature = "picture_extract")]
+use service::picture_extract::dto::ExtractSender;
 use crate::dto::owner_info::{OwnerInfoInsertDto, OwnerInfoSearchDto, OwnerInfoSearchType, OwnerInfoUpdateDto};
 use crate::dto::{ToInsertPO, ToUpdatePO};
+#[cfg(feature = "picture_extract")]
 use crate::AppData;
+#[cfg(feature = "picture_extract")]
 use actix_multipart::form::{tempfile::TempFile, MultipartForm};
 use actix_web::web::scope;
 use actix_web::{delete, get, post, put, web, HttpResponse};
+#[cfg(feature = "picture_extract")]
 use common::const_value::SETTINGS;
 use common::data_result::PaginateSearch;
-use common::data_result::{AppResult, WebResult};
+use common::data_result::{WebResult};
+#[cfg(feature = "picture_extract")]
+use common::data_result::{AppResult};
 use common::db_config::auto_trait::AutoOperation;
 use common::db_config::db_get_connection;
+#[cfg(feature = "picture_extract")]
 use common::error::BUSINESS_ERROR;
 use common::{result_success, validate};
 use diesel::query_dsl::methods::OrderDsl;
@@ -18,6 +26,7 @@ use repository::component::page::Paginate;
 use repository::owner_info::OwnerBasicInfoPo;
 use repository::schema::basic::t_owner_basic_info::*;
 use repository::soft_delete_by_id;
+#[cfg(test)]
 use service::picture_extract::dto::ExtractSender;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
@@ -27,7 +36,7 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         .service(add_info)
         .service(get_find)
         .service(delete_info)
-        .service(upload_picture)
+        // .service(upload_picture)
     );
 }
 
@@ -128,12 +137,14 @@ async fn get_find(param: web::Query<OwnerInfoSearchType>) -> WebResult<HttpRespo
 }
 
 #[derive(Debug,MultipartForm)]
+#[cfg(feature = "picture_extract")]
 struct UploadForm{
     #[multipart(limit = "10MB")]
     file:TempFile,
 }
 
 #[post("/picture")]
+#[cfg(feature = "picture_extract")]
 async fn upload_picture(MultipartForm(form): MultipartForm<UploadForm>, data: web::Data<AppData>) -> WebResult<HttpResponse> {
     let file_name_opt = form.file.file_name;
     let suffix = file_name_opt.verify_extract_prefix()?;
@@ -150,11 +161,15 @@ async fn upload_picture(MultipartForm(form): MultipartForm<UploadForm>, data: we
     result_success!()
 }
 
+
+#[cfg(feature = "picture_extract")]
 trait ExtractSuffix{
     fn verify_extract_prefix(&self) -> AppResult<String>;
 }
 
 
+
+#[cfg(feature = "picture_extract")]
 impl ExtractSuffix for Option<String> {
     fn verify_extract_prefix(&self) -> AppResult<String> {
         let suffix_vec = &SETTINGS.attachment_config.picture_suffix;

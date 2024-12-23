@@ -70,6 +70,12 @@ pub struct AttachmentConfig {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct PictureConfig {
+    pub owner_table_horizontal_offset: u32,
+    pub owner_table_vertical_offset: u32,
+}
+
+#[derive(Debug, Deserialize)]
 #[allow(unused)]
 pub struct Settings {
     pub web_config: WebConfig,
@@ -78,6 +84,7 @@ pub struct Settings {
     pub excel_config: ExcelConfig,
     pub aliyun_oss_config: AliyunOssConfig,
     pub attachment_config: AttachmentConfig,
+    pub picture_config: PictureConfig,
 }
 impl Settings {
     pub fn new() -> Result<Self, ConfigError> {

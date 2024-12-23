@@ -3,6 +3,11 @@ name = "service"
 version.workspace = true
 edition.workspace = true
 
+
+[features]
+oss = []
+picture_extract = []
+
 [dependencies]
 tempfile.workspace = true
 actix.workspace = true
@@ -27,3 +32,6 @@ rust_xlsxwriter.workspace = true
 futures.workspace = true
 
 lazy_static.workspace = true
+
+encoding_rs = "0.8.35"
+regex.workspace = true

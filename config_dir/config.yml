@@ -40,3 +40,7 @@ aliyun_oss_config:
 attachment_config:
   picture_suffix: [ "jpg", "jpeg", "png", "gif", "bmp" ]
   temp_output_dir: "./temp_output"
+
+picture_config:
+  owner_table_horizontal_offset: 25
+  owner_table_vertical_offset: 15

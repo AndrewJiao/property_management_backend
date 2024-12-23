@@ -1,9 +1,11 @@
+#[cfg(feature = "picture_extract")]
 use actix::{Actor, Addr};
 use actix_web::web;
 use common::conf::log4::init_log4j;
 use common::const_value::DB_CONNECTION;
 use common::data_result::AppResult;
 use common::web_config::{build_service, DataTrait};
+#[cfg(feature = "picture_extract")]
 use service::picture_extract::PictureExtractor;
 
 #[path = "../controller/mod.rs"]
@@ -35,11 +37,13 @@ fn build_web_data() -> web::Data<AppData> {
 
 #[derive(Clone)]
 pub struct AppData {
+    #[cfg(feature = "picture_extract")]
     actors: Actors,
 }
 impl DataTrait for AppData {}
 
 #[derive(Clone)]
+#[cfg(feature = "picture_extract")]
 pub struct Actors {
     picture_extractor: Addr<PictureExtractor>,
 }
@@ -47,6 +51,7 @@ pub struct Actors {
 impl AppData {
     fn new() -> Self {
         AppData {
+            #[cfg(feature = "picture_extract")]
             actors: Actors { picture_extractor: PictureExtractor.start() },
         }
     }
