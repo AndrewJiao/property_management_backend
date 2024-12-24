@@ -190,7 +190,7 @@ pub mod basic {
             account -> Varchar,
             password -> Varchar,
             name -> Varchar,
-            role -> RoleType,
+            role_type -> RoleType,
             create_by -> Varchar,
             update_by -> Varchar,
             create_time -> Timestamp,

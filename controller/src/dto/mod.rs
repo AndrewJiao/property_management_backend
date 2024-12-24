@@ -19,3 +19,6 @@ pub trait ToInsertPO {
     fn to_insert_po(&self) -> Self::PO<'_>;
 }
 
+pub trait ToDesc {
+    fn to_desc(&self) -> String;
+}

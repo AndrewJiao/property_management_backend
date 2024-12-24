@@ -1,5 +1,5 @@
-use crate::dto::user::{UserCreateDto, UserSearchDto, UserUpdateDto};
-use crate::dto::{ToInsertPO, ToUpdatePO};
+use crate::dto::user::{SearchType, UserCreateDto, UserResultDto, UserSearchDto, UserUpdateDto};
+use crate::dto::{user, ToInsertPO, ToUpdatePO};
 use actix_web::web::scope;
 use actix_web::{delete, get, post, put, web, HttpResponse};
 use common::data_result::{PaginateSearch, WebResult};
@@ -28,15 +28,20 @@ pub async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpRespon
     let search_param = param.convert_param::<UserSearchDto>()?;
     validate!(search_param,param);
     let statement = UserPo::search(search_param.account.as_deref(),
-                                search_param.binding_room_number.as_deref(),
-                                search_param.role,
-                                search_param.name.as_deref());
+                                   search_param.binding_room_number.as_deref(),
+                                   search_param.role_type,
+                                   search_param.name.as_deref(),
+                                   search_param.create_time_star.as_ref(),
+                                   search_param.create_time_end.as_ref(),
+                                   search_param.update_time_star.as_ref(),
+                                   search_param.update_time_end.as_ref());
 
     let (result, total) =
         statement.order_by(create_time.desc())
             .paginate(param.current_page())
             .per_page(param.limit())
             .load_and_count_pages(&mut db_get_connection())?;
+    let result = result.into_iter().map(|e| e.into()).collect::<Vec<UserResultDto>>();
     result_success!(result, param.produce_page_result(total))
 }
 #[post("data")]
@@ -80,3 +85,27 @@ pub async fn delete_data(path_param: web::Path<i64>) -> WebResult<HttpResponse> 
     repository::user::delete_by_id(path_param.into_inner())?;
     result_success!()
 }
+
+///
+/// 查询房间绑定列表
+///
+#[get("data/binding_room")]
+pub async fn get_binding_room(param: web::Query<user::SearchType>) -> WebResult<HttpResponse> {
+
+    match param.into_inner() {
+        SearchType::Account(value) => {
+            let result = UserPo::find_by_account(&value)?;
+            result_success!(result)
+        }
+        SearchType::Name(value) => {
+            let result = UserPo::find_by_name(&value)?;
+            result_success!(result)
+        }
+        SearchType::BindingRoomNumber(_) => {
+            todo!();
+            result_success!()
+        }
+    }
+
+}
+

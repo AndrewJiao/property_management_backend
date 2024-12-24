@@ -1,8 +1,9 @@
-use crate::dto::{ToInsertPO, ToUpdatePO};
-use common::const_value::SYSTEM;
-use repository::user::{RoleType, UserInsertPo, UserUpdatePo};
-use serde::Deserialize;
+use chrono::NaiveDateTime;
+use serde::{Deserialize, Serialize};
 use validator::Validate;
+use common::const_value::SYSTEM;
+use repository::user::{RoleType, UserInsertPo, UserPo, UserUpdatePo};
+use crate::dto::{ToDesc, ToInsertPO, ToUpdatePO};
 
 #[derive(Deserialize,Validate)]
 #[serde(rename_all = "camelCase")]
@@ -13,7 +14,7 @@ pub struct UserCreateDto {
     pub password: String,
     #[validate(length(min = 1, max = 100))]
     pub name: String,
-    pub role: RoleType,
+    pub role_type: RoleType,
     #[validate(length(min = 1, max = 5000))]
     pub comment: Option<String>,
     #[validate(length(min = 1, max = 100))]
@@ -27,7 +28,8 @@ impl ToInsertPO for UserCreateDto{
             password: self.password.clone(),
             account: &self.account,
             name: &self.name,
-            role: self.role,
+            role_type: self.role_type,
+            create_by: SYSTEM,
             update_by: SYSTEM,
             create_time: None,
             update_time: None,
@@ -44,7 +46,7 @@ impl ToInsertPO for UserCreateDto{
 pub struct UserUpdateDto {
     #[validate(length(min = 1, max = 100))]
     pub name: Option<String>,
-    pub role: RoleType,
+    pub role_type: RoleType,
     #[validate(length(min = 1, max = 5000))]
     pub comment: Option<String>,
     #[validate(length(min = 1, max = 100))]
@@ -59,7 +61,7 @@ impl ToUpdatePO for UserUpdateDto{
             account: None,
             password: None,
             name: self.name.as_deref(),
-            role: Some(self.role),
+            role_type: Some(self.role_type),
             update_by: None,
             update_time: None,
             comment: self.comment.as_deref(),
@@ -77,7 +79,67 @@ pub struct UserSearchDto {
     pub account: Option<String>,
     #[validate(length(min = 1, max = 100))]
     pub name: Option<String>,
-    pub role: Option<RoleType>,
+    pub role_type: Option<RoleType>,
     #[validate(length(min = 1, max = 100))]
     pub binding_room_number: Option<String>,
+    pub create_time_star: Option<NaiveDateTime>,
+    pub create_time_end: Option<NaiveDateTime>,
+    pub update_time_star: Option<NaiveDateTime>,
+    pub update_time_end: Option<NaiveDateTime>,
+
+}
+
+#[derive(Serialize,Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct UserResultDto {
+    pub account_id: String,
+    pub account: String,
+    pub password: String,
+    pub name: String,
+    pub role_type: RoleType,
+    pub role_type_desc: String,
+    pub create_by: String,
+    pub update_by: String,
+    pub create_time: chrono::NaiveDateTime,
+    pub update_time: chrono::NaiveDateTime,
+    pub comment: Option<String>,
+    pub binding_room_number: Option<String>,
+}
+
+impl From<UserPo> for UserResultDto{
+    fn from(value: UserPo) -> Self {
+        UserResultDto {
+            account_id: value.account_id,
+            account: value.account,
+            password: value.password,
+            name: value.name,
+            role_type: value.role_type,
+            role_type_desc: value.role_type.to_desc(),
+            create_by: value.create_by,
+            update_by: value.update_by,
+            create_time: value.create_time,
+            update_time: value.update_time,
+            comment: value.comment,
+            binding_room_number: value.binding_room_number,
+        }
+    }
+}
+impl ToDesc for RoleType{
+    fn to_desc(&self) -> String {
+        match self {
+            RoleType::Manager => "管理员".to_string(),
+            RoleType::Root => "超级管理员".to_string(),
+            RoleType::SubManager => "次级管理员".to_string(),
+            RoleType::User => "普通用户".to_string(),
+        }
+    }
+}
+
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", tag = "searchType", content = "searchValue")]
+pub enum SearchType {
+    Account(String),
+    Name(String),
+    BindingRoomNumber(String),
 }

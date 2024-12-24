@@ -1,3 +1,4 @@
+use base64::Engine;
 use common::const_value::SETTINGS;
 use common::data_result::AppResult;
 use common::db_config::auto_trait::AutoOperation;
@@ -35,11 +36,12 @@ impl<T: Password> PasswordCoder for T{
         let password = self.raw_password();
         let sec_key = &SETTINGS.app_config.password_sec_key;
 
-         HmacSha256::new_from_slice(&sec_key.as_bytes())
+        HmacSha256::new_from_slice(&sec_key.as_bytes())
             .map(|mut mac| {
                 mac.update(password.as_bytes());
-                String::from_utf8(mac.finalize().into_bytes().to_vec()).ok()
-            }).ok().flatten()
+                let bytes = mac.finalize().into_bytes();
+                base64::engine::general_purpose::STANDARD.encode(bytes)
+            }).ok()
     }
 }
 
