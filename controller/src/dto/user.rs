@@ -34,7 +34,6 @@ impl ToInsertPO for UserCreateDto{
             create_time: None,
             update_time: None,
             comment: self.comment.as_deref(),
-            binding_room_number: self.binding_room_number.as_deref(),
             is_delete: false,
         }
     }
@@ -120,7 +119,7 @@ impl From<UserPo> for UserResultDto{
             create_time: value.create_time,
             update_time: value.update_time,
             comment: value.comment,
-            binding_room_number: value.binding_room_number,
+            binding_room_number: None,
         }
     }
 }

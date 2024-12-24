@@ -1,16 +1,21 @@
+use crate::component::page::Paginate;
+use crate::owner_info::OwnerBasicInfoPo;
 use crate::schema::basic::t_user;
 use crate::schema::basic::t_user::*;
-use crate::{common_type, filter_data_enable, if_filter};
+use crate::{build_statement, common_type, copy_statement, filter_data_enable, if_filter};
 use chrono::NaiveDateTime;
 use common::data_result::AppResult;
 use common::db_config::db_get_connection;
 use diesel::dsl::auto_type;
 use diesel::pg::Pg;
-use diesel::ExpressionMethods;
+use diesel::query_dsl::InternalJoinDsl;
 use diesel::{AsChangeset, Identifiable, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper, TextExpressionMethods};
+use diesel::{ExpressionMethods, JoinOnDsl};
 use diesel_derive_enum::DbEnum;
 use management_macro::AutoOperation;
 use serde::{Deserialize, Serialize};
+
+pub mod relate;
 
 #[derive(Deserialize, Serialize, DbEnum, Debug, Clone, Copy)]
 #[ExistingTypePath = "crate::schema::basic::sql_types::RoleType"]
@@ -51,7 +56,6 @@ pub struct UserPo {
     pub update_time: chrono::NaiveDateTime,
     pub comment: Option<String>,
     pub is_delete: bool,
-    pub binding_room_number: Option<String>,
 }
 type BoxedQuery<'a> = t_user::BoxedQuery<'a, Pg, crate::SqlType<UserPo>>;
 impl UserPo {
@@ -84,26 +88,37 @@ impl UserPo {
 
 
     pub fn search<'a>(p_account: Option<&'a str>,
-                      p_bind_room: Option<&'a str>,
                       p_role: Option<RoleType>,
                       p_name: Option<&'a str>,
                       create_time_star: Option<&'a NaiveDateTime>,
                       create_time_end: Option<&'a NaiveDateTime>,
                       update_time_star: Option<&'a NaiveDateTime>,
                       update_time_end: Option<&'a NaiveDateTime>,
-
+                      current_page:i64,
+                      page_size:i64,
     )
-        -> BoxedQuery<'a> {
-        let mut statement = Self::all();
+        -> AppResult<(Vec<(UserPo, OwnerBasicInfoPo)>, i64)> {
+        use crate::schema::basic::t_user_relate_room;
+        use crate::schema::basic::t_owner_basic_info;
 
+        let mut statement = Self::all()
+            .inner_join(t_user_relate_room::table.on(t_user_relate_room::relate_account_id.eq(t_user::account_id)))
+            .inner_join(t_owner_basic_info::table.on(t_owner_basic_info::room_number.eq(t_user_relate_room::relate_number)));
         if_filter!(statement = account.eq(p_account));
         if_filter!(statement = role_type.eq(p_role));
         if_filter!(statement = with_name_like(p_name));
-        if_filter!(statement = binding_room_number.eq(p_bind_room));
         if_filter!(statement = with_create_time_between(create_time_star, create_time_end));
         if_filter!(statement = with_update_time_between(update_time_star, update_time_end));
         filter_data_enable!(statement);
-        statement
+
+        let result = statement
+            .select((UserPo::as_select(), OwnerBasicInfoPo::as_select()))
+            .offset(page_size * current_page)
+            .limit(page_size)
+            .get_results(&mut db_get_connection())?;
+        //数量
+
+        Ok((result, 0))
     }
 }
 
@@ -121,7 +136,6 @@ pub struct UserInsertPo<'a> {
     pub create_time: Option<chrono::NaiveDateTime>,
     pub update_time: Option<chrono::NaiveDateTime>,
     pub comment: Option<&'a str>,
-    pub binding_room_number: Option<&'a str>,
     pub is_delete: bool,
 }
 impl UserInsertPo<'_> {
@@ -145,7 +159,6 @@ pub struct UserUpdatePo<'a> {
     pub update_by: Option<&'a str>,
     pub update_time: Option<chrono::NaiveDateTime>,
     pub comment: Option<&'a str>,
-    pub binding_room_number: Option<&'a str>,
     pub is_delete: Option<bool>,
 }
 

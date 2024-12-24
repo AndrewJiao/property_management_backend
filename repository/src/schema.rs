@@ -197,7 +197,14 @@ pub mod basic {
             update_time -> Timestamp,
             comment -> Nullable<Text>,
             is_delete -> Bool,
-            binding_room_number -> Nullable<Varchar>,
+        }
+    }
+
+    diesel::table! {
+        basic.t_user_relate_room (id) {
+            id -> Int8,
+            relate_account_id -> Varchar,
+            relate_number -> Varchar,
         }
     }
 
@@ -212,5 +219,6 @@ pub mod basic {
         t_room_info_detail,
         t_tool_table,
         t_user,
+        t_user_relate_room,
     );
 }

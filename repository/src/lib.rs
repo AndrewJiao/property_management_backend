@@ -53,6 +53,27 @@ macro_rules! filter_data_enable {
 }
 
 
+// #[macro_export]
+// macro_rules! copy_statement {
+//     ($statement:block)=>{
+//         ({$statement}, {$statement});
+//     }
+// }
+#[macro_export]
+macro_rules! build_statement {
+    ($a:ident,$b:ident,$($body:tt)*) => {{
+        {
+            $($body)*;
+            $a  = statement
+        }
+        {
+            $($body)*;
+            $b = statement
+        }
+    }};
+}
+
+
 #[macro_export]
 macro_rules! common_type {
     () => {

@@ -13,8 +13,7 @@ create table if not exists t_user
     create_time         timestamp       not null,
     update_time         timestamp       not null,
     comment             text,
-    is_delete           boolean         not null,
-    binding_room_number varchar
+    is_delete           boolean         not null
 );
 
 alter table t_user
