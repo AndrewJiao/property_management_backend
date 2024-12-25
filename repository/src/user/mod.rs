@@ -8,13 +8,14 @@ use common::data_result::AppResult;
 use common::db_config::{db_get_connection, Conn};
 use diesel::dsl::auto_type;
 use diesel::pg::Pg;
-use diesel::{AsChangeset, BoolExpressionMethods, GroupedBy, Identifiable, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper, Table, TextExpressionMethods};
+use diesel::{AsChangeset, BoolExpressionMethods, Identifiable, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper, TextExpressionMethods};
 use diesel::{ExpressionMethods, JoinOnDsl};
 use diesel_derive_enum::DbEnum;
 use management_macro::AutoOperation;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
+use diesel::sql_types::Bool;
 use common::tools::time::DEFAULT_TIME;
 
 pub mod relate;
@@ -108,22 +109,21 @@ impl UserPo {
     )
         -> AppResult<(Vec<(UserPo, Option<Vec<String>>)>, i64)> {
         use crate::schema::basic::t_user_relate_room;
-        let (result, total):  = table
+        let (result, total)  = table
             .left_join(t_user_relate_room::table.on(t_user_relate_room::relate_account_id.eq(t_user::account_id)))
-            .filter(account.eq(p_account.unwrap_or_default()).or(p_account.is_none()))
-            .filter(role_type.eq(p_role.unwrap_or_default()).or(p_role.is_none()))
-            .filter(with_name_like(p_name.unwrap_or_default()).or(p_name.is_none()))
-            .filter((t_user_relate_room::relate_number.eq_any(p_binding_room_number.unwrap_or(&vec!["a".to_string()]))).or(p_binding_room_number.is_none()))
-            .filter(create_time.between(create_time_star.unwrap_or(&DEFAULT_TIME), create_time_end.unwrap_or(&DEFAULT_TIME)).or(create_time_star.is_none() || create_time_end.is_none()))
-            .filter(update_time.between(update_time_star.unwrap_or(&DEFAULT_TIME), update_time_end.unwrap_or(&DEFAULT_TIME)).or(update_time_star.is_none() || update_time_end.is_none()))
+            .filter(with_account_like(p_account.unwrap_or_default()).or(diesel::dsl::sql::<Bool>("TRUE")))
+            .filter(with_name_like(p_name.unwrap_or_default()).or(diesel::dsl::sql::<Bool>("TRUE")))
+            .filter((t_user_relate_room::relate_number.eq_any(p_binding_room_number.unwrap_or(&vec!["a".to_string()]))).or(diesel::dsl::sql::<Bool>("TRUE")))
+            .filter(create_time.between(create_time_star.unwrap_or(&DEFAULT_TIME), create_time_end.unwrap_or(&DEFAULT_TIME)).or(diesel::dsl::sql::<Bool>("TRUE")))
+            .filter(update_time.between(update_time_star.unwrap_or(&DEFAULT_TIME), update_time_end.unwrap_or(&DEFAULT_TIME)).or(diesel::dsl::sql::<Bool>("TRUE")))
+            .filter(role_type.eq(p_role.unwrap_or_default()).or(diesel::dsl::sql::<Bool>("TRUE")))
             .filter(with_data_enable())
             .select(UserPo::as_select())
-            .group_by(t_user::account_id)
+            .group_by( (id, account_id, account, password, name, role_type, create_by, update_by, create_time, update_time, comment, is_delete))
             .order_by(create_time.desc())
-            .get_results(&mut db_get_connection())?;
-            // .paginate(current_page)
-            // .per_page(page_size)
-            // .load_and_count_pages(&mut db_get_connection())?;
+            .paginate(current_page)
+            .per_page(page_size)
+            .load_and_count_pages(&mut db_get_connection())?;
 
         let acc_ids = result.iter().map(|item| {
             item.account_id.as_str()
