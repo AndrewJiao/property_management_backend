@@ -1,4 +1,5 @@
 use chrono::NaiveDateTime;
+use lazy_static::lazy_static;
 
 pub fn now_local_date_time_naive() -> NaiveDateTime {
     chrono::Local::now().naive_local()
@@ -22,3 +23,7 @@ pub fn now_utc_date_str(fmt: &str) -> String {
     now.format(fmt).to_string()
 }
 
+//获取最早的时间 1970-01-01 00:00:00
+lazy_static!(
+    pub static ref DEFAULT_TIME:NaiveDateTime = NaiveDateTime::default();
+);

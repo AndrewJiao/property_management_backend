@@ -8,7 +8,6 @@ use common::error::BaseError::AnyhowError;
 use common::error::USER_ACCOUNT_EXIST;
 use common::{result_success, validate};
 use repository::user::UserPo;
-use std::collections::HashMap;
 mod inner;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
@@ -25,31 +24,22 @@ pub async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpRespon
     let param = param.into_inner();
     let search_param = param.convert_param::<UserSearchDto>()?;
     validate!(search_param,param);
-    let (result, total) = UserPo::search(search_param.account.as_deref(),
-                                   search_param.role_type,
-                                   search_param.name.as_deref(),
-                                   search_param.create_time_star.as_ref(),
-                                   search_param.create_time_end.as_ref(),
-                                   search_param.update_time_star.as_ref(),
-                                   search_param.update_time_end.as_ref(),
-                                   param.current_page(),
-                                   param.limit(),
+    let (result, total) = UserPo::search(
+        search_param.account.as_deref(),
+        search_param.role_type,
+        search_param.name.as_deref(),
+        search_param.binding_room_number.as_ref(),
+        search_param.create_time_star.as_ref(),
+        search_param.create_time_end.as_ref(),
+        search_param.update_time_star.as_ref(),
+        search_param.update_time_end.as_ref(),
+        param.current_page(),
+        param.limit(),
     )?;
     //分组
-    let result = result.into_iter()
-        .fold(HashMap::new(),|mut map, (user,room)|{
-            let room_vec: &mut Option<Vec<String>> = map.entry(user).or_insert(None);
-            if let Some(room) = room{
-                if let Some(room_vec) = room_vec{
-                    room_vec.push(room.room_number);
-                }else{
-                    *room_vec = Some(vec![room.room_number]);
-                }
-            }
-            map
-        })
-        //转换
-        .into_iter().map(|e|e.compute_user_result() ).collect::<Vec<UserResultDto>>();
+    let result = result
+        .into_iter().map(|e| e.compute_user_result())
+        .collect::<Vec<UserResultDto>>();
     result_success!(result, param.produce_page_result(total))
 
 }

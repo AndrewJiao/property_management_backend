@@ -1,3 +1,5 @@
+use common::tools::serde::empty_string_or_null_as_none;
+use common::tools::serde::empty_vec_or_null_as_none;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
@@ -44,11 +46,14 @@ impl ToInsertPO for UserCreateDto{
 #[serde(rename_all = "camelCase")]
 pub struct UserUpdateDto {
     #[validate(length(min = 1, max = 100))]
+    #[serde(default, deserialize_with = "empty_string_or_null_as_none")]
     pub name: Option<String>,
     pub role_type: RoleType,
     #[validate(length(min = 1, max = 5000))]
+    #[serde(default, deserialize_with = "empty_string_or_null_as_none")]
     pub comment: Option<String>,
     #[validate(length(min = 1, max = 100))]
+    #[serde(default)]
     pub binding_room_number: Option<Vec<String>>,
 }
 impl ToUpdatePO for UserUpdateDto{
@@ -74,11 +79,14 @@ impl ToUpdatePO for UserUpdateDto{
 #[serde(rename_all = "camelCase")]
 pub struct UserSearchDto {
     #[validate(length(min = 1, max = 100))]
+    #[serde(default, deserialize_with = "empty_string_or_null_as_none")]
     pub account: Option<String>,
+    #[serde(default, deserialize_with = "empty_string_or_null_as_none")]
     #[validate(length(min = 1, max = 100))]
     pub name: Option<String>,
     pub role_type: Option<RoleType>,
-    #[validate(length(min = 1, max = 100))]
+    #[validate(length(min = 0, max = 100))]
+    #[serde(default, deserialize_with = "empty_vec_or_null_as_none")]
     pub binding_room_number: Option<Vec<String>>,
     pub create_time_star: Option<NaiveDateTime>,
     pub create_time_end: Option<NaiveDateTime>,

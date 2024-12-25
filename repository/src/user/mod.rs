@@ -1,18 +1,21 @@
-use std::hash::{Hash, Hasher};
-use crate::owner_info::OwnerBasicInfoPo;
+use crate::component::page::Paginate;
 use crate::schema::basic::t_user;
 use crate::schema::basic::t_user::*;
-use crate::{common_type, filter_data_enable, if_filter};
+use crate::user::relate::UserRelateRoomPo;
+use crate::common_type;
 use chrono::NaiveDateTime;
 use common::data_result::AppResult;
 use common::db_config::{db_get_connection, Conn};
 use diesel::dsl::auto_type;
 use diesel::pg::Pg;
-use diesel::{AsChangeset, Identifiable, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper, TextExpressionMethods};
+use diesel::{AsChangeset, BoolExpressionMethods, GroupedBy, Identifiable, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper, Table, TextExpressionMethods};
 use diesel::{ExpressionMethods, JoinOnDsl};
 use diesel_derive_enum::DbEnum;
 use management_macro::AutoOperation;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
+use common::tools::time::DEFAULT_TIME;
 
 pub mod relate;
 
@@ -24,6 +27,11 @@ pub enum RoleType {
     Manager,
     SubManager,
     User,
+}
+impl Default for RoleType {
+    fn default() -> Self {
+        RoleType::User
+    }
 }
 common_type!();
 
@@ -56,7 +64,6 @@ pub struct UserPo {
     pub comment: Option<String>,
     pub is_delete: bool,
 }
-
 type BoxedQuery<'a> = t_user::BoxedQuery<'a, Pg, crate::SqlType<UserPo>>;
 impl UserPo {
     pub fn all<'a>() -> BoxedQuery<'a> {
@@ -91,6 +98,7 @@ impl UserPo {
         p_account: Option<&'a str>,
         p_role: Option<RoleType>,
         p_name: Option<&'a str>,
+        p_binding_room_number: Option<&Vec<String>>,
         create_time_star: Option<&'a NaiveDateTime>,
         create_time_end: Option<&'a NaiveDateTime>,
         update_time_star: Option<&'a NaiveDateTime>,
@@ -98,49 +106,39 @@ impl UserPo {
         current_page: i64,
         page_size: i64,
     )
-        -> AppResult<(Vec<(UserPo, Option<OwnerBasicInfoPo>)>, i64)> {
-        let result;
-        {
+        -> AppResult<(Vec<(UserPo, Option<Vec<String>>)>, i64)> {
+        use crate::schema::basic::t_user_relate_room;
+        let (result, total):  = table
+            .left_join(t_user_relate_room::table.on(t_user_relate_room::relate_account_id.eq(t_user::account_id)))
+            .filter(account.eq(p_account.unwrap_or_default()).or(p_account.is_none()))
+            .filter(role_type.eq(p_role.unwrap_or_default()).or(p_role.is_none()))
+            .filter(with_name_like(p_name.unwrap_or_default()).or(p_name.is_none()))
+            .filter((t_user_relate_room::relate_number.eq_any(p_binding_room_number.unwrap_or(&vec!["a".to_string()]))).or(p_binding_room_number.is_none()))
+            .filter(create_time.between(create_time_star.unwrap_or(&DEFAULT_TIME), create_time_end.unwrap_or(&DEFAULT_TIME)).or(create_time_star.is_none() || create_time_end.is_none()))
+            .filter(update_time.between(update_time_star.unwrap_or(&DEFAULT_TIME), update_time_end.unwrap_or(&DEFAULT_TIME)).or(update_time_star.is_none() || update_time_end.is_none()))
+            .filter(with_data_enable())
+            .select(UserPo::as_select())
+            .group_by(t_user::account_id)
+            .order_by(create_time.desc())
+            .get_results(&mut db_get_connection())?;
+            // .paginate(current_page)
+            // .per_page(page_size)
+            // .load_and_count_pages(&mut db_get_connection())?;
 
-            use crate::schema::basic::t_user_relate_room;
-            use crate::schema::basic::t_owner_basic_info;
-
-            let mut statement = table.into_boxed()
-                .left_join(t_user_relate_room::table.on(t_user_relate_room::relate_account_id.eq(t_user::account_id)))
-                .left_join(t_owner_basic_info::table.on(t_owner_basic_info::room_number.eq(t_user_relate_room::relate_number)));
-            if_filter!(statement = account.eq(p_account));
-            if_filter!(statement = role_type.eq(p_role));
-            if_filter!(statement = with_name_like(p_name));
-            if_filter!(statement = with_create_time_between(create_time_star, create_time_end));
-            if_filter!(statement = with_update_time_between(update_time_star, update_time_end));
-            filter_data_enable!(statement);
-
-            result = statement
-                .select((UserPo::as_select(), Option::<OwnerBasicInfoPo>::as_select()))
-                .offset(page_size * (current_page - 1))
-                .limit(page_size)
-                .get_results::<(UserPo, Option<OwnerBasicInfoPo>)>(&mut db_get_connection())?;
-
-        }
-        let total;
-        {
-            use crate::schema::basic::t_user_relate_room;
-            use crate::schema::basic::t_owner_basic_info;
-
-            let mut statement = table.into_boxed()
-                .left_join(t_user_relate_room::table.on(t_user_relate_room::relate_account_id.eq(t_user::account_id)))
-                .left_join(t_owner_basic_info::table.on(t_owner_basic_info::room_number.eq(t_user_relate_room::relate_number)));
-            if_filter!(statement = account.eq(p_account));
-            if_filter!(statement = role_type.eq(p_role));
-            if_filter!(statement = with_name_like(p_name));
-            if_filter!(statement = with_create_time_between(create_time_star, create_time_end));
-            if_filter!(statement = with_update_time_between(update_time_star, update_time_end));
-            filter_data_enable!(statement);
-
-            total = statement.count().get_result(&mut db_get_connection())?;
-            //数量
-        }
-
+        let acc_ids = result.iter().map(|item| {
+            item.account_id.as_str()
+        }).collect::<Vec<&str>>();
+        let mut relation_map =
+            UserRelateRoomPo::by_account_id(acc_ids)?
+                .into_iter().map(|item| (item.relate_account_id, item.relate_number))
+                .fold(HashMap::new(), |mut acc, (key, value)| {
+                    acc.entry(key).or_insert(vec![]).push(value);
+                    acc
+                });
+        let result = result.into_iter().map(|item| {
+            let acc_temp_id = item.account_id.clone();
+            (item, relation_map.remove(&acc_temp_id))
+        }).collect();
         Ok((result, total))
     }
 }

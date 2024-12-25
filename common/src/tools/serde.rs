@@ -19,6 +19,22 @@ where
 }
 
 
+pub fn empty_vec_or_null_as_none<'de, D>(deserializer: D) -> Result<Option<Vec<String>>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    // 尝试反序列化为 Option<String>
+    let option_str: Option<Vec<String>> = Option::deserialize(deserializer)?;
+
+    // 如果是空字符串或 null 则转为 None
+    match option_str {
+        Some(s) if s.is_empty() => Ok(None),
+        None => Ok(None),
+        Some(s) => Ok(Some(s)),
+    }
+}
+
+
 // 序列化：None 转换为 null，空字符串保持为空字符串
 pub fn none_as_null_or_empty_string<S>(value: &Option<String>, serializer: S) -> Result<S::Ok, S::Error>
 where

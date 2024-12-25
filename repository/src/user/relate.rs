@@ -10,9 +10,9 @@ use serde::{Deserialize, Serialize};
 #[diesel(check_for_backend(diesel::pg::Pg))]
 #[serde(rename_all = "camelCase")]
 pub struct UserRelateRoomPo {
-    id: i64,
-    relate_account_id: String,
-    relate_number: String,
+    pub id: i64,
+    pub relate_account_id: String,
+    pub relate_number: String,
 }
 impl UserRelateRoomPo{
     pub fn bind(p_account_id: &str, p_room_numbers: &Vec<&str>, conn: &mut Conn) -> AppResult<Vec<UserRelateRoomPo>> {
