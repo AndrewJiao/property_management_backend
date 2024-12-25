@@ -18,7 +18,7 @@ pub struct UserCreateDto {
     #[validate(length(min = 1, max = 5000))]
     pub comment: Option<String>,
     #[validate(length(min = 1, max = 100))]
-    pub binding_room_number: Option<String>,
+    pub binding_room_number: Option<Vec<String>>,
 }
 impl ToInsertPO for UserCreateDto{
     type PO<'a> = UserInsertPo<'a>;
@@ -49,7 +49,7 @@ pub struct UserUpdateDto {
     #[validate(length(min = 1, max = 5000))]
     pub comment: Option<String>,
     #[validate(length(min = 1, max = 100))]
-    pub binding_room_number: Option<String>,
+    pub binding_room_number: Option<Vec<String>>,
 }
 impl ToUpdatePO for UserUpdateDto{
     type PO<'a> = UserUpdatePo<'a>;
@@ -64,7 +64,6 @@ impl ToUpdatePO for UserUpdateDto{
             update_by: None,
             update_time: None,
             comment: self.comment.as_deref(),
-            binding_room_number: self.binding_room_number.as_deref(),
             is_delete: None,
         }
     }
@@ -80,7 +79,7 @@ pub struct UserSearchDto {
     pub name: Option<String>,
     pub role_type: Option<RoleType>,
     #[validate(length(min = 1, max = 100))]
-    pub binding_room_number: Option<String>,
+    pub binding_room_number: Option<Vec<String>>,
     pub create_time_star: Option<NaiveDateTime>,
     pub create_time_end: Option<NaiveDateTime>,
     pub update_time_star: Option<NaiveDateTime>,
@@ -102,7 +101,7 @@ pub struct UserResultDto {
     pub create_time: chrono::NaiveDateTime,
     pub update_time: chrono::NaiveDateTime,
     pub comment: Option<String>,
-    pub binding_room_number: Option<String>,
+    pub binding_room_number: Option<Vec<String>>,
 }
 
 impl From<UserPo> for UserResultDto{
@@ -142,3 +141,4 @@ pub enum SearchType {
     Name(String),
     BindingRoomNumber(String),
 }
+

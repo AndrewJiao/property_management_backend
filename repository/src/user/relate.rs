@@ -1,7 +1,8 @@
 use crate::schema::basic::t_user_relate_room::*;
+use crate::schema::basic::t_user_relate_room;
 use common::data_result::AppResult;
 use common::db_config::{db_get_connection, Conn};
-use diesel::{ExpressionMethods, Insertable, Queryable, RunQueryDsl, Selectable};
+use diesel::{ExpressionMethods, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper};
 use serde::{Deserialize, Serialize};
 
 #[derive(Queryable, Selectable, Deserialize, Serialize)]
@@ -15,6 +16,9 @@ pub struct UserRelateRoomPo {
 }
 impl UserRelateRoomPo{
     pub fn bind(p_account_id: &str, p_room_numbers: &Vec<&str>, conn: &mut Conn) -> AppResult<Vec<UserRelateRoomPo>> {
+        if p_room_numbers.is_empty(){
+            return Ok(vec![]);
+        }
         let new_insert:Vec<UserRelateRoomInsertPo> = p_room_numbers.iter()
             .map(|p_room_number| {
                 UserRelateRoomInsertPo{
@@ -28,6 +32,10 @@ impl UserRelateRoomPo{
         Ok(result)
     }
     pub fn unbind(any_id: &Vec<&str>, conn: &mut Conn) -> AppResult<usize> {
+        //判空
+        if any_id.is_empty(){
+            return Ok(0);
+        }
         let result = diesel::delete(table)
             .filter(relate_account_id.eq_any(any_id))
             .filter(relate_number.eq_any(any_id))
@@ -36,13 +44,13 @@ impl UserRelateRoomPo{
     }
 
     pub fn by_account_id(p_account_id:Vec<&str>)->AppResult<Vec<UserRelateRoomPo>>{
-        let result = table
+        let result = table.select(UserRelateRoomPo::as_select())
             .filter(relate_account_id.eq_any(p_account_id))
             .get_results(&mut db_get_connection())?;
         Ok(result)
     }
     pub fn by_room_number(p_room_number: &str) -> AppResult<Vec<UserRelateRoomPo> > {
-        let result = table
+        let result = table.select(UserRelateRoomPo::as_select())
             .filter(relate_number.eq(p_room_number))
             .get_results(&mut db_get_connection())?;
         Ok(result)

@@ -5,20 +5,27 @@ use common::db_config::db_get_connection;
 use common::CURRENT_USE;
 use diesel::dsl::insert_into;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SaveChangesDsl};
-use repository::component::operation_trait::FeeCalculator;
 use repository::owner_info::OwnerBasicInfoPo;
 use repository::price_basic::{BasicPriceType, PriceBasicConfigGet, PriceBasicPo};
 use repository::property_fee::{PropertyFeeDetailInsertPo, PropertyFeeDetailPo, PropertyFeeDetailUpdatePo};
 use repository::room_info::RoomInfoDetailPo;
 use std::collections::{HashMap, HashSet};
 use bigdecimal::BigDecimal;
+use repository::component::operation_trait::FeeCalculator;
 
 ///
 /// 编辑的过程中尝试重新计算
 ///
-pub fn do_edit_update(mut po: PropertyFeeDetailUpdatePo) -> AppResult<PropertyFeeDetailPo> {
-    po.fee_calculate();
-    let result  = po.update_time()
+pub fn do_edit_update(update_po: PropertyFeeDetailUpdatePo) -> AppResult<PropertyFeeDetailPo>
+{
+    let binding = &PropertyFeeDetailPo::by_id(update_po.id)
+        .get_result::<PropertyFeeDetailPo>(&mut db_get_connection())?;
+    let mut exist_po: PropertyFeeDetailUpdatePo = binding.into();
+    exist_po.update(update_po);
+    exist_po.fee_calculate();
+    //交给外部去修改
+    let result = exist_po
+        .update_time()
         .save_changes::<PropertyFeeDetailPo>(&mut db_get_connection())?;
     Ok(result)
 }

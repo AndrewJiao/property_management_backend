@@ -49,7 +49,7 @@ impl PropertyFeeDetailPo{
         table.select(PropertyFeeDetailPo::as_select()).into_boxed()
     }
     pub fn by_id<'a>(p_id:i64) -> BoxedQuery<'a> {
-        Self::all().filter(with_id_filter(p_id))
+        Self::all().filter(with_id_filter(p_id)).filter(with_data_enable())
     }
 
     ///
@@ -94,6 +94,70 @@ pub struct PropertyFeeDetailUpdatePo<'a> {
     pub delete_at: Option<NaiveDateTime>,
     pub comment: Option<&'a str>,
     pub total_fee: Option<BigDecimal>,
+}
+impl <'c> PropertyFeeDetailUpdatePo<'c>{
+    pub fn update<'a, 'b>(&'a mut self, update_po: PropertyFeeDetailUpdatePo<'b>)
+    where
+        'b: 'a,
+        'b: 'c,
+    {
+        if update_po.management_fee.is_some() {
+            self.management_fee = update_po.management_fee;
+        }
+        if update_po.part_fee.is_some() {
+            self.part_fee = update_po.part_fee;
+        }
+        if update_po.machine_room_renovation_fee.is_some() {
+            self.machine_room_renovation_fee = update_po.machine_room_renovation_fee;
+        }
+        if update_po.lift_fee.is_some() {
+            self.lift_fee = update_po.lift_fee;
+        }
+        if update_po.electric_fee.is_some() {
+            self.electric_fee = update_po.electric_fee;
+        }
+        if update_po.electric_share_fee.is_some() {
+            self.electric_share_fee = update_po.electric_share_fee;
+        }
+        if update_po.water_fee.is_some() {
+            self.water_fee = update_po.water_fee;
+        }
+        if update_po.water_share_fee.is_some() {
+            self.water_share_fee = update_po.water_share_fee;
+        }
+        if update_po.liquidate_fee.is_some() {
+            self.liquidate_fee = update_po.liquidate_fee;
+        }
+        if update_po.pre_store_fee.is_some() {
+            self.pre_store_fee = update_po.pre_store_fee;
+        }
+        if update_po.comment.is_some() {
+            self.comment = update_po.comment;
+        }
+    }
+}
+impl<'a> From<&'a PropertyFeeDetailPo> for PropertyFeeDetailUpdatePo<'a> {
+    fn from(po: &'a PropertyFeeDetailPo) -> Self {
+        Self {
+            id: po.id,
+            management_fee: po.management_fee.as_ref(),
+            part_fee: po.part_fee.as_ref(),
+            machine_room_renovation_fee: po.machine_room_renovation_fee.as_ref(),
+            lift_fee: po.lift_fee.as_ref(),
+            electric_fee: po.electric_fee.as_ref(),
+            electric_share_fee: po.electric_share_fee.as_ref(),
+            water_fee: po.water_fee.as_ref(),
+            water_share_fee: po.water_share_fee.as_ref(),
+            liquidate_fee: po.liquidate_fee.as_ref(),
+            pre_store_fee: po.pre_store_fee.as_ref(),
+            update_by: Some(&po.update_by),
+            update_time: Some(po.update_time),
+            is_delete: Some(po.is_delete),
+            delete_at: po.delete_at,
+            comment: po.comment.as_deref(),
+            total_fee: po.total_fee.clone(),
+        }
+    }
 }
 
 impl FeeCalculator for PropertyFeeDetailUpdatePo<'_> {

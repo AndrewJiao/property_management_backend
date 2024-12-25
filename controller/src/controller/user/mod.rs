@@ -1,17 +1,15 @@
+use crate::controller::user::inner::ComputeUserResult;
 use crate::dto::user::{SearchType, UserCreateDto, UserResultDto, UserSearchDto, UserUpdateDto};
-use crate::dto::{user, ToInsertPO, ToUpdatePO};
+use crate::dto::{ToInsertPO, ToUpdatePO};
 use actix_web::web::scope;
 use actix_web::{delete, get, post, put, web, HttpResponse};
 use common::data_result::{PaginateSearch, WebResult};
-use common::db_config::auto_trait::AutoOperation;
-use common::db_config::db_get_connection;
 use common::error::BaseError::AnyhowError;
-use common::error::{DATA_NOT_EXIST, USER_ACCOUNT_EXIST};
+use common::error::USER_ACCOUNT_EXIST;
 use common::{result_success, validate};
-use diesel::{ExpressionMethods, QueryDsl, SaveChangesDsl};
-use repository::component::page::Paginate;
-use repository::schema::basic::t_user::create_time;
 use repository::user::UserPo;
+use std::collections::HashMap;
+mod inner;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(scope("/user_info")
@@ -27,7 +25,7 @@ pub async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpRespon
     let param = param.into_inner();
     let search_param = param.convert_param::<UserSearchDto>()?;
     validate!(search_param,param);
-    let (user,room) = UserPo::search(search_param.account.as_deref(),
+    let (result, total) = UserPo::search(search_param.account.as_deref(),
                                    search_param.role_type,
                                    search_param.name.as_deref(),
                                    search_param.create_time_star.as_ref(),
@@ -37,9 +35,23 @@ pub async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpRespon
                                    param.current_page(),
                                    param.limit(),
     )?;
-
-    let result = result.into_iter().map(|e| e.into()).collect::<Vec<UserResultDto>>();
+    //分组
+    let result = result.into_iter()
+        .fold(HashMap::new(),|mut map, (user,room)|{
+            let room_vec: &mut Option<Vec<String>> = map.entry(user).or_insert(None);
+            if let Some(room) = room{
+                if let Some(room_vec) = room_vec{
+                    room_vec.push(room.room_number);
+                }else{
+                    *room_vec = Some(vec![room.room_number]);
+                }
+            }
+            map
+        })
+        //转换
+        .into_iter().map(|e|e.compute_user_result() ).collect::<Vec<UserResultDto>>();
     result_success!(result, param.produce_page_result(total))
+
 }
 #[post("data")]
 pub async fn post_data(param: web::Json<UserCreateDto>) -> WebResult<HttpResponse> {
@@ -48,9 +60,7 @@ pub async fn post_data(param: web::Json<UserCreateDto>) -> WebResult<HttpRespons
     if let Some(_) = UserPo::by_account(&param.account) {
         return Err(AnyhowError(USER_ACCOUNT_EXIST()));
     }
-    valid_room_number(&param.binding_room_number)?;
-
-    let result = service::user::create_account(param.to_insert_po())?;
+    let result = service::user::create_account(param.to_insert_po(), param.binding_room_number.clone())?;
     result_success!(result)
 }
 
@@ -60,27 +70,18 @@ pub async fn post_data(param: web::Json<UserCreateDto>) -> WebResult<HttpRespons
 #[put("data/{id}")]
 pub async fn put_data(path_param: web::Path<i64>, param: web::Json<UserUpdateDto>) -> WebResult<HttpResponse> {
     validate!(param);
-    valid_room_number(&param.binding_room_number)?;
 
-    let result = param.to_update_po(path_param.into_inner())
-        .update_time()
-        .save_changes::<UserPo>(&mut db_get_connection())?;
+    let result = service::user::put_data(param.to_update_po(path_param.into_inner()), param.binding_room_number.clone())?
+        .compute_user_result();
     result_success!(result)
 }
 
-fn valid_room_number(param: &Option<String>) -> WebResult<()> {
-    if let Some(ref room_number) = param {
-        if repository::owner_info::OwnerBasicInfoPo::by_room_number(room_number, &mut db_get_connection()).is_err() {
-            return Err(AnyhowError(DATA_NOT_EXIST()));
-        }
-    }
-    Ok(())
-}
 
 #[delete("data/{id}")]
 pub async fn delete_data(path_param: web::Path<i64>) -> WebResult<HttpResponse> {
-    repository::user::delete_by_id(path_param.into_inner())?;
-    result_success!()
+    let result = service::user::delete_data(path_param.into_inner())?
+        .compute_user_result();
+    result_success!(result)
 }
 
 ///

@@ -105,7 +105,7 @@ fn do_search(current_page: i64, page_size: i64, order_types: &Option<Vec<Order>>
 #[put("/data/{data_id}")]
 async fn put_data(path_param: web::Path<i64>, body_param: web::Json<PropertyFeeDetailUpdateDto>) -> WebResult<HttpResponse> {
     validate!(body_param);
-    let result = do_edit_update(body_param.to_update_po(path_param.into_inner()))?;
+    let result = do_edit_update(body_param.into_inner().to_update_po(path_param.into_inner()))?;
     result_success!(result)
 }
 

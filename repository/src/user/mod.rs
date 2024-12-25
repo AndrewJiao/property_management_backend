@@ -1,14 +1,13 @@
-use crate::component::page::Paginate;
+use std::hash::{Hash, Hasher};
 use crate::owner_info::OwnerBasicInfoPo;
 use crate::schema::basic::t_user;
 use crate::schema::basic::t_user::*;
-use crate::{build_statement, common_type, copy_statement, filter_data_enable, if_filter};
+use crate::{common_type, filter_data_enable, if_filter};
 use chrono::NaiveDateTime;
 use common::data_result::AppResult;
-use common::db_config::db_get_connection;
+use common::db_config::{db_get_connection, Conn};
 use diesel::dsl::auto_type;
 use diesel::pg::Pg;
-use diesel::query_dsl::InternalJoinDsl;
 use diesel::{AsChangeset, Identifiable, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper, TextExpressionMethods};
 use diesel::{ExpressionMethods, JoinOnDsl};
 use diesel_derive_enum::DbEnum;
@@ -57,6 +56,7 @@ pub struct UserPo {
     pub comment: Option<String>,
     pub is_delete: bool,
 }
+
 type BoxedQuery<'a> = t_user::BoxedQuery<'a, Pg, crate::SqlType<UserPo>>;
 impl UserPo {
     pub fn all<'a>() -> BoxedQuery<'a> {
@@ -87,40 +87,75 @@ impl UserPo {
     }
 
 
-    pub fn search<'a>(p_account: Option<&'a str>,
-                      p_role: Option<RoleType>,
-                      p_name: Option<&'a str>,
-                      create_time_star: Option<&'a NaiveDateTime>,
-                      create_time_end: Option<&'a NaiveDateTime>,
-                      update_time_star: Option<&'a NaiveDateTime>,
-                      update_time_end: Option<&'a NaiveDateTime>,
-                      current_page:i64,
-                      page_size:i64,
+    pub fn search<'a>(
+        p_account: Option<&'a str>,
+        p_role: Option<RoleType>,
+        p_name: Option<&'a str>,
+        create_time_star: Option<&'a NaiveDateTime>,
+        create_time_end: Option<&'a NaiveDateTime>,
+        update_time_star: Option<&'a NaiveDateTime>,
+        update_time_end: Option<&'a NaiveDateTime>,
+        current_page: i64,
+        page_size: i64,
     )
-        -> AppResult<(Vec<(UserPo, OwnerBasicInfoPo)>, i64)> {
-        use crate::schema::basic::t_user_relate_room;
-        use crate::schema::basic::t_owner_basic_info;
+        -> AppResult<(Vec<(UserPo, Option<OwnerBasicInfoPo>)>, i64)> {
+        let result;
+        {
 
-        let mut statement = Self::all()
-            .inner_join(t_user_relate_room::table.on(t_user_relate_room::relate_account_id.eq(t_user::account_id)))
-            .inner_join(t_owner_basic_info::table.on(t_owner_basic_info::room_number.eq(t_user_relate_room::relate_number)));
-        if_filter!(statement = account.eq(p_account));
-        if_filter!(statement = role_type.eq(p_role));
-        if_filter!(statement = with_name_like(p_name));
-        if_filter!(statement = with_create_time_between(create_time_star, create_time_end));
-        if_filter!(statement = with_update_time_between(update_time_star, update_time_end));
-        filter_data_enable!(statement);
+            use crate::schema::basic::t_user_relate_room;
+            use crate::schema::basic::t_owner_basic_info;
 
-        let result = statement
-            .select((UserPo::as_select(), OwnerBasicInfoPo::as_select()))
-            .offset(page_size * current_page)
-            .limit(page_size)
-            .get_results(&mut db_get_connection())?;
-        //数量
+            let mut statement = table.into_boxed()
+                .left_join(t_user_relate_room::table.on(t_user_relate_room::relate_account_id.eq(t_user::account_id)))
+                .left_join(t_owner_basic_info::table.on(t_owner_basic_info::room_number.eq(t_user_relate_room::relate_number)));
+            if_filter!(statement = account.eq(p_account));
+            if_filter!(statement = role_type.eq(p_role));
+            if_filter!(statement = with_name_like(p_name));
+            if_filter!(statement = with_create_time_between(create_time_star, create_time_end));
+            if_filter!(statement = with_update_time_between(update_time_star, update_time_end));
+            filter_data_enable!(statement);
 
-        Ok((result, 0))
+            result = statement
+                .select((UserPo::as_select(), Option::<OwnerBasicInfoPo>::as_select()))
+                .offset(page_size * (current_page - 1))
+                .limit(page_size)
+                .get_results::<(UserPo, Option<OwnerBasicInfoPo>)>(&mut db_get_connection())?;
+
+        }
+        let total;
+        {
+            use crate::schema::basic::t_user_relate_room;
+            use crate::schema::basic::t_owner_basic_info;
+
+            let mut statement = table.into_boxed()
+                .left_join(t_user_relate_room::table.on(t_user_relate_room::relate_account_id.eq(t_user::account_id)))
+                .left_join(t_owner_basic_info::table.on(t_owner_basic_info::room_number.eq(t_user_relate_room::relate_number)));
+            if_filter!(statement = account.eq(p_account));
+            if_filter!(statement = role_type.eq(p_role));
+            if_filter!(statement = with_name_like(p_name));
+            if_filter!(statement = with_create_time_between(create_time_star, create_time_end));
+            if_filter!(statement = with_update_time_between(update_time_star, update_time_end));
+            filter_data_enable!(statement);
+
+            total = statement.count().get_result(&mut db_get_connection())?;
+            //数量
+        }
+
+        Ok((result, total))
     }
 }
+
+impl PartialEq<Self> for UserPo {
+    fn eq(&self, other: &Self) -> bool {
+        self.account_id == other.account_id
+    }
+}
+impl Hash for UserPo{
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.account_id.hash(state);
+    }
+}
+impl Eq for UserPo {}
 
 #[derive(Insertable, Deserialize, Serialize, AutoOperation)]
 #[diesel(table_name = t_user)]
@@ -139,10 +174,10 @@ pub struct UserInsertPo<'a> {
     pub is_delete: bool,
 }
 impl UserInsertPo<'_> {
-    pub fn save(self) ->AppResult<UserPo>{
+    pub fn save(self,conn:&mut Conn) ->AppResult<UserPo>{
          let result = diesel::insert_into(t_user::table)
             .values(self)
-            .get_result(&mut db_get_connection())?;
+            .get_result(conn)?;
         Ok(result)
     }
 }
@@ -162,10 +197,10 @@ pub struct UserUpdatePo<'a> {
     pub is_delete: Option<bool>,
 }
 
-pub fn delete_by_id(p_id: i64) -> AppResult<()> {
-    diesel::update(t_user::table)
+pub fn delete_by_id(p_id: i64, conn: &mut Conn) -> AppResult<UserPo> {
+    let result = diesel::update(t_user::table)
         .filter(with_id_filter(p_id))
         .set(is_delete.eq(true))
-        .execute(&mut db_get_connection())?;
-    Ok(())
+        .get_result(conn)?;
+    Ok(result)
 }
