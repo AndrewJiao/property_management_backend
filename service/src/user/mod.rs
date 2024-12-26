@@ -121,7 +121,7 @@ fn valid_room_number(param: &Option<Vec<String>>) -> AppResult<()> {
 fn valid_has_being_bind(param: &Option<Vec<String>>)->AppResult<()> {
     if let Some(ref room_number) = param {
         for room_number in room_number {
-            if UserRelateRoomPo::by_room_number(room_number).is_err() {
+            if UserRelateRoomPo::by_room_number(room_number).is_ok() {
                 return Err(DATA_HAS_EXIST());
             }
         }

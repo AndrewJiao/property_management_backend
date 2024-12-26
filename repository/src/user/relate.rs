@@ -2,7 +2,7 @@ use crate::schema::basic::t_user_relate_room::*;
 use crate::schema::basic::t_user_relate_room;
 use common::data_result::AppResult;
 use common::db_config::{db_get_connection, Conn};
-use diesel::{ExpressionMethods, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper};
+use diesel::{BoolExpressionMethods, ExpressionMethods, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper};
 use serde::{Deserialize, Serialize};
 
 #[derive(Queryable, Selectable, Deserialize, Serialize)]
@@ -37,8 +37,7 @@ impl UserRelateRoomPo{
             return Ok(0);
         }
         let result = diesel::delete(table)
-            .filter(relate_account_id.eq_any(any_id))
-            .filter(relate_number.eq_any(any_id))
+            .filter(relate_account_id.eq_any(any_id).or(relate_number.eq_any(any_id)))
             .execute(conn)?;
         Ok(result)
     }
@@ -49,10 +48,10 @@ impl UserRelateRoomPo{
             .get_results(&mut db_get_connection())?;
         Ok(result)
     }
-    pub fn by_room_number(p_room_number: &str) -> AppResult<Vec<UserRelateRoomPo> > {
+    pub fn by_room_number(p_room_number: &str) -> AppResult<UserRelateRoomPo> {
         let result = table.select(UserRelateRoomPo::as_select())
             .filter(relate_number.eq(p_room_number))
-            .get_results(&mut db_get_connection())?;
+            .first(&mut db_get_connection())?;
         Ok(result)
     }
 

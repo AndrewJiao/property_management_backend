@@ -111,12 +111,12 @@ impl UserPo {
         use crate::schema::basic::t_user_relate_room;
         let (result, total)  = table
             .left_join(t_user_relate_room::table.on(t_user_relate_room::relate_account_id.eq(t_user::account_id)))
-            .filter(with_account_like(p_account.unwrap_or_default()).or(diesel::dsl::sql::<Bool>("TRUE")))
-            .filter(with_name_like(p_name.unwrap_or_default()).or(diesel::dsl::sql::<Bool>("TRUE")))
-            .filter((t_user_relate_room::relate_number.eq_any(p_binding_room_number.unwrap_or(&vec!["a".to_string()]))).or(diesel::dsl::sql::<Bool>("TRUE")))
-            .filter(create_time.between(create_time_star.unwrap_or(&DEFAULT_TIME), create_time_end.unwrap_or(&DEFAULT_TIME)).or(diesel::dsl::sql::<Bool>("TRUE")))
-            .filter(update_time.between(update_time_star.unwrap_or(&DEFAULT_TIME), update_time_end.unwrap_or(&DEFAULT_TIME)).or(diesel::dsl::sql::<Bool>("TRUE")))
-            .filter(role_type.eq(p_role.unwrap_or_default()).or(diesel::dsl::sql::<Bool>("TRUE")))
+            .filter(diesel::dsl::sql::<Bool>(if p_account.is_none() { "TRUE" } else { "FALSE" }).or(with_account_like(p_account.unwrap_or_default())))
+            .filter(diesel::dsl::sql::<Bool>(if p_name.is_none() { "TRUE" } else { "FALSE" }).or(with_name_like(p_name.unwrap_or_default())))
+            .filter(diesel::dsl::sql::<Bool>(if p_binding_room_number.is_none() { "TRUE" } else { "FALSE" }).or(t_user_relate_room::relate_number.eq_any(p_binding_room_number.unwrap_or(&vec!["a".to_string()]))))
+            .filter(diesel::dsl::sql::<Bool>(if create_time_star.is_none() { "TRUE" } else { "FALSE" }).or(create_time.between(create_time_star.unwrap_or(&DEFAULT_TIME), create_time_end.unwrap_or(&DEFAULT_TIME))))
+            .filter(diesel::dsl::sql::<Bool>(if update_time_star.is_none() { "TRUE" } else { "FALSE" }).or(update_time.between(update_time_star.unwrap_or(&DEFAULT_TIME), update_time_end.unwrap_or(&DEFAULT_TIME))))
+            .filter(diesel::dsl::sql::<Bool>(if p_role.is_none() { "TRUE" } else { "FALSE" }).or(role_type.eq(p_role.unwrap_or_default())))
             .filter(with_data_enable())
             .select(UserPo::as_select())
             .group_by( (id, account_id, account, password, name, role_type, create_by, update_by, create_time, update_time, comment, is_delete))
@@ -173,7 +173,7 @@ pub struct UserInsertPo<'a> {
 }
 impl UserInsertPo<'_> {
     pub fn save(self,conn:&mut Conn) ->AppResult<UserPo>{
-         let result = diesel::insert_into(t_user::table)
+        let result = diesel::insert_into(t_user::table)
             .values(self)
             .get_result(conn)?;
         Ok(result)

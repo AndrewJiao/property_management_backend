@@ -98,6 +98,7 @@ pub struct UserSearchDto {
 #[derive(Serialize,Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct UserResultDto {
+    pub id: i64,
     pub account_id: String,
     pub account: String,
     pub password: String,
@@ -115,6 +116,7 @@ pub struct UserResultDto {
 impl From<UserPo> for UserResultDto{
     fn from(value: UserPo) -> Self {
         UserResultDto {
+            id: value.id,
             account_id: value.account_id,
             account: value.account,
             password: value.password,
