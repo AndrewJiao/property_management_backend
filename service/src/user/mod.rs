@@ -10,6 +10,7 @@ use repository::owner_info::OwnerBasicInfoPo;
 use repository::user::relate::UserRelateRoomPo;
 use repository::user::{UserInsertPo, UserPo, UserUpdatePo};
 use sha2::Sha256;
+use common::tools::jwt::AppJwtToken;
 
 ///
 /// 如果是加密就生成解密后的字符串，如果是解密就生成加密后的字符串
@@ -50,6 +51,19 @@ impl Password for UserInsertPo<'_> {
 }
 
 type Result = AppResult<(UserPo, Option<Vec<String>>)>;
+
+///
+/// 根据长湖，查询数据并查询验证密码
+///
+pub fn verify_password(account: String, password: String) -> AppResult<UserPo> {
+    let user_po = UserPo::by_account(&account)?;
+    let sec_password = password.as_str().parse_password().unwrap_or_default();
+    if user_po.password ==  sec_password{
+        Ok(user_po)
+    } else {
+        Err(USER_PASSWORD_ERROR())
+    }
+}
 
 pub fn create_account(mut po: UserInsertPo, room_number: Option<Vec<String>>) -> Result {
     let uuid = uuid_v7::gen_uuid_v7().to_string();
@@ -127,4 +141,15 @@ fn valid_has_being_bind(param: &Option<Vec<String>>)->AppResult<()> {
         }
     }
     Ok(())
+}
+
+///
+/// 验证密码
+/// 设置jwtToken
+///
+pub fn login(account: String, password: String) -> AppResult<String> {
+    let user_po = verify_password(account, password)?;
+    //设置jwtToken
+    let token_str = AppJwtToken::create_token_str(user_po)?;
+    Ok(token_str)
 }

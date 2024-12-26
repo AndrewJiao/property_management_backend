@@ -1,12 +1,14 @@
 use crate::controller::user::inner::ComputeUserResult;
-use crate::dto::user::{SearchType, UserCreateDto, UserResultDto, UserSearchDto, UserUpdateDto};
+use crate::dto::user::{SearchType, UserCreateDto, UserLoginDto, UserResultDto, UserSearchDto, UserUpdateDto};
 use crate::dto::{ToInsertPO, ToUpdatePO};
 use actix_web::web::scope;
-use actix_web::{delete, get, post, put, web, HttpResponse};
+use actix_web::{delete, get, post, put, web, HttpRequest, HttpResponse};
+use actix_web::cookie::{Cookie, CookieBuilder};
 use common::data_result::{PaginateSearch, WebResult};
 use common::error::BaseError::AnyhowError;
 use common::error::USER_ACCOUNT_EXIST;
 use common::{result_success, validate};
+use common::tools::jwt::JWT_TOKEN_KEY;
 use repository::user::UserPo;
 mod inner;
 
@@ -26,7 +28,7 @@ pub async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpRespon
     validate!(search_param,param);
     let (result, total) = UserPo::search(
         search_param.account.as_deref(),
-        search_param.role_type,
+        search_param.role_type.as_ref(),
         search_param.name.as_deref(),
         search_param.binding_room_number.as_ref(),
         search_param.create_time_star.as_ref(),
@@ -47,7 +49,7 @@ pub async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpRespon
 pub async fn post_data(param: web::Json<UserCreateDto>) -> WebResult<HttpResponse> {
     validate!(param);
     //验证账户已存在
-    if let Some(_) = UserPo::by_account(&param.account) {
+    if UserPo::by_account(&param.account).is_ok() {
         return Err(AnyhowError(USER_ACCOUNT_EXIST()));
     }
     let result = service::user::create_account(param.to_insert_po(), param.binding_room_number.clone())?;
@@ -96,4 +98,29 @@ pub async fn get_binding_room(param: web::Query<SearchType>) -> WebResult<HttpRe
     }
 
 }
+
+
+///
+/// 登录
+///
+#[put("login")]
+pub async fn login(param: web::Json<UserLoginDto>) -> WebResult<HttpResponse> {
+    validate!(param);
+    let UserLoginDto { account, password } = param.into();
+    let token_string = service::user::login(account, password)?;
+    HttpResponse::Ok().cookie(Cookie::build(JWT_TOKEN_KEY, token_string)
+        .secure(true).http_only(true).finish());
+    result_success!()
+}
+
+///
+/// 登出
+///
+#[get("logout")]
+pub async fn logout() -> WebResult<HttpResponse> {
+    HttpResponse::Ok()
+        .cookie(Cookie::build(JWT_TOKEN_KEY, "").secure(true).http_only(true).finish());
+    result_success!()
+}
+
 

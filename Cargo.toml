@@ -64,3 +64,8 @@ futures = "0.3.31"
 regex = "1.11.1"
 
 tempfile = "3.14.0"
+
+jwt = "0.16.0"
+futures-util = "0.3.31"
+
+rand = "0.8.5"

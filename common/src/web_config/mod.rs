@@ -1,7 +1,7 @@
-pub(crate) mod interceptor;
-
 use crate::const_value::SETTINGS;
+mod interceptors;
 use crate::data_result::AppResult;
+use crate::web_config::interceptors::jwt::JWTMiddleware;
 use actix_web::dev::Server;
 use actix_web::web::ServiceConfig;
 use actix_web::{web, App, HttpServer};
@@ -22,6 +22,7 @@ where
                 App::new().app_data(data.clone())
                     .wrap(create_cors())
                     .wrap(TracingLogger::default())
+                    .wrap(JWTMiddleware)
                 ,
                 |app, conf| {
                     app.configure(conf.clone())

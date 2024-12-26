@@ -84,7 +84,7 @@ pub struct UserSearchDto {
     #[serde(default, deserialize_with = "empty_string_or_null_as_none")]
     #[validate(length(min = 1, max = 100))]
     pub name: Option<String>,
-    pub role_type: Option<RoleType>,
+    pub role_type: Option<Vec<RoleType>>,
     #[validate(length(min = 0, max = 100))]
     #[serde(default, deserialize_with = "empty_vec_or_null_as_none")]
     pub binding_room_number: Option<Vec<String>>,
@@ -152,3 +152,12 @@ pub enum SearchType {
     BindingRoomNumber(String),
 }
 
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UserLoginDto {
+    #[validate(length(min = 1, max = 100))]
+    pub account: String,
+    #[validate(length(min = 1, max = 100))]
+    pub password: String,
+}

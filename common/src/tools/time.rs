@@ -1,3 +1,4 @@
+use std::ops::Add;
 use chrono::NaiveDateTime;
 use lazy_static::lazy_static;
 
@@ -27,3 +28,8 @@ pub fn now_utc_date_str(fmt: &str) -> String {
 lazy_static!(
     pub static ref DEFAULT_TIME:NaiveDateTime = NaiveDateTime::default();
 );
+
+
+pub fn nexted_time_stamp(stamp: i64) -> i64 {
+    chrono::Utc::now().timestamp().add(stamp)
+}

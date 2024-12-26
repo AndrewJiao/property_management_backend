@@ -16,6 +16,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use diesel::sql_types::Bool;
+use common::const_value::SETTINGS;
+use common::tools;
+use common::tools::jwt::{AccountInfo, JwtTokenInfoTrait, AppJwtToken};
 use common::tools::time::DEFAULT_TIME;
 
 pub mod relate;
@@ -70,13 +73,12 @@ impl UserPo {
     pub fn all<'a>() -> BoxedQuery<'a> {
         table.select(UserPo::as_select()).into_boxed()
     }
-    pub fn by_account(p_account: &str) -> Option<UserPo> {
+    pub fn by_account(p_account: &str) -> AppResult<UserPo> {
         let result = Self::all()
             .filter(account.eq(p_account)).filter(is_delete.eq(false))
             .filter(with_data_enable())
-            .first(&mut db_get_connection())
-            .ok();
-        result
+            .first(&mut db_get_connection())?;
+        Ok(result)
     }
 
     pub fn find_by_account(p_account: &str) -> AppResult<Vec<UserPo>> {
@@ -97,7 +99,7 @@ impl UserPo {
 
     pub fn search<'a>(
         p_account: Option<&'a str>,
-        p_role: Option<RoleType>,
+        p_role: Option<&'a Vec<RoleType>>,
         p_name: Option<&'a str>,
         p_binding_room_number: Option<&Vec<String>>,
         create_time_star: Option<&'a NaiveDateTime>,
@@ -116,7 +118,7 @@ impl UserPo {
             .filter(diesel::dsl::sql::<Bool>(if p_binding_room_number.is_none() { "TRUE" } else { "FALSE" }).or(t_user_relate_room::relate_number.eq_any(p_binding_room_number.unwrap_or(&vec!["a".to_string()]))))
             .filter(diesel::dsl::sql::<Bool>(if create_time_star.is_none() { "TRUE" } else { "FALSE" }).or(create_time.between(create_time_star.unwrap_or(&DEFAULT_TIME), create_time_end.unwrap_or(&DEFAULT_TIME))))
             .filter(diesel::dsl::sql::<Bool>(if update_time_star.is_none() { "TRUE" } else { "FALSE" }).or(update_time.between(update_time_star.unwrap_or(&DEFAULT_TIME), update_time_end.unwrap_or(&DEFAULT_TIME))))
-            .filter(diesel::dsl::sql::<Bool>(if p_role.is_none() { "TRUE" } else { "FALSE" }).or(role_type.eq(p_role.unwrap_or_default())))
+            .filter(diesel::dsl::sql::<Bool>(if p_role.is_none() { "TRUE" } else { "FALSE" }).or(role_type.eq_any(p_role.unwrap_or(&vec![RoleType::User]))))
             .filter(with_data_enable())
             .select(UserPo::as_select())
             .group_by( (id, account_id, account, password, name, role_type, create_by, update_by, create_time, update_time, comment, is_delete))
@@ -143,6 +145,34 @@ impl UserPo {
     }
 }
 
+
+///
+/// 用于生成jwttoken
+///
+impl From<UserPo> for AppJwtToken {
+    fn from(po: UserPo) -> Self {
+        AppJwtToken {
+            exp: tools::time::nexted_time_stamp(SETTINGS.app_config.jwt_expire_time),
+            jti: tools::id::generate_uuid_v7(),
+            account_id: po.account_id,
+            account_info: AccountInfo {
+                account:po.account,
+                name: po.name,
+                role_type: format!("{:?}", po.role_type),
+            },
+        }
+    }
+}
+impl JwtTokenInfoTrait for UserPo{
+    fn create_info(self) -> AccountInfo {
+        AccountInfo {
+            account: self.account,
+            name: self.name,
+            account_id: self.account_id,
+            role_type: format!("{:?}", self.role_type),
+        }
+    }
+}
 impl PartialEq<Self> for UserPo {
     fn eq(&self, other: &Self) -> bool {
         self.account_id == other.account_id

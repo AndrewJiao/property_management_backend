@@ -1,6 +1,8 @@
 pub mod serde;
 pub mod validator;
 pub mod lock;
+pub mod id;
+pub mod jwt;
 ///
 /// 查看当前泛型的类型
 ///

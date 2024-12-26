@@ -29,6 +29,8 @@ pub struct AppConfig {
     pub record_max: i32,
     pub liquidated_damages_rate: BigDecimal,
     pub password_sec_key: String,
+    pub jwt_expire_time: i64,
+    pub jwt_secret: [String; 3],
 }
 
 #[derive(Debug, Deserialize)]

@@ -40,3 +40,7 @@ reqwest.workspace = true
 tokio = "1.42.0"
 
 actix.workspace = true
+jwt.workspace = true
+futures-util.workspace = true
+uuid_v7.workspace = true
+rand.workspace = true
