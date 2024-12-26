@@ -153,7 +153,7 @@ pub enum SearchType {
 }
 
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct UserLoginDto {
     #[validate(length(min = 1, max = 100))]

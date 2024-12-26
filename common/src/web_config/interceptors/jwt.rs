@@ -2,9 +2,7 @@ use actix::fut::{ready, Ready};
 use actix_web::dev::forward_ready;
 use actix_web::{dev::{Service, ServiceRequest, ServiceResponse, Transform}, Error};
 use futures_util::future::LocalBoxFuture;
-use jwt::SignWithKey;
 use log::info;
-use serde::{Deserialize, Serialize};
 
 pub struct JWTMiddleware;
 

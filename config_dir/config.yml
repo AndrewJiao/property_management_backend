@@ -23,7 +23,7 @@ app_config:
   liquidated_damages_rate: 0.1 #违约金比例
   password_sec_key: "[,85/ASVR\"}UYn~&:fUrg$ei$Y!{u#|X"
   jwt_expire_time: 3600,
-  jwt_secret: [ "[r!7!)%@r^eyt9q,gI#*5d=%.cZCcm=)","q3]#{t21*u>C&,0'k02K#::,;7UotYvt","yl0Im<`(oxsa+?}W$g^8YD#D~Eh#wRoo" ]
+  jwt_secret: "[r!7!)%@r^eyt9q,gI#*5d=%.cZCcm=)"
 
 
 excel_config:

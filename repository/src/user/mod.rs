@@ -1,13 +1,16 @@
+use crate::common_type;
 use crate::component::page::Paginate;
 use crate::schema::basic::t_user;
 use crate::schema::basic::t_user::*;
 use crate::user::relate::UserRelateRoomPo;
-use crate::common_type;
 use chrono::NaiveDateTime;
 use common::data_result::AppResult;
 use common::db_config::{db_get_connection, Conn};
+use common::tools::jwt::{AccountInfo, JwtTokenInfoTrait};
+use common::tools::time::DEFAULT_TIME;
 use diesel::dsl::auto_type;
 use diesel::pg::Pg;
+use diesel::sql_types::Bool;
 use diesel::{AsChangeset, BoolExpressionMethods, Identifiable, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper, TextExpressionMethods};
 use diesel::{ExpressionMethods, JoinOnDsl};
 use diesel_derive_enum::DbEnum;
@@ -15,11 +18,6 @@ use management_macro::AutoOperation;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
-use diesel::sql_types::Bool;
-use common::const_value::SETTINGS;
-use common::tools;
-use common::tools::jwt::{AccountInfo, JwtTokenInfoTrait, AppJwtToken};
-use common::tools::time::DEFAULT_TIME;
 
 pub mod relate;
 
@@ -149,20 +147,6 @@ impl UserPo {
 ///
 /// 用于生成jwttoken
 ///
-impl From<UserPo> for AppJwtToken {
-    fn from(po: UserPo) -> Self {
-        AppJwtToken {
-            exp: tools::time::nexted_time_stamp(SETTINGS.app_config.jwt_expire_time),
-            jti: tools::id::generate_uuid_v7(),
-            account_id: po.account_id,
-            account_info: AccountInfo {
-                account:po.account,
-                name: po.name,
-                role_type: format!("{:?}", po.role_type),
-            },
-        }
-    }
-}
 impl JwtTokenInfoTrait for UserPo{
     fn create_info(self) -> AccountInfo {
         AccountInfo {

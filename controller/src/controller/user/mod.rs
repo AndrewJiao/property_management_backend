@@ -106,7 +106,7 @@ pub async fn get_binding_room(param: web::Query<SearchType>) -> WebResult<HttpRe
 #[put("login")]
 pub async fn login(param: web::Json<UserLoginDto>) -> WebResult<HttpResponse> {
     validate!(param);
-    let UserLoginDto { account, password } = param.into();
+    let UserLoginDto { account, password } = param.into_inner();
     let token_string = service::user::login(account, password)?;
     HttpResponse::Ok().cookie(Cookie::build(JWT_TOKEN_KEY, token_string)
         .secure(true).http_only(true).finish());
