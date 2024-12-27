@@ -7,8 +7,9 @@ use lazy_static::lazy_static;
 use log::info;
 use serde::{Deserialize, Serialize};
 use sha2::{Sha384};
+use crate::error::NO_AUTH;
 
-pub const JWT_TOKEN_KEY: &str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9";
+pub const JWT_TOKEN_KEY: &str = "AuthorizationToken";
 
 //定义一个jwt载荷对象
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -50,13 +51,27 @@ impl AppJwtToken {
     }
 
 
-    pub fn verify_token_str(token_str: &str) -> AppResult<AppJwtToken> {
+    ///
+    /// 1.解析token是否有效
+    /// 2.判断是否过期
+    ///
+    pub fn verify_token_str(token_str: &str) -> AppResult<()> {
         let key = get_sec_key();
         let token: Token<Header, AppJwtToken, _> = token_str.verify_with_key(&key)?;
         let claims = token.claims();
-        info!("claims:{:?}", claims);
-        Ok(claims.clone())
+        claims.is_out_off_time()?;
+        info!("claims verify success:{:?}", claims);
+        Ok(())
     }
+
+    pub fn is_out_off_time(&self) -> AppResult<()> {
+        let now = tools::time::current_time_stamp();
+        if now > self.exp {
+            return Err(NO_AUTH());
+        }
+        Ok(())
+    }
+
 }
 
 

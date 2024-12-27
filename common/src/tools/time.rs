@@ -33,3 +33,7 @@ lazy_static!(
 pub fn nexted_time_stamp(stamp: i64) -> i64 {
     chrono::Utc::now().timestamp().add(stamp)
 }
+
+pub fn current_time_stamp() -> i64 {
+    chrono::Utc::now().timestamp()
+}

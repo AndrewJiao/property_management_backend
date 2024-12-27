@@ -33,6 +33,13 @@ pub struct AppConfig {
     pub jwt_secret: String,
 }
 
+
+#[derive(Debug, Deserialize)]
+pub struct OpenSSl{
+    pub private_key: String,
+    pub certificate: String,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct ExcelConfig {
     pub basic_height: u32,
@@ -88,6 +95,7 @@ pub struct Settings {
     pub aliyun_oss_config: AliyunOssConfig,
     pub attachment_config: AttachmentConfig,
     pub picture_config: PictureConfig,
+    pub open_ssl: OpenSSl,
 }
 impl Settings {
     pub fn new() -> Result<Self, ConfigError> {

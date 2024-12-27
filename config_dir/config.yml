@@ -22,9 +22,12 @@ app_config:
   record_max: 2 #生成多少条流水就创建新的记录
   liquidated_damages_rate: 0.1 #违约金比例
   password_sec_key: "[,85/ASVR\"}UYn~&:fUrg$ei$Y!{u#|X"
-  jwt_expire_time: 3600,
+  jwt_expire_time: 3600
   jwt_secret: "[r!7!)%@r^eyt9q,gI#*5d=%.cZCcm=)"
 
+open_ssl:
+    private_key: "./config_dir/openssl/private.pem"
+    certificate: "./config_dir/openssl/certificate.pem"
 
 excel_config:
   basic_height: 31.5
