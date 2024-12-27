@@ -610,6 +610,7 @@ dependencies = [
  "pq-sys",
  "quote",
  "rand",
+ "regex",
  "reqwest",
  "serde",
  "serde_json",

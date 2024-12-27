@@ -2,9 +2,12 @@ use crate::data_result::AppBusinessError;
 use crate::error::BaseError::BusinessError;
 use actix_web::body::BoxBody;
 use actix_web::{error, HttpResponse};
-use anyhow::anyhow;
+use anyhow::{anyhow, Error};
 use diesel::r2d2::Error as R2d2Error;
+use lazy_static::lazy_static;
 use log::error;
+use regex::Regex;
+use serde::Serialize;
 use std::env::VarError;
 use std::string::FromUtf8Error;
 use thiserror::Error;
@@ -47,8 +50,52 @@ pub enum BaseError {
 // impl From<anyhow::Error> for BaseError {
 //     fn from(value: Error) -> Self {
 //         BaseError::AnyhowError(value)
+
 //     }
 // }
+///
+/// eg:errorMsg = 无权限 code = 10005
+///
+#[derive(Serialize)]
+struct ErrorResponse{
+    pub message: String,
+    pub source: String,
+    pub code: i32
+}
+
+
+lazy_static!(
+static ref  ERROR_PATTERN: Regex = regex::Regex::new(r"errorMsg = (?<errorMsg>\S+)\s+code = (?<code>\d+)").expect("regex error");
+);
+
+impl From<&anyhow::Error> for ErrorResponse{
+    fn from(value: &Error) -> Self {
+        let ori_error_msg = value.to_string();
+        let error_info = ERROR_PATTERN.captures(&ori_error_msg).map(|cap|{
+            let msg = cap.name("errorMsg").map(|e|e.as_str());
+            let code = cap.name("code").map(|e|e.as_str());
+            (msg,code)
+        }).unwrap_or_default();
+
+        if let (Some(msg),Some(code)) = error_info{
+            ErrorResponse{
+                message: msg.to_string(),
+                source: value.source().map(|e|e.to_string()).unwrap_or_default(),
+                code: code.parse::<i32>().unwrap_or_default(),
+            }
+        } else {
+            ErrorResponse {
+                message: ori_error_msg,
+                source: value.source().unwrap().to_string(),
+                code: 110,
+            }
+        }
+
+
+    }
+}
+
+
 
 impl error::ResponseError for BaseError {
     fn error_response(&self) -> HttpResponse<BoxBody> {
@@ -57,8 +104,12 @@ impl error::ResponseError for BaseError {
             BusinessError(e) => {
                 HttpResponse::InternalServerError().json(e)
             }
+            BaseError::AnyhowError(e)=>{
+                let response:ErrorResponse = e.into();
+                HttpResponse::InternalServerError().json(response)
+            }
             _ => {
-                HttpResponse::InternalServerError().json(self.to_string())
+                HttpResponse::InternalServerError().body(self.to_string())
             }
         }
     }

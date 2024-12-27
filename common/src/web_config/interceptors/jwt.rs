@@ -4,7 +4,6 @@ use actix::fut::{ready, Ready};
 use actix_web::body::EitherBody;
 use actix_web::dev::forward_ready;
 use actix_web::{dev::{Service, ServiceRequest, ServiceResponse, Transform}, Error, HttpResponse};
-use actix_web::cookie::Cookie;
 use futures_util::future::LocalBoxFuture;
 use log::info;
 use crate::tools::jwt::TokenOperation::Fail;

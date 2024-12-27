@@ -4,10 +4,8 @@ use crate::data_result::AppResult;
 use crate::web_config::interceptors::jwt::JWTMiddleware;
 use actix_web::dev::Server;
 use actix_web::web::ServiceConfig;
-use actix_web::{dev, web, App, HttpServer};
+use actix_web::{web, App, HttpServer};
 use std::time::Duration;
-use actix_web::http::{header, StatusCode};
-use actix_web::middleware::{ErrorHandlers,ErrorHandlerResponse};
 use tracing_actix_web::TracingLogger;
 
 pub trait DataTrait{}
@@ -22,7 +20,7 @@ where
         move || {
             service_config.into_iter().fold(
                 App::new().app_data(data.clone())
-                    .wrap(ErrorHandlers::new().handler(StatusCode::INTERNAL_SERVER_ERROR, add_error_header))
+                    // .wrap(ErrorHandlers::new().handler(StatusCode::INTERNAL_SERVER_ERROR, add_error_header))
                     .wrap(create_cors())
                     .wrap(TracingLogger::default())
                     .wrap(JWTMiddleware)
@@ -47,11 +45,11 @@ fn create_cors() -> actix_cors::Cors {
         .allow_any_header()
         .max_age(3600)
 }
-fn add_error_header<B>(mut res: dev::ServiceResponse<B>) -> actix_web::Result<ErrorHandlerResponse<B>> {
-    res.response_mut().headers_mut().insert(
-        header::CONTENT_TYPE,
-        header::HeaderValue::from_static("Error"),
-    );
-
-    Ok(ErrorHandlerResponse::Response(res.map_into_left_body()))
-}
+// fn add_error_header<B>(mut res: dev::ServiceResponse<B>) -> actix_web::Result<ErrorHandlerResponse<B>> {
+//     res.response_mut().headers_mut().insert(
+//         header::CONTENT_TYPE,
+//         header::HeaderValue::from_static("Error"),
+//     );
+//
+//     Ok(ErrorHandlerResponse::Response(res.map_into_left_body()))
+// }

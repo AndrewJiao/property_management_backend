@@ -70,7 +70,7 @@ impl AppJwtToken {
     /// 1.解析token是否有效
     /// 2.判断是否过期
     ///
-    pub fn verify_token_str(token_str: &str) -> TokenOperation {
+    pub(crate) fn verify_token_str(token_str: &str) -> TokenOperation {
         let key = get_sec_key();
 
         //验证jwt

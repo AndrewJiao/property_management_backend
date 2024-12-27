@@ -46,3 +46,5 @@ uuid_v7.workspace = true
 rand.workspace = true
 #openssl.workspace = true
 #rustls.workspace = true
+
+regex.workspace = true
