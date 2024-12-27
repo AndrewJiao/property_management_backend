@@ -1,14 +1,12 @@
 use crate::controller::user::inner::ComputeUserResult;
 use crate::dto::user::{SearchType, UserCreateDto, UserLoginDto, UserResultDto, UserSearchDto, UserUpdateDto};
 use crate::dto::{ToInsertPO, ToUpdatePO};
-use actix_web::cookie::time::Duration;
-use actix_web::cookie::Cookie;
 use actix_web::web::scope;
 use actix_web::{delete, get, post, put, web, HttpResponse};
 use common::data_result::{PaginateSearch, WebResult};
 use common::error::BaseError::AnyhowError;
 use common::error::USER_ACCOUNT_EXIST;
-use common::tools::jwt::JWT_TOKEN_KEY;
+use common::tools::jwt::create_wt_token_cookie;
 use common::{result_success, validate};
 use repository::user::UserPo;
 mod inner;
@@ -111,13 +109,7 @@ pub async fn login(param: web::Json<UserLoginDto>) -> WebResult<HttpResponse> {
     validate!(param);
     let UserLoginDto { account, password } = param.into_inner();
     let token_string = service::user::login(account, password)?;
-    let response = HttpResponse::Ok().cookie(Cookie::build(JWT_TOKEN_KEY, token_string)
-        .same_site(actix_web::cookie::SameSite::Strict)
-        .domain("localhost")
-        .path("/")
-        .secure(true).http_only(true)
-        .max_age(Duration::days(1))
-        .finish()).finish();
+    let response = HttpResponse::Ok().cookie(create_wt_token_cookie(&token_string)).finish();
     Ok(response)
 }
 
@@ -127,7 +119,7 @@ pub async fn login(param: web::Json<UserLoginDto>) -> WebResult<HttpResponse> {
 #[put("logout")]
 pub async fn logout() -> WebResult<HttpResponse> {
     HttpResponse::Ok()
-        .cookie(Cookie::build(JWT_TOKEN_KEY, "").secure(true).http_only(true).finish());
+        .cookie(create_wt_token_cookie(""));
     result_success!()
 }
 

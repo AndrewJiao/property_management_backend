@@ -22,8 +22,10 @@ app_config:
   record_max: 2 #生成多少条流水就创建新的记录
   liquidated_damages_rate: 0.1 #违约金比例
   password_sec_key: "[,85/ASVR\"}UYn~&:fUrg$ei$Y!{u#|X"
-  jwt_expire_time: 3600
+  jwt_expire_time: 20
+  jwt_renew_time: 5
   jwt_secret: "[r!7!)%@r^eyt9q,gI#*5d=%.cZCcm=)"
+  jwt_handler_ignore_path: ["/user_info/login"]
 
 open_ssl:
     private_key: "./config_dir/openssl/private.pem"

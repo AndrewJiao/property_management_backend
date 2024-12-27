@@ -4,8 +4,10 @@ use crate::data_result::AppResult;
 use crate::web_config::interceptors::jwt::JWTMiddleware;
 use actix_web::dev::Server;
 use actix_web::web::ServiceConfig;
-use actix_web::{web, App, HttpServer};
+use actix_web::{dev, web, App, HttpServer};
 use std::time::Duration;
+use actix_web::http::{header, StatusCode};
+use actix_web::middleware::{ErrorHandlers,ErrorHandlerResponse};
 use tracing_actix_web::TracingLogger;
 
 pub trait DataTrait{}
@@ -20,6 +22,7 @@ where
         move || {
             service_config.into_iter().fold(
                 App::new().app_data(data.clone())
+                    .wrap(ErrorHandlers::new().handler(StatusCode::INTERNAL_SERVER_ERROR, add_error_header))
                     .wrap(create_cors())
                     .wrap(TracingLogger::default())
                     .wrap(JWTMiddleware)
@@ -44,31 +47,11 @@ fn create_cors() -> actix_cors::Cors {
         .allow_any_header()
         .max_age(3600)
 }
+fn add_error_header<B>(mut res: dev::ServiceResponse<B>) -> actix_web::Result<ErrorHandlerResponse<B>> {
+    res.response_mut().headers_mut().insert(
+        header::CONTENT_TYPE,
+        header::HeaderValue::from_static("Error"),
+    );
 
-// fn create_openssl() -> SslAcceptorBuilder {
-//     let config = &SETTINGS.open_ssl;
-//     // 创建 SSL 接受器，用于 HTTPS 配置
-//
-//     let mut ssl_builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
-//     ssl_builder
-//         .set_private_key_file(&config.private_key, SslFiletype::PEM)
-//         .unwrap();
-//     ssl_builder.set_certificate_chain_file(&config.certificate).unwrap();
-//     ssl_builder
-//     // 加载证书和私钥
-//     let cert_file = File::open("cert.pem").unwrap();
-//     let mut reader = BufReader::new(cert_file);
-//     rustls::
-//     let certs = rustls::internal::pemfile::certs(&mut reader).unwrap();
-//
-//     let key_file = File::open("key.pem").unwrap();
-//     let mut reader = BufReader::new(key_file);
-//     let mut keys = rustls::internal::pemfile::pkcs8_private_keys(&mut reader).unwrap();
-//
-//     // 使用 rustls 配置接受器
-//     let rustls_config = rustls::ServerConfig::new(rustls::NoClientAuth::new());
-//     let rustls_config = rustls_config
-//         .with_single_cert(certs, keys.remove(0))
-//         .expect("invalid key or certificate");
-//     let rustls_config = Arc::new(rustls_config);
-// }
+    Ok(ErrorHandlerResponse::Response(res.map_into_left_body()))
+}

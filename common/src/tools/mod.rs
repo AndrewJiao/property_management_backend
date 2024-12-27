@@ -3,6 +3,7 @@ pub mod validator;
 pub mod lock;
 pub mod id;
 pub mod jwt;
+pub mod tls;
 ///
 /// 查看当前泛型的类型
 ///
