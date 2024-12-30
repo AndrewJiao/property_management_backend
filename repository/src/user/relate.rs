@@ -2,7 +2,7 @@ use crate::schema::basic::t_user_relate_room::*;
 use crate::schema::basic::t_user_relate_room;
 use common::data_result::AppResult;
 use common::db_config::{db_get_connection, Conn};
-use diesel::{BoolExpressionMethods, ExpressionMethods, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper};
+use diesel::{BoolExpressionMethods, ExpressionMethods, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper, TextExpressionMethods};
 use serde::{Deserialize, Serialize};
 
 #[derive(Queryable, Selectable, Deserialize, Serialize)]
@@ -52,6 +52,13 @@ impl UserRelateRoomPo{
         let result = table.select(UserRelateRoomPo::as_select())
             .filter(relate_number.eq(p_room_number))
             .first(&mut db_get_connection())?;
+        Ok(result)
+    }
+
+    pub fn by_room_number_like(p_room_number: &str) -> AppResult<Vec<UserRelateRoomPo> > {
+        let result = table.select(UserRelateRoomPo::as_select())
+            .filter(relate_number.like(format!("%{}%", p_room_number)))
+            .get_results(&mut db_get_connection())?;
         Ok(result)
     }
 

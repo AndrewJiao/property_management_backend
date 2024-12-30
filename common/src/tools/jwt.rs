@@ -1,19 +1,22 @@
-use actix_web::cookie::Cookie;
 use crate::const_value::SETTINGS;
 use crate::data_result::AppResult;
+use crate::error::NO_AUTH;
 use crate::tools;
+use crate::tools::jwt::TokenOperation::Fail;
+use actix_web::cookie::{Cookie, SameSite};
 use hmac::{Hmac, Mac};
 use jwt::{AlgorithmType, Header, SignWithKey, Token, VerifyWithKey};
 use lazy_static::lazy_static;
 use log::info;
 use serde::{Deserialize, Serialize};
-use sha2::{Sha384};
-use crate::error::NO_AUTH;
-use crate::tools::jwt::TokenOperation::Fail;
+use sha2::Sha384;
 
 pub const JWT_TOKEN_KEY: &str = "AuthorizationToken";
-pub fn create_wt_token_cookie(token_str: &str) -> Cookie {
-    Cookie::build(JWT_TOKEN_KEY, token_str).secure(true).http_only(true).finish()
+pub fn create_jwt_token_cookie(token_str: &str) -> Cookie {
+    Cookie::build(JWT_TOKEN_KEY, token_str).secure(false).http_only(true).same_site(SameSite::None)
+        .expires(None)
+        .path("/")
+        .finish()
 }
 
 //定义一个jwt载荷对象

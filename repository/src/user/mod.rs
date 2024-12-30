@@ -48,7 +48,7 @@ pub fn with_account_like<'a>(value: &'a str) -> _ {
     account.like(pattern)
 }
 
-#[derive(Queryable, Selectable, Deserialize, Serialize)]
+#[derive(Queryable, Selectable, Deserialize, Serialize, Clone)]
 #[diesel(table_name = t_user)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 #[serde(rename_all = "camelCase")]

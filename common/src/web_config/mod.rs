@@ -21,9 +21,9 @@ where
             service_config.into_iter().fold(
                 App::new().app_data(data.clone())
                     // .wrap(ErrorHandlers::new().handler(StatusCode::INTERNAL_SERVER_ERROR, add_error_header))
-                    .wrap(create_cors())
-                    .wrap(TracingLogger::default())
                     .wrap(JWTMiddleware)
+                    .wrap(TracingLogger::default())
+                    .wrap(create_cors())
                 ,
                 |app, conf| {
                     app.configure(conf.clone())

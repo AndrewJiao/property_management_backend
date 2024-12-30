@@ -14,6 +14,8 @@ databases:
   database: "property_management"
   database_url: "postgres://postgres:postgres@localhost:5432/property_management?options=-c%20search_path%3Dbasic"
 
+# jwt_expire_time: 1,296,000
+# jwt_renew_time: 864000
 # 应用配置
 app_config:
   json_length: 10000
@@ -22,7 +24,7 @@ app_config:
   record_max: 2 #生成多少条流水就创建新的记录
   liquidated_damages_rate: 0.1 #违约金比例
   password_sec_key: "[,85/ASVR\"}UYn~&:fUrg$ei$Y!{u#|X"
-  jwt_expire_time: 1,296,000
+  jwt_expire_time: 1296000
   jwt_renew_time: 864000
   jwt_secret: "[r!7!)%@r^eyt9q,gI#*5d=%.cZCcm=)"
   jwt_handler_ignore_path: ["/user_info/login"]

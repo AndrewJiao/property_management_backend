@@ -1,5 +1,5 @@
 use crate::const_value::SETTINGS;
-use crate::tools::jwt::{create_wt_token_cookie, AppJwtToken, TokenOperation, JWT_TOKEN_KEY};
+use crate::tools::jwt::{create_jwt_token_cookie, AppJwtToken, TokenOperation, JWT_TOKEN_KEY};
 use actix::fut::{ready, Ready};
 use actix_web::body::EitherBody;
 use actix_web::dev::forward_ready;
@@ -66,7 +66,7 @@ where
                     let service_fun = self.service.call(req);
                     Box::pin(async move {
                         let mut result = service_fun.await.map(|e| e.map_into_left_body())?;
-                        let _ = result.response_mut().add_cookie(&create_wt_token_cookie(&new_token));
+                        let _ = result.response_mut().add_cookie(&create_jwt_token_cookie(&new_token));
                         Ok(result)
                     })
                 }

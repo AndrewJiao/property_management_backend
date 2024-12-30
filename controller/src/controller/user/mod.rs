@@ -3,11 +3,13 @@ use crate::dto::user::{SearchType, UserCreateDto, UserLoginDto, UserResultDto, U
 use crate::dto::{ToInsertPO, ToUpdatePO};
 use actix_web::web::scope;
 use actix_web::{delete, get, post, put, web, HttpResponse};
-use common::data_result::{PaginateSearch, WebResult};
+use common::data_result::{AppDataResult, PaginateSearch, WebResult};
 use common::error::BaseError::AnyhowError;
 use common::error::USER_ACCOUNT_EXIST;
-use common::tools::jwt::create_wt_token_cookie;
+use common::tools::jwt::create_jwt_token_cookie;
+use common::tools::time::now_utc_date_time_naive;
 use common::{result_success, validate};
+use repository::user::relate::UserRelateRoomPo;
 use repository::user::UserPo;
 mod inner;
 
@@ -92,9 +94,9 @@ pub async fn get_binding_room(param: web::Query<SearchType>) -> WebResult<HttpRe
             let result = UserPo::find_by_name(&value)?;
             result_success!(result)
         }
-        SearchType::BindingRoomNumber(_) => {
-            todo!();
-            result_success!()
+        SearchType::BindingRoomNumber(value) => {
+            let result = UserRelateRoomPo::by_room_number_like(&value)?;
+            result_success!(result)
         }
     }
 
@@ -108,8 +110,19 @@ pub async fn get_binding_room(param: web::Query<SearchType>) -> WebResult<HttpRe
 pub async fn login(param: web::Json<UserLoginDto>) -> WebResult<HttpResponse> {
     validate!(param);
     let UserLoginDto { account, password } = param.into_inner();
-    let token_string = service::user::login(account, password)?;
-    let response = HttpResponse::Ok().cookie(create_wt_token_cookie(&token_string)).finish();
+    let (user_po,token_string) = service::user::login(account, password)?;
+    let response = HttpResponse::Ok()
+        .append_header(("Access-Control-Allow-Credentials", "true"))
+        .cookie(create_jwt_token_cookie(&token_string))
+        .json(
+            AppDataResult {
+                data: user_po,
+                code: 200,
+                message: "success".to_string(),
+                time_stamp: now_utc_date_time_naive(),
+                paginate_result: None,
+            }
+    );
     Ok(response)
 }
 
@@ -118,9 +131,19 @@ pub async fn login(param: web::Json<UserLoginDto>) -> WebResult<HttpResponse> {
 ///
 #[put("logout")]
 pub async fn logout() -> WebResult<HttpResponse> {
-    HttpResponse::Ok()
-        .cookie(create_wt_token_cookie(""));
-    result_success!()
+    let result = HttpResponse::Ok()
+        .cookie(create_jwt_token_cookie(""))
+        .append_header(("Access-Control-Allow-Credentials", "true"))
+        .json(
+            AppDataResult {
+                data: (),
+                code: 200,
+                message: "success".to_string(),
+                time_stamp: now_utc_date_time_naive(),
+                paginate_result: None,
+            }
+        );
+    Ok(result)
 }
 
 

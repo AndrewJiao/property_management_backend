@@ -147,9 +147,9 @@ fn valid_has_being_bind(param: &Option<Vec<String>>)->AppResult<()> {
 /// 验证密码
 /// 设置jwtToken
 ///
-pub fn login(account: String, password: String) -> AppResult<String> {
+pub fn login(account: String, password: String) -> AppResult<(UserPo, String)> {
     let user_po = verify_password(account, password)?;
     //设置jwtToken
-    let token_str = AppJwtToken::create_token_str(user_po)?;
-    Ok(token_str)
+    let token_str = AppJwtToken::create_token_str(user_po.clone())?;
+    Ok((user_po,token_str))
 }
