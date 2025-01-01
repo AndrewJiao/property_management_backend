@@ -33,6 +33,7 @@ where
 
         .keep_alive(Duration::from_secs(config.keep_alive))
         .shutdown_timeout(config.shutting_down_timeout)
+        // .bind_rustls_0_23((config.host.as_str(), config.port),tls::get_tls_config()?)?
         .bind((config.host.as_str(), config.port))?
         .run();
     Ok(server)
@@ -43,7 +44,8 @@ fn create_cors() -> actix_cors::Cors {
         .allow_any_origin()
         .allow_any_method()
         .allow_any_header()
-        .max_age(3600)
+        // .supports_credentials()
+
 }
 // fn add_error_header<B>(mut res: dev::ServiceResponse<B>) -> actix_web::Result<ErrorHandlerResponse<B>> {
 //     res.response_mut().headers_mut().insert(

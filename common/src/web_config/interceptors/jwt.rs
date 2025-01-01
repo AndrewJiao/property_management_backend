@@ -82,8 +82,6 @@ where
     }
 }
 
-// const ERROR_RESPONSE:HttpResponse = HttpResponse::Unauthorized().finish();
-
 fn ignore_path(path: &str) -> bool {
     SETTINGS.app_config.jwt_handler_ignore_path.iter().any(|p| path == p)
 }

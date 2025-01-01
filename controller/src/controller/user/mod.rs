@@ -112,7 +112,6 @@ pub async fn login(param: web::Json<UserLoginDto>) -> WebResult<HttpResponse> {
     let UserLoginDto { account, password } = param.into_inner();
     let (user_po,token_string) = service::user::login(account, password)?;
     let response = HttpResponse::Ok()
-        .append_header(("Access-Control-Allow-Credentials", "true"))
         .cookie(create_jwt_token_cookie(&token_string))
         .json(
             AppDataResult {
@@ -133,7 +132,6 @@ pub async fn login(param: web::Json<UserLoginDto>) -> WebResult<HttpResponse> {
 pub async fn logout() -> WebResult<HttpResponse> {
     let result = HttpResponse::Ok()
         .cookie(create_jwt_token_cookie(""))
-        .append_header(("Access-Control-Allow-Credentials", "true"))
         .json(
             AppDataResult {
                 data: (),

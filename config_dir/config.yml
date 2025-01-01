@@ -14,8 +14,6 @@ databases:
   database: "property_management"
   database_url: "postgres://postgres:postgres@localhost:5432/property_management?options=-c%20search_path%3Dbasic"
 
-# jwt_expire_time: 1,296,000
-# jwt_renew_time: 864000
 # 应用配置
 app_config:
   json_length: 10000
@@ -30,8 +28,8 @@ app_config:
   jwt_handler_ignore_path: ["/user_info/login"]
 
 open_ssl:
-    private_key: "./config_dir/openssl/private.pem"
-    certificate: "./config_dir/openssl/certificate.pem"
+  private_key: "openssl/localhost.key"
+  certificate: "openssl/localhost.crt"
 
 excel_config:
   basic_height: 31.5

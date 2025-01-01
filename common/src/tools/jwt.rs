@@ -13,7 +13,7 @@ use sha2::Sha384;
 
 pub const JWT_TOKEN_KEY: &str = "AuthorizationToken";
 pub fn create_jwt_token_cookie(token_str: &str) -> Cookie {
-    Cookie::build(JWT_TOKEN_KEY, token_str).secure(false).http_only(true).same_site(SameSite::None)
+    Cookie::build(JWT_TOKEN_KEY, token_str).secure(false).http_only(false).same_site(SameSite::Strict)
         .expires(None)
         .path("/")
         .finish()

@@ -102,7 +102,6 @@ pub struct Settings {
 impl Settings {
     pub fn new() -> Result<Self, ConfigError> {
         let config_dir = get_current_config_dir_path("config");
-        println!("config: {}", config_dir);
         let s = Config::builder()
             .add_source(config::File::with_name(config_dir.as_str()))
             .build()?;
