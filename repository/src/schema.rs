@@ -3,6 +3,14 @@
 pub mod basic {
     pub mod sql_types {
         #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
+        #[diesel(postgres_type(name = "approve_state", schema = "basic"))]
+        pub struct ApproveState;
+
+        #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
+        #[diesel(postgres_type(name = "approve_type", schema = "basic"))]
+        pub struct ApproveType;
+
+        #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
         #[diesel(postgres_type(name = "attachment_state"))]
         pub struct AttachmentState;
 
@@ -25,6 +33,26 @@ pub mod basic {
             title -> Varchar,
             body -> Text,
             published -> Bool,
+        }
+    }
+
+    diesel::table! {
+        use diesel::sql_types::*;
+        use super::sql_types::ApproveState;
+        use super::sql_types::ApproveType;
+
+        basic.t_approve (id) {
+            id -> Int8,
+            order_no -> Varchar,
+            approve_state -> ApproveState,
+            approve_type -> ApproveType,
+            approve_data -> Json,
+            comment -> Nullable<Text>,
+            create_by -> Varchar,
+            update_by -> Varchar,
+            create_time -> Timestamp,
+            update_time -> Timestamp,
+            is_delete -> Bool,
         }
     }
 
@@ -177,6 +205,7 @@ pub mod basic {
             code -> Varchar,
             value -> Varchar,
             comment -> Varchar,
+            current_date -> Date,
         }
     }
 
@@ -210,6 +239,7 @@ pub mod basic {
 
     diesel::allow_tables_to_appear_in_same_query!(
         posts,
+        t_approve,
         t_attachment,
         t_owner_basic_info,
         t_owner_fee_detail,

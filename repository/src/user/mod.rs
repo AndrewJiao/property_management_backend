@@ -5,7 +5,7 @@ use crate::schema::basic::t_user::*;
 use crate::user::relate::UserRelateRoomPo;
 use chrono::NaiveDateTime;
 use common::data_result::AppResult;
-use common::db_config::{db_get_connection, Conn};
+use common::db_config::{db_get_connection, AppConn, Conn};
 use common::tools::jwt::{AccountInfo, JwtTokenInfoTrait};
 use common::tools::time::DEFAULT_TIME;
 use diesel::dsl::auto_type;
@@ -18,6 +18,7 @@ use management_macro::AutoOperation;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
+use diesel::r2d2::PooledConnection;
 
 pub mod relate;
 
@@ -207,6 +208,18 @@ pub struct UserUpdatePo<'a> {
     pub update_time: Option<chrono::NaiveDateTime>,
     pub comment: Option<&'a str>,
     pub is_delete: Option<bool>,
+}
+
+impl<'a> UserUpdatePo<'a> {
+    pub fn change_password(p_account: &String, new_password: String, conn: &mut PooledConnection<AppConn>) -> AppResult<UserPo> {
+        let result = diesel::update(table)
+            .filter(account.eq(p_account))
+            .set(password.eq(new_password))
+            .get_result(conn)?;
+        Ok(result)
+
+
+    }
 }
 
 pub fn delete_by_id(p_id: i64, conn: &mut Conn) -> AppResult<UserPo> {

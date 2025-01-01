@@ -2,7 +2,7 @@ use base64::Engine;
 use common::const_value::SETTINGS;
 use common::data_result::{AppError, AppResult};
 use common::db_config::auto_trait::AutoOperation;
-use common::db_config::db_get_connection;
+use common::db_config::{db_get_connection, Conn};
 use common::error::{DATA_HAS_EXIST, DATA_NOT_EXIST, USER_PASSWORD_ERROR};
 use diesel::{Connection, SaveChangesDsl};
 use hmac::Mac;
@@ -55,8 +55,8 @@ type Result = AppResult<(UserPo, Option<Vec<String>>)>;
 ///
 /// 根据长湖，查询数据并查询验证密码
 ///
-pub fn verify_password(account: String, password: String) -> AppResult<UserPo> {
-    let user_po = UserPo::by_account(&account)?;
+pub fn verify_password(account: &String, password: String) -> AppResult<UserPo> {
+    let user_po = UserPo::by_account(account)?;
     let sec_password = password.as_str().parse_password().unwrap_or_default();
     if user_po.password ==  sec_password{
         Ok(user_po)
@@ -65,7 +65,7 @@ pub fn verify_password(account: String, password: String) -> AppResult<UserPo> {
     }
 }
 
-pub fn create_account(mut po: UserInsertPo, room_number: Option<Vec<String>>) -> Result {
+pub fn create_account(mut po: UserInsertPo, room_number: Option<Vec<String>>,conn:&mut Conn) -> Result {
     let uuid = uuid_v7::gen_uuid_v7().to_string();
     po.account_id = Some(uuid);
     if let Some(encode_password) = po.parse_password() {
@@ -75,7 +75,6 @@ pub fn create_account(mut po: UserInsertPo, room_number: Option<Vec<String>>) ->
     }
     //事务
 
-    let conn = &mut db_get_connection();
     let user_po = conn.transaction::<_, AppError, _>(|conn| {
         valid_room_number(&room_number)?;
         valid_has_being_bind(&room_number)?;
@@ -106,6 +105,17 @@ pub fn put_data(update_po: UserUpdatePo, room_number: Option<Vec<String>>) -> Re
         Ok(result)
     })?;
     Ok((result, room_number))
+}
+
+
+///
+/// 修改密码
+/// 修改前先校验密码正确性
+///
+pub fn change_password(account: String, old_password: String, new_passowrd: String) -> AppResult<UserPo> {
+    verify_password(&account, old_password)?;
+    let result = UserUpdatePo::change_password(&account, new_passowrd.as_str().parse_password().unwrap_or_default(), &mut db_get_connection())?;
+    Ok(result)
 }
 
 pub fn delete_data(id: i64) ->Result{
@@ -148,7 +158,7 @@ fn valid_has_being_bind(param: &Option<Vec<String>>)->AppResult<()> {
 /// 设置jwtToken
 ///
 pub fn login(account: String, password: String) -> AppResult<(UserPo, String)> {
-    let user_po = verify_password(account, password)?;
+    let user_po = verify_password(&account, password)?;
     //设置jwtToken
     let token_str = AppJwtToken::create_token_str(user_po.clone())?;
     Ok((user_po,token_str))

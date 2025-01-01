@@ -1,6 +1,7 @@
 pub mod hello;
 #[cfg(feature = "oss")]
 pub mod attachment;
+pub mod approve;
 pub mod user;
 pub mod price_basic;
 pub mod owner_info;

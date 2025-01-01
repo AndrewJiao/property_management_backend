@@ -10,7 +10,7 @@ use tracing_actix_web::TracingLogger;
 
 pub trait DataTrait{}
 
-pub fn build_service<F, T>(service_config: &'static [F; 7], data: web::Data<T>) -> AppResult<Server>
+pub fn build_service<F, T>(service_config: &'static [F; 8], data: web::Data<T>) -> AppResult<Server>
 where
     F: FnOnce(&mut ServiceConfig) + Sync + Clone + Send,
     T: DataTrait + Send + Sync + Clone + 'static,

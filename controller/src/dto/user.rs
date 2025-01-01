@@ -75,6 +75,17 @@ impl ToUpdatePO for UserUpdateDto{
 }
 
 
+#[derive(Deserialize,Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct UserChangePasswordDto {
+    #[validate(length(min = 1, max = 100))]
+    pub account: String,
+    #[validate(length(min = 1, max = 100))]
+    pub old_password: String,
+    #[validate(length(min = 1, max = 100))]
+    pub new_password: String,
+}
+
 #[derive(Deserialize, Validate, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct UserSearchDto {

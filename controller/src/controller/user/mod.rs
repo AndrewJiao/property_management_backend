@@ -1,9 +1,10 @@
 use crate::controller::user::inner::ComputeUserResult;
-use crate::dto::user::{SearchType, UserCreateDto, UserLoginDto, UserResultDto, UserSearchDto, UserUpdateDto};
+use crate::dto::user::{SearchType, UserChangePasswordDto, UserCreateDto, UserLoginDto, UserResultDto, UserSearchDto, UserUpdateDto};
 use crate::dto::{ToInsertPO, ToUpdatePO};
 use actix_web::web::scope;
 use actix_web::{delete, get, post, put, web, HttpResponse};
 use common::data_result::{AppDataResult, PaginateSearch, WebResult};
+use common::db_config::db_get_connection;
 use common::error::BaseError::AnyhowError;
 use common::error::USER_ACCOUNT_EXIST;
 use common::tools::jwt::create_jwt_token_cookie;
@@ -55,7 +56,7 @@ pub async fn post_data(param: web::Json<UserCreateDto>) -> WebResult<HttpRespons
     if UserPo::by_account(&param.account).is_ok() {
         return Err(AnyhowError(USER_ACCOUNT_EXIST()));
     }
-    let result = service::user::create_account(param.to_insert_po(), param.binding_room_number.clone())?;
+    let result = service::user::create_account(param.to_insert_po(), param.binding_room_number.clone(),&mut db_get_connection())?;
     result_success!(result)
 }
 
@@ -68,6 +69,14 @@ pub async fn put_data(path_param: web::Path<i64>, param: web::Json<UserUpdateDto
 
     let result = service::user::put_data(param.to_update_po(path_param.into_inner()), param.binding_room_number.clone())?
         .compute_user_result();
+    result_success!(result)
+}
+
+#[put("data/change_password")]
+pub async fn change_password(param: web::Json<UserChangePasswordDto>) -> WebResult<HttpResponse> {
+    validate!(param);
+    let UserChangePasswordDto { account, old_password, new_password } = param.into_inner();
+    let result = service::user::change_password(account, old_password, new_password)?;
     result_success!(result)
 }
 
@@ -101,6 +110,7 @@ pub async fn get_binding_room(param: web::Query<SearchType>) -> WebResult<HttpRe
     }
 
 }
+
 
 
 ///

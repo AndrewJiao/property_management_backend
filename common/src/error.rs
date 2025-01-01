@@ -86,7 +86,7 @@ impl From<&anyhow::Error> for ErrorResponse{
         } else {
             ErrorResponse {
                 message: ori_error_msg,
-                source: value.source().unwrap().to_string(),
+                source: value.source().map(|e|e.to_string()).unwrap_or_default(),
                 code: 110,
             }
         }
@@ -133,5 +133,8 @@ pub const USER_NOT_EXIST: fn() -> anyhow::Error = || anyhow!("errorMsg = 用户�
 pub const USER_PASSWORD_ERROR: fn() -> anyhow::Error = || anyhow!("errorMsg = 账户或密码错误 code = 10002");
 pub const USER_ACCOUNT_EXIST: fn() -> anyhow::Error = || anyhow!("errorMsg = 用户账号已存在 code = 10003");
 pub const NO_AUTH: fn() -> anyhow::Error = || anyhow!("errorMsg = 无权限 code = 10005");
+//approve
+pub const APPROVE_NOT_EXIST: fn() -> anyhow::Error = || anyhow!("errorMsg = 审批不存在 code = 20001");
+pub const APPROVE_STATE_ERROR: fn() -> anyhow::Error = || anyhow!("errorMsg = 审批状态错误 code = 20002");
 
 

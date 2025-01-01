@@ -12,6 +12,7 @@ pub mod property_fee;
 pub mod owner_fee;
 pub mod tool_table;
 pub mod user;
+pub mod approve;
 
 
 type SqlType<T> = SqlTypeOf<AsSelect<T, Pg>>;
