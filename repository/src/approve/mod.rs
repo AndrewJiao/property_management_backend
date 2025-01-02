@@ -25,11 +25,28 @@ impl Default for ApproveState {
         ApproveState::Pending
     }
 }
+
+impl ApproveState{
+    pub fn to_string(&self) -> String {
+        match self {
+            ApproveState::Pending => "待审批".to_string(),
+            ApproveState::Approved => "已通过".to_string(),
+            ApproveState::Rejected => "已拒绝".to_string(),
+        }
+    }
+}
 #[derive(Deserialize,Serialize,Debug,DbEnum,Clone,Copy)]
 #[ExistingTypePath = "crate::schema::basic::sql_types::ApproveType"]
 #[serde(rename_all = "PascalCase")]
 pub enum ApproveType{
     CreateUser,
+}
+impl ApproveType{
+    pub fn to_string(&self) -> String {
+        match self {
+            ApproveType::CreateUser => "创建用户".to_string(),
+        }
+    }
 }
 impl Default for ApproveType {
     fn default() -> Self {
@@ -88,7 +105,9 @@ impl ApprovePo{
         if_filter!(statement = approve_type.eq(p_approve_type));
         if_filter!(statement = order_no.eq(p_order_no));
         filter_data_enable!(statement);
-        let (data, total) = statement.paginate(p_current_page).per_page(p_page_size)
+        let (data, total) = statement
+            .order_by(create_time.desc())
+            .paginate(p_current_page).per_page(p_page_size)
             .load_and_count_pages(&mut db_get_connection())?;
         Ok((data, total))
     }

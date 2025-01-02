@@ -6,6 +6,7 @@ use repository::user::{RoleType, UserInsertPo};
 /// 定义一个创建用户的json
 ///
 #[derive(Deserialize,Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct UserCreateValue {
     pub account: String,
     pub name: String,

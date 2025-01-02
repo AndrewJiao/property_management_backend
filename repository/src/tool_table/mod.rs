@@ -47,21 +47,22 @@ pub fn current_date_count_with_conn(count_type: CountType, conn: &mut Conn) -> A
         diesel::sql_query(sql)
             .bind::<diesel::sql_types::Text, String>((&count_type).into())
             .get_result::<ReturnValue>(conn)?;
-    //生成00001，00002...00009，00100，00101...00999，01000，01001...09999，10000，10001...99999
+    //保留五位，不足补0
+
     let order_number = match count_type {
         CountType::OwnerFeeSeqNumber => {
-            format!("{}{}{}",
+            format!("{}{}{:0>5}",
                     "HSMZ",
                     now_local_date("%Y%m%d"),
                     result.value)
         }
         CountType::OwnerFeeRecordSeqNumber => {
-            format!("R-HSMZ{}{}",
+            format!("R-HSMZ{}{:0>5}",
                     now_local_date("%Y%m%d"),
                     result.value)
         }
         CountType::ApproveOrderNumber => {
-            format!("SP-HSMZ{}{}",
+            format!("SP-HSMZ{}{:0>5}",
                     now_local_date("%Y%m%d"),
                     result.value)
         }

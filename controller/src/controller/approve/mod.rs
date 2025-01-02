@@ -1,4 +1,4 @@
-use crate::dto::approve::{ApproveActionDto, ApproveCreateDto, ApproveSearchDto};
+use crate::dto::approve::{ApproveActionDto, ApproveCreateDto, ApproveResultDto, ApproveSearchDto};
 use crate::dto::{ToInsertPO, ToUpdatePO};
 use actix_web::web::scope;
 use actix_web::{get, post, put, web, HttpResponse};
@@ -29,6 +29,8 @@ pub async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpRespon
         search_param.order_no.as_deref(),
         (param.current_page(), param.limit()),
     )?;
+
+    let result = result.into_iter().map(|x| x.into()).collect::<Vec<ApproveResultDto>>();
     result_success!(result, param.produce_page_result(total))
 }
 
@@ -55,5 +57,3 @@ pub async fn add_data(param: web::Json<ApproveCreateDto>) -> WebResult<HttpRespo
     result.save(&mut db_get_connection())?;
     result_success!(result)
 }
-
-

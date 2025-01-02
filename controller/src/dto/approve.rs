@@ -1,23 +1,42 @@
 use crate::dto::{ToInsertPO, ToUpdatePO};
 use common::const_value::SYSTEM;
-use repository::approve::{ApproveInsertPo, ApproveState, ApproveType, ApproveUpdatePo};
+use repository::approve::{ApproveInsertPo, ApprovePo, ApproveState, ApproveType, ApproveUpdatePo};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
-// #[derive(Serialize)]
-// #[serde(rename_all = "camelCase")]
-// pub struct ApproveInsertPo {
-//     pub id: i64,
-//     pub order_no: String,
-//     pub approve_state: ApproveState,
-//     pub approve_type: ApproveType,
-//     pub approve_data: serde_json::Value,
-//     pub comment: Option<String>,
-//     pub create_by: String,
-//     pub update_by: String,
-//     pub create_time: chrono::NaiveDateTime,
-//     pub update_time: chrono::NaiveDateTime,
-//     pub is_delete: bool,
-// }
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ApproveResultDto {
+    pub id: i64,
+    pub order_no: String,
+    pub approve_state: ApproveState,
+    pub approve_state_desc: String,
+    pub approve_type: ApproveType,
+    pub approve_type_desc: String,
+    pub approve_data: serde_json::Value,
+    pub comment: Option<String>,
+    pub create_by: String,
+    pub update_by: String,
+    pub create_time: chrono::NaiveDateTime,
+    pub update_time: chrono::NaiveDateTime,
+}
+impl From<ApprovePo> for ApproveResultDto{
+    fn from(value: ApprovePo) -> Self {
+        ApproveResultDto{
+            id: value.id,
+            order_no: value.order_no,
+            approve_state: value.approve_state,
+            approve_state_desc: value.approve_state.to_string(),
+            approve_type: value.approve_type,
+            approve_type_desc: value.approve_type.to_string(),
+            approve_data: value.approve_data,
+            comment: value.comment,
+            create_by: value.create_by,
+            update_by: value.update_by,
+            create_time: value.create_time,
+            update_time: value.update_time,
+        }
+    }
+}
 
 
 #[derive(Serialize, Deserialize, Validate, Default)]
