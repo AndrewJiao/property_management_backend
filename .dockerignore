@@ -1,0 +1,17 @@
+# 忽略日志文件
+*.log
+log
+
+# 忽略 Git 元数据
+.git
+.gitignore
+
+# 忽略 Dockerfile 本身
+Dockerfile
+docker-compose.yml
+
+# 忽略环境配置
+.env
+
+# 忽略编译产物
+target

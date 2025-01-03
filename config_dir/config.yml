@@ -1,6 +1,6 @@
 # This is a sample configuration picture_extract for the application
 web_config:
-  port: 8080
+  port: 9000
   host: "127.0.0.1"
   shutting_down_timeout: 30
   keep_alive: 30
