@@ -29,4 +29,4 @@ jobs:
           context: .
           file: Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/${{env.PATH_DIR}}:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{vars.PATH_DIR}}:latest
