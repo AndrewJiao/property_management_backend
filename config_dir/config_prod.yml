@@ -1,7 +1,7 @@
 # This is a sample configuration picture_extract for the application
 web_config:
   port: 9000
-  host: "0.0.0.0"
+  host: "warefeehsmz.nat300.top"
   shutting_down_timeout: 30
   keep_alive: 30
 

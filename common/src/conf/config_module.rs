@@ -101,7 +101,11 @@ pub struct Settings {
 }
 impl Settings {
     pub fn new() -> Result<Self, ConfigError> {
-        let config_dir = get_current_config_dir_path("config");
+        let config_path = match std::env::var("env").unwrap_or("dev".to_string()).as_str() {
+            "prod" => {"config_prod"}
+            _ => {"config"}
+        };
+        let config_dir = get_current_config_dir_path(config_path);
         let s = Config::builder()
             .add_source(config::File::with_name(config_dir.as_str()))
             .build()?;
