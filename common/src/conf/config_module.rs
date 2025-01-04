@@ -118,4 +118,5 @@ pub fn init_settings() -> AppResult<Settings> {
     let settings = Settings::new();
     info!("{settings:?}");
     Ok(settings?)
+
 }
