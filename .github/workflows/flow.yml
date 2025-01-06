@@ -39,4 +39,4 @@ jobs:
           context: .
           file: Dockerfile
           push: true
-          tags: ${{vars.PATH_DIR}}:${{ github.sha }}
+          tags: ${{vars.PATH_DIR}}:latest
