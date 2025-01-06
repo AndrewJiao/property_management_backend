@@ -1,19 +1,18 @@
 # This is a sample configuration picture_extract for the application
 web_config:
   port: 9000
-  host: "warefeehsmz.nat300.top"
+  host: "0.0.0.0"
   shutting_down_timeout: 30
   keep_alive: 30
 
 # Database configuration
 databases:
-  user: "postgres"
-  password: "postgres"
-  host: "localhost"
-  port: 5432
+  user: "app_user"
+  password: "andrew123"
+  host: "fba7bc71917f6492.natapp.cc"
+  port: 65532
   database: "property_management"
-  database_url: "postgres://postgres:postgres@localhost:5432/property_management?options=-c%20search_path%3Dbasic"
-
+  database_url: "postgres://app_user:andrew123@fba7bc71917f6492.natapp.cc:65532/property_management?options=-c%20search_path%3Dbasic"
 # 应用配置
 app_config:
   json_length: 10000
