@@ -1,9 +1,11 @@
+use std::cell::RefMut;
 use crate::const_value::SETTINGS;
 use crate::data_result::AppResult;
 use crate::error::NO_AUTH;
 use crate::tools;
 use crate::tools::jwt::TokenOperation::Fail;
 use actix_web::cookie::{Cookie, SameSite};
+use actix_web::dev::Extensions;
 use hmac::{Hmac, Mac};
 use jwt::{AlgorithmType, Header, SignWithKey, Token, VerifyWithKey};
 use lazy_static::lazy_static;
@@ -73,7 +75,7 @@ impl AppJwtToken {
     /// 1.解析token是否有效
     /// 2.判断是否过期
     ///
-    pub(crate) fn verify_token_str(token_str: &str) -> TokenOperation {
+    pub(crate) fn verify_token_str(token_str: &str, mut extensions: RefMut<Extensions>) -> TokenOperation {
         let key = get_sec_key();
 
         //验证jwt
@@ -87,6 +89,9 @@ impl AppJwtToken {
         if let Err(_) = claims.is_out_off_time(){
             return Fail;
         }
+        //往extensions添加用户信息
+        extensions.insert(claims.account_info.clone());
+
         info!("claims verify success:{:?}", claims);
         if let Some(new_token) = claims.try_renew(){
             return TokenOperation::SuccessAndRenew(new_token.sign_to_string().unwrap_or_default());

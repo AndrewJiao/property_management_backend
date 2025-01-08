@@ -68,6 +68,20 @@ impl PaginateSearch {
     }
 }
 
+///
+/// 偏移量查询
+///
+
+#[derive(Deserialize, Validate,Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OffsetSearch {
+    #[validate(range(min = 1))]
+    pub offset: i64,
+    #[validate(range(min = 1, max = 100))]
+    pub limit: i64,
+    #[validate(length(min = 0, max = 1000))]
+    pub param: Option<String>,
+}
 
 #[derive(Deserialize, Serialize,Debug)]
 pub enum OrderType { Desc, Asc }
@@ -124,3 +138,5 @@ pub type AppResult<T> = anyhow::Result<T, anyhow::Error>;
 pub type AppError = anyhow::Error;
 
 pub type WebResult<T> = Result<T, BaseError>;
+
+

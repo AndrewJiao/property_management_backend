@@ -3,10 +3,9 @@ use crate::tools::jwt::{create_jwt_token_cookie, AppJwtToken, TokenOperation, JW
 use actix::fut::{ready, Ready};
 use actix_web::body::EitherBody;
 use actix_web::dev::forward_ready;
-use actix_web::{dev::{Service, ServiceRequest, ServiceResponse, Transform}, Error, HttpResponse};
+use actix_web::{dev::{Service, ServiceRequest, ServiceResponse, Transform}, Error, HttpMessage, HttpResponse};
 use futures_util::future::LocalBoxFuture;
 use log::info;
-use crate::tools::jwt::TokenOperation::Fail;
 
 pub struct JWTMiddleware;
 
@@ -44,9 +43,11 @@ where
     fn call(&self, req: ServiceRequest) -> Self::Future {
         info!("jwt middleware call for uri {}", req.uri());
         if !ignore_path(req.path()) {
+            //验证token
             let operation = req.cookie(JWT_TOKEN_KEY)
                 .and_then(|cookie| {
-                    let a = AppJwtToken::verify_token_str(cookie.value());
+                    let extension = req.extensions_mut();
+                    let a = AppJwtToken::verify_token_str(cookie.value(), extension);
                     Some(a)
                 }).unwrap_or_default();
 
@@ -58,7 +59,7 @@ where
                         Ok(result)
                     })
                 }
-                Fail => {
+                TokenOperation::Fail => {
                     let error_res = HttpResponse::Unauthorized().finish().map_into_right_body();
                     Box::pin(async { Ok(req.into_response(error_res)) })
                 }
@@ -71,14 +72,13 @@ where
                     })
                 }
             }
-        }else{
+        } else {
             let service_fun = self.service.call(req);
             Box::pin(async move {
                 let result = service_fun.await.map(|e| e.map_into_left_body())?;
                 Ok(result)
             })
         }
-
     }
 }
 

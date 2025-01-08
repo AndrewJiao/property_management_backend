@@ -5,7 +5,7 @@ use crate::SqlType;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use common::data_result::AppResult;
-use common::db_config::Conn;
+use common::db_config::{db_get_connection, Conn};
 use common::error::DB_UPDATE_ERROR;
 use diesel::pg::Pg;
 use diesel::{AsChangeset, ExpressionMethods, Identifiable, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper};
@@ -39,6 +39,10 @@ type BoxedQuery<'a> = t_owner_basic_info::BoxedQuery<'a, Pg, SqlType<OwnerBasicI
 impl OwnerBasicInfoPo {
     pub fn all<'a>() -> BoxedQuery<'a> {
         table.select(OwnerBasicInfoPo::as_select()).into_boxed()
+    }
+
+    pub fn all_result() -> AppResult<Vec<OwnerBasicInfoPo>> {
+        Ok(Self::all().filter(is_delete.eq(false)).load::<OwnerBasicInfoPo>(&mut db_get_connection())?)
     }
 
     pub fn by_room_number(param:&str,conn : &mut Conn)-> AppResult<OwnerBasicInfoPo>{

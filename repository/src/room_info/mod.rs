@@ -54,7 +54,23 @@ impl RoomInfoDetailPo {
             .get_result(&mut db_get_connection()).ok();
         Ok(result)
     }
+
+    pub fn by_room_number_flow(p_room_number: Option<Vec<&str>>, offset: i64, limit: i64) -> AppResult<Vec<RoomInfoDetailPo>> {
+        if let Some(p_room_number) = p_room_number {
+            let result = table
+                .select(RoomInfoDetailPo::as_select())
+                .filter(room_number.eq_any(p_room_number))
+                .filter(is_delete.eq(false))
+                .offset(offset)
+                .limit(limit)
+                .load(&mut db_get_connection())?;
+            Ok(result)
+        } else {
+            Ok(vec![])
+        }
+    }
 }
+
 
 
 impl RoomInfoDetailPo {

@@ -21,4 +21,4 @@ log.workspace = true
 uuid.workspace = true
 uuid_v7.workspace = true
 itertools.workspace = true
-
+actix-web.workspace = true

@@ -136,5 +136,7 @@ pub const NO_AUTH: fn() -> anyhow::Error = || anyhow!("errorMsg = 无权限 code
 //approve
 pub const APPROVE_NOT_EXIST: fn() -> anyhow::Error = || anyhow!("errorMsg = 审批不存在 code = 20001");
 pub const APPROVE_STATE_ERROR: fn() -> anyhow::Error = || anyhow!("errorMsg = 审批状态错误 code = 20002");
+//账户信息不存
+pub const ACCOUNT_NOT_EXIST: fn() -> anyhow::Error = || anyhow!("errorMsg = 账户信息不存在 code = 30001");
 
 

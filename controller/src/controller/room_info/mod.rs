@@ -1,15 +1,15 @@
 use crate::dto::room_info::{RoomInfoDetailSearchDto, RoomInfoDetailUpdateDto, RoomInfoManuallyInsertDto, RoomInfoSearchType};
 use crate::dto::{ToInsertPO, ToUpdatePO};
 use actix_web::web::scope;
-use actix_web::{get, post, put, web, HttpResponse};
-use common::data_result::{PaginateSearch, WebResult};
+use actix_web::{get, post, put, web,  HttpRequest, HttpResponse};
+use common::data_result::{OffsetSearch, PaginateSearch, WebResult};
 use common::db_config::auto_trait::AutoOperation;
 use common::db_config::db_get_connection;
+use common::error::{BaseError, DATA_HAS_EXIST};
 use common::{result_success, validate};
 use diesel::query_dsl::methods::GroupByDsl;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SaveChangesDsl, SelectableHelper, Table, TextExpressionMethods};
 use log::info;
-use common::error::{BaseError, DATA_HAS_EXIST};
 use repository::component::page::Paginate;
 use repository::room_info::{ReCalculator, RoomInfoDetailPo};
 
@@ -20,12 +20,14 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         .service(get_find)
         .service(init_data)
         .service(post_data)
+        .service(get_data_card)
     );
 }
 
 use crate::controller::IfFilter;
-use repository::schema::basic::t_room_info_detail::*;
 use repository::schema::basic::t_room_info_detail::dsl::t_room_info_detail;
+use repository::schema::basic::t_room_info_detail::*;
+use repository::user::UserPo;
 use service::room_info::init_room_data;
 
 ///
@@ -134,4 +136,18 @@ async fn post_data(query_param: web::Json<RoomInfoManuallyInsertDto>) -> WebResu
         .update_time().save(&mut db_get_connection());
     result_success!()
 }
+
+///
+/// 小程序不具备搜索能力，提供小程序获取表单接口
+///
+#[get("/data_card")]
+async fn get_data_card(req: HttpRequest, param: web::Query<OffsetSearch>) -> WebResult<HttpResponse> {
+    let param = param.into_inner();
+    validate!(param);
+    let (_, relate_room) = UserPo::current_user_info(&req)?;
+    let room_param = relate_room.as_ref().map(|item| item.iter().map(|item| item.as_str()).collect::<Vec<&str>>());
+    let data = RoomInfoDetailPo::by_room_number_flow(room_param, param.offset, param.limit)?;
+    result_success!(data)
+}
+
 

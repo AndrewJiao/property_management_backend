@@ -3,6 +3,7 @@ use crate::component::page::Paginate;
 use crate::schema::basic::t_user;
 use crate::schema::basic::t_user::*;
 use crate::user::relate::UserRelateRoomPo;
+use actix_web::{HttpMessage, HttpRequest};
 use chrono::NaiveDateTime;
 use common::data_result::AppResult;
 use common::db_config::{db_get_connection, AppConn, Conn};
@@ -10,6 +11,7 @@ use common::tools::jwt::{AccountInfo, JwtTokenInfoTrait};
 use common::tools::time::DEFAULT_TIME;
 use diesel::dsl::auto_type;
 use diesel::pg::Pg;
+use diesel::r2d2::PooledConnection;
 use diesel::sql_types::Bool;
 use diesel::{AsChangeset, BoolExpressionMethods, Identifiable, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper, TextExpressionMethods};
 use diesel::{ExpressionMethods, JoinOnDsl};
@@ -18,7 +20,8 @@ use management_macro::AutoOperation;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
-use diesel::r2d2::PooledConnection;
+use common::error::ACCOUNT_NOT_EXIST;
+use crate::owner_info::OwnerBasicInfoPo;
 
 pub mod relate;
 
@@ -93,6 +96,30 @@ impl UserPo {
             .filter(with_data_enable())
             .get_results(&mut db_get_connection())?;
         Ok(result)
+    }
+
+    ///
+    /// 如果是管理员，就返回所有的roomNumber
+    ///
+    pub fn current_user_info(service_request: &HttpRequest) -> AppResult<(UserPo, Option<Vec<String>>)> {
+        if let Some(account_info) = service_request.extensions().get::<AccountInfo>() {
+            let is_user = account_info.role_type == "User";
+            let result = Self::all()
+                .filter(account_id.eq(&account_info.account_id))
+                .filter(with_data_enable())
+                .get_result(&mut db_get_connection())?;
+            let relation_map = if is_user {
+                UserRelateRoomPo::by_account_id(vec![&account_info.account_id]).ok()
+                    .map(|item| item.into_iter().map(|item| item.relate_number).collect::<Vec<String>>())
+            } else {
+                Some(OwnerBasicInfoPo::all_result()?
+                    .into_iter().map(|item| item.room_number).collect::<Vec<String>>())
+            };
+
+            Ok((result, relation_map))
+        } else {
+            Err(ACCOUNT_NOT_EXIST())
+        }
     }
 
 
