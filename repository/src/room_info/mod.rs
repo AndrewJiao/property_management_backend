@@ -13,8 +13,14 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::str::FromStr;
+use diesel::dsl::auto_type;
 use diesel::sql_types::Bool;
 use common::tools::time::DEFAULT_TIME;
+
+#[auto_type(no_type_alias)]
+pub fn with_not_completed()->_{
+    water_meter_sub.is_null().and(electricity_meter_sub.is_null())
+}
 
 #[derive(Queryable, Selectable, Deserialize, Serialize)]
 #[diesel(table_name = t_room_info_detail)]
@@ -57,14 +63,20 @@ impl RoomInfoDetailPo {
         Ok(result)
     }
 
-    pub fn by_room_number_flow(p_room_number: Option<Vec<&str>>, create_time_range: Option<(NaiveDateTime, NaiveDateTime)>, offset: i64, limit: i64) -> AppResult<Vec<RoomInfoDetailPo>> {
-        let create_range_time = create_time_range.unwrap_or((*DEFAULT_TIME, *DEFAULT_TIME));
 
+    pub fn by_room_number_flow(
+        p_room_number: Option<Vec<&str>>
+        , create_time_range: Option<(NaiveDateTime, NaiveDateTime)>
+        , only_not_completed: Option<bool>
+        , offset: i64, limit: i64)
+        -> AppResult<Vec<RoomInfoDetailPo>> {
+        let create_range_time = create_time_range.unwrap_or((*DEFAULT_TIME, *DEFAULT_TIME));
         if let Some(p_room_number) = p_room_number {
             let result = table
                 .select(RoomInfoDetailPo::as_select())
                 .filter(room_number.eq_any(p_room_number))
                 .filter(diesel::dsl::sql::<Bool>(if create_time_range.is_none() { "TRUE" } else { "FALSE" }).or(create_time.between(create_range_time.0, create_range_time.1)))
+                .filter(diesel::dsl::sql::<Bool>(if only_not_completed.unwrap_or_default() { "FALSE" } else { "TRUE" }).or(with_not_completed()))
                 .filter(is_delete.eq(false))
                 .offset(offset)
                 .limit(limit)

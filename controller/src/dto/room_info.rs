@@ -24,6 +24,7 @@ pub struct RoomInfoDetailOffsetSearchDto {
     pub room_number: Option<Vec<String>>,
     pub create_time_star: Option<NaiveDateTime>,
     pub create_time_end: Option<NaiveDateTime>,
+    pub only_not_completed: Option<bool>,
 
 }
 

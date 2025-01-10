@@ -153,7 +153,12 @@ async fn get_data_card(req: HttpRequest, param: web::Query<OffsetSearch>) -> Web
         room_param.retain(|item| room_number_filter.contains(&item.to_string()));
     }
 
-    let data = RoomInfoDetailPo::by_room_number_flow(room_param, Option::zip(search_param.create_time_star, search_param.create_time_end), param.offset, param.limit)?;
+    let data = RoomInfoDetailPo::by_room_number_flow(
+        room_param,
+        Option::zip(search_param.create_time_star, search_param.create_time_end),
+        search_param.only_not_completed,
+        param.offset,
+        param.limit)?;
     result_success!(data)
 }
 
