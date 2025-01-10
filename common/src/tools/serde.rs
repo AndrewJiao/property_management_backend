@@ -73,6 +73,15 @@ where
     }
 }
 
+#[allow(dead_code)]
+fn empty_vec_to_none<'de, D>(deserializer: D) -> Result<Option<Vec<String>>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let opt = Option::<Vec<String>>::deserialize(deserializer)?;
+    Ok(opt.filter(|v| !v.is_empty()))
+}
+
 // #[derive(Serialize, Deserialize, Debug)]
 // struct MyStruct {
 //     #[serde(deserialize_with = "empty_string_or_null_as_none", serialize_with = "none_as_null_or_empty_string")]

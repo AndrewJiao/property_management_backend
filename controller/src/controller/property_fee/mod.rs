@@ -1,9 +1,9 @@
 use crate::dto::property_fee::{PropertyFeeDetailInitDto, PropertyFeeDetailResultDto, PropertyFeeDetailSearchDto, PropertyFeeDetailUpdateDto};
 use actix_web::web::scope;
-use actix_web::{delete, get, post, put, web, HttpResponse};
+use actix_web::{delete, get, post, put, web, HttpRequest, HttpResponse};
 use base64::engine::general_purpose;
 use base64::Engine;
-use common::data_result::{AppResult, Order, OrderType, PaginateSearch, WebResult};
+use common::data_result::{AppResult, OffsetSearch, Order, OrderType, PaginateSearch, WebResult};
 use common::db_config::db_get_connection;
 use common::error::BaseError::AnyhowError;
 use common::error::{BUSINESS_ERROR_OWNER_FEE_DETAIL_EXIST};
@@ -24,12 +24,14 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         .service(init_data)
         .service(delete_data)
         .service(export_data)
+        .service(get_data_card)
     );
 }
 
 use crate::controller::IfFilter;
 use crate::dto::ToUpdatePO;
 use repository::schema::basic::t_property_fee_detail::*;
+use repository::user::UserPo;
 use service::property_fee::do_edit_update;
 
 #[get("/data")]
@@ -178,4 +180,14 @@ async fn export_data(param: web::Query<PaginateSearch>) -> WebResult<HttpRespons
         .append_header(("Access-Control-Expose-Headers", "Content-Disposition"))
         .append_header(("Content-Disposition", format!("attachment; filename={encode_file_name}")))
         .body(buffer))
+}
+
+#[get("/data_card")]
+async fn get_data_card(req: HttpRequest, param: web::Query<OffsetSearch>) -> WebResult<HttpResponse> {
+    let param = param.into_inner();
+    validate!(param);
+    let (_, relate_room) = UserPo::current_user_info(&req)?;
+    let room_param = relate_room.as_ref().map(|item| item.iter().map(|item| item.as_str()).collect::<Vec<&str>>());
+    let data = PropertyFeeDetailPo::by_room_number_flow( room_param, param.offset, param.limit)?;
+    result_success!(data)
 }

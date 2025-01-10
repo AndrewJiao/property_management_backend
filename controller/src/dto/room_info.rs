@@ -17,6 +17,16 @@ pub struct RoomInfoDetailSearchDto {
     pub update_time_star: Option<NaiveDateTime>,
 }
 
+#[derive(Deserialize, Validate, Default,Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct RoomInfoDetailOffsetSearchDto {
+    #[serde(default ,deserialize_with = "common::tools::serde::empty_vec_or_null_as_none")]
+    pub room_number: Option<Vec<String>>,
+    pub create_time_star: Option<NaiveDateTime>,
+    pub create_time_end: Option<NaiveDateTime>,
+
+}
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RoomInfoDetailResultDto {

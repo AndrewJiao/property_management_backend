@@ -1,23 +1,21 @@
-#[cfg(feature = "picture_extract")]
-use service::picture_extract::dto::ExtractSender;
+use crate::dto::owner_info::{OwnerInfoInsertDto, OwnerInfoSearchDto, OwnerInfoSearchType, OwnerInfoUpdateDto};
+use crate::dto::{ToInsertPO, ToUpdatePO};
 #[cfg(feature = "picture_extract")]
 use crate::AppData;
 #[cfg(feature = "picture_extract")]
 use actix_multipart::form::{tempfile::TempFile, MultipartForm};
+use actix_web::web::scope;
+use actix_web::{delete, get, post, put, web, HttpRequest, HttpResponse};
 #[cfg(feature = "picture_extract")]
 use common::const_value::SETTINGS;
 #[cfg(feature = "picture_extract")]
-use common::data_result::{AppResult};
-#[cfg(feature = "picture_extract")]
-use common::error::BUSINESS_ERROR;
-use crate::dto::owner_info::{OwnerInfoInsertDto, OwnerInfoSearchDto, OwnerInfoSearchType, OwnerInfoUpdateDto};
-use crate::dto::{ToInsertPO, ToUpdatePO};
-use actix_web::web::scope;
-use actix_web::{delete, get, post, put, web, HttpResponse};
-use common::data_result::PaginateSearch;
-use common::data_result::{WebResult};
+use common::data_result::AppResult;
+use common::data_result::{OffsetSearch, PaginateSearch};
+use common::data_result::WebResult;
 use common::db_config::auto_trait::AutoOperation;
 use common::db_config::db_get_connection;
+#[cfg(feature = "picture_extract")]
+use common::error::BUSINESS_ERROR;
 use common::{result_success, validate};
 use diesel::query_dsl::methods::OrderDsl;
 use diesel::{ExpressionMethods, Insertable, QueryDsl, RunQueryDsl, SaveChangesDsl, SelectableHelper, TextExpressionMethods};
@@ -26,6 +24,9 @@ use repository::component::page::Paginate;
 use repository::owner_info::OwnerBasicInfoPo;
 use repository::schema::basic::t_owner_basic_info::*;
 use repository::soft_delete_by_id;
+use repository::user::UserPo;
+#[cfg(feature = "picture_extract")]
+use service::picture_extract::dto::ExtractSender;
 #[cfg(test)]
 use service::picture_extract::dto::ExtractSender;
 
@@ -189,5 +190,16 @@ impl ExtractSuffix for Option<String> {
             (|suffix| if suffix_vec.contains(&suffix) { Ok(suffix) } else { Err(BUSINESS_ERROR("文件格式不支持", 230001)) })
 
     }
+}
+
+
+#[get("/data_card")]
+async fn get_data_card(req: HttpRequest, param: web::Query<OffsetSearch>) -> WebResult<HttpResponse> {
+    let param = param.into_inner();
+    validate!(param);
+    let (_, relate_room) = UserPo::current_user_info(&req)?;
+    let room_param = relate_room.as_ref().map(|item| item.iter().map(|item| item.as_str()).collect::<Vec<&str>>());
+    let data = OwnerBasicInfoPo::by_room_number_flow( room_param, param.offset, param.limit)?;
+    result_success!(data)
 }
 

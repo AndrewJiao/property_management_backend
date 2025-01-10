@@ -5,7 +5,7 @@ use crate::schema::basic::t_property_fee_detail::*;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use common::data_result::AppResult;
-use common::db_config::Conn;
+use common::db_config::{db_get_connection, Conn};
 use diesel::pg::Pg;
 use diesel::{AsChangeset, ExpressionMethods, Identifiable, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper};
 use management_macro::AutoOperation;
@@ -62,6 +62,23 @@ impl PropertyFeeDetailPo{
             .filter(is_delete.eq(false))
             .first(conn)?;
         Ok(result)
+    }
+    ///
+    /// 增量查询
+    ///
+    pub fn by_room_number_flow(p_room_number: Option<Vec<&str>>, offset: i64, limit: i64) -> AppResult<Vec<PropertyFeeDetailPo>> {
+        if let Some(p_room_number) = p_room_number {
+            let result = Self::all()
+                .filter(room_number.eq_any(p_room_number))
+                .filter(is_delete.eq(false))
+                .offset(offset)
+                .limit(limit)
+                .order_by(create_time.desc())
+                .get_results(&mut db_get_connection())?;
+            Ok(result)
+        } else {
+            Ok(vec![])
+        }
     }
 
     pub fn by_version (p_version:&str,conn:&mut Conn) -> AppResult<Vec<PropertyFeeDetailPo>>{

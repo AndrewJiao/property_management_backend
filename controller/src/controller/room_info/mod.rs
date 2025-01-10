@@ -1,4 +1,4 @@
-use crate::dto::room_info::{RoomInfoDetailSearchDto, RoomInfoDetailUpdateDto, RoomInfoManuallyInsertDto, RoomInfoSearchType};
+use crate::dto::room_info::{RoomInfoDetailOffsetSearchDto, RoomInfoDetailSearchDto, RoomInfoDetailUpdateDto, RoomInfoManuallyInsertDto, RoomInfoSearchType};
 use crate::dto::{ToInsertPO, ToUpdatePO};
 use actix_web::web::scope;
 use actix_web::{get, post, put, web,  HttpRequest, HttpResponse};
@@ -143,11 +143,20 @@ async fn post_data(query_param: web::Json<RoomInfoManuallyInsertDto>) -> WebResu
 #[get("/data_card")]
 async fn get_data_card(req: HttpRequest, param: web::Query<OffsetSearch>) -> WebResult<HttpResponse> {
     let param = param.into_inner();
-    validate!(param);
+    let search_param: RoomInfoDetailOffsetSearchDto = param.convert_param()?;
+    validate!(param, search_param);
+
     let (_, relate_room) = UserPo::current_user_info(&req)?;
-    let room_param = relate_room.as_ref().map(|item| item.iter().map(|item| item.as_str()).collect::<Vec<&str>>());
-    let data = RoomInfoDetailPo::by_room_number_flow(room_param, param.offset, param.limit)?;
+    let mut room_param = relate_room.as_ref().map(|item| item.iter().map(|item| item.as_str()).collect::<Vec<&str>>());
+    //管理员由所有的room权限，所以可以在这里筛选
+    if let (Some(ref mut room_param),Some(ref room_number_filter)) = (&mut room_param,search_param.room_number) {
+        room_param.retain(|item| room_number_filter.contains(&item.to_string()));
+    }
+
+    let data = RoomInfoDetailPo::by_room_number_flow(room_param, Option::zip(search_param.create_time_star, search_param.create_time_end), param.offset, param.limit)?;
     result_success!(data)
 }
+
+
 
 

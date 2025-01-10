@@ -75,12 +75,26 @@ impl PaginateSearch {
 #[derive(Deserialize, Validate,Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OffsetSearch {
-    #[validate(range(min = 1))]
     pub offset: i64,
-    #[validate(range(min = 1, max = 100))]
     pub limit: i64,
     #[validate(length(min = 0, max = 1000))]
     pub param: Option<String>,
+}
+impl OffsetSearch {
+    pub fn convert_param<T>(&self) -> AppResult<T>
+    where
+        T: for<'de> Deserialize<'de>,
+        T: Default,
+    {
+        if let Some(ref e) = self.param {
+            let decode = general_purpose::STANDARD.decode(e).map_err(BaseError::Base64Error)?;
+            let decode_str = String::from_utf8(decode).map_err(BaseError::FromUtf8Error)?;
+            Ok(serde_json::from_str::<T>(&decode_str).map_err(BaseError::JsonError)?)
+        } else {
+            Ok(T::default())
+        }
+    }
+
 }
 
 #[derive(Deserialize, Serialize,Debug)]

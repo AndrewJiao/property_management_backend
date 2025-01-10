@@ -35,6 +35,24 @@ pub struct OwnerBasicInfoPo {
 
 }
 
+impl OwnerBasicInfoPo {
+    pub fn by_room_number_flow(p_room_number: Option<Vec<&str>>, p1: i64, p2: i64) -> AppResult<Vec<OwnerBasicInfoPo>> {
+        if let Some(p_room_number) = p_room_number {
+            let result = Self::all()
+                .filter(room_number.eq_any(p_room_number))
+                .filter(is_delete.eq(false))
+                .select(OwnerBasicInfoPo::as_select())
+                .order_by(create_time.desc())
+                .offset(p1)
+                .limit(p2)
+                .load::<OwnerBasicInfoPo>(&mut db_get_connection())?;
+            Ok(result)
+        } else {
+            Ok(vec![])
+        }
+    }
+}
+
 type BoxedQuery<'a> = t_owner_basic_info::BoxedQuery<'a, Pg, SqlType<OwnerBasicInfoPo>>;
 impl OwnerBasicInfoPo {
     pub fn all<'a>() -> BoxedQuery<'a> {

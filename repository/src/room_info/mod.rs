@@ -1,18 +1,20 @@
 use crate::price_basic::{BasicPriceType, PriceBasicPo};
 use crate::schema::basic::t_room_info_detail::*;
-use crate::schema::basic::{t_room_info_detail};
+use crate::schema::basic::t_room_info_detail;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use common::data_result::AppResult;
 use common::db_config::{db_get_connection, Conn};
 use diesel::pg::Pg;
-use diesel::{AsChangeset, ExpressionMethods, Identifiable, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper};
+use diesel::{AsChangeset, BoolExpressionMethods, ExpressionMethods, Identifiable, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper};
 use log::debug;
 use management_macro::AutoOperation;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::str::FromStr;
+use diesel::sql_types::Bool;
+use common::tools::time::DEFAULT_TIME;
 
 #[derive(Queryable, Selectable, Deserialize, Serialize)]
 #[diesel(table_name = t_room_info_detail)]
@@ -55,14 +57,18 @@ impl RoomInfoDetailPo {
         Ok(result)
     }
 
-    pub fn by_room_number_flow(p_room_number: Option<Vec<&str>>, offset: i64, limit: i64) -> AppResult<Vec<RoomInfoDetailPo>> {
+    pub fn by_room_number_flow(p_room_number: Option<Vec<&str>>, create_time_range: Option<(NaiveDateTime, NaiveDateTime)>, offset: i64, limit: i64) -> AppResult<Vec<RoomInfoDetailPo>> {
+        let create_range_time = create_time_range.unwrap_or((*DEFAULT_TIME, *DEFAULT_TIME));
+
         if let Some(p_room_number) = p_room_number {
             let result = table
                 .select(RoomInfoDetailPo::as_select())
                 .filter(room_number.eq_any(p_room_number))
+                .filter(diesel::dsl::sql::<Bool>(if create_time_range.is_none() { "TRUE" } else { "FALSE" }).or(create_time.between(create_range_time.0, create_range_time.1)))
                 .filter(is_delete.eq(false))
                 .offset(offset)
                 .limit(limit)
+                .order_by(create_time.desc())
                 .load(&mut db_get_connection())?;
             Ok(result)
         } else {
