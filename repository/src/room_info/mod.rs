@@ -78,7 +78,7 @@ impl RoomInfoDetailPo {
                 .filter(diesel::dsl::sql::<Bool>(if create_time_range.is_none() { "TRUE" } else { "FALSE" }).or(create_time.between(create_range_time.0, create_range_time.1)))
                 .filter(diesel::dsl::sql::<Bool>(if only_not_completed.unwrap_or_default() { "FALSE" } else { "TRUE" }).or(with_not_completed()))
                 .filter(is_delete.eq(false))
-                .offset(offset)
+                .offset(offset * limit)
                 .limit(limit)
                 .order_by(create_time.desc())
                 .load(&mut db_get_connection())?;
