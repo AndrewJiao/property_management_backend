@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 
-#[derive(Selectable, Queryable, Deserialize, Serialize)]
+#[derive(Selectable, Queryable, Deserialize, Serialize, Debug)]
 #[diesel(table_name = t_owner_basic_info)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 #[serde(rename_all = "camelCase")]
@@ -36,7 +36,7 @@ pub struct OwnerBasicInfoPo {
 }
 
 impl OwnerBasicInfoPo {
-    pub fn by_room_number_flow(p_room_number: Option<Vec<&str>>, p1: i64, p2: i64) -> AppResult<Vec<OwnerBasicInfoPo>> {
+    pub fn by_room_number_flow(p_room_number: Option<&Vec<String>>, p1: i64, p2: i64) -> AppResult<Vec<OwnerBasicInfoPo>> {
         if let Some(p_room_number) = p_room_number {
             let result = Self::all()
                 .filter(room_number.eq_any(p_room_number))

@@ -1,11 +1,12 @@
+use crate::dto::owner_info::OwnerInfoResultDto;
+use crate::dto::{ToDesc, ToInsertPO, ToUpdatePO};
+use chrono::NaiveDateTime;
+use common::const_value::SYSTEM;
 use common::tools::serde::empty_string_or_null_as_none;
 use common::tools::serde::empty_vec_or_null_as_none;
-use chrono::NaiveDateTime;
+use repository::user::{RoleType, UserInsertPo, UserPo, UserUpdatePo};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
-use common::const_value::SYSTEM;
-use repository::user::{RoleType, UserInsertPo, UserPo, UserUpdatePo};
-use crate::dto::{ToDesc, ToInsertPO, ToUpdatePO};
 
 #[derive(Deserialize,Validate)]
 #[serde(rename_all = "camelCase")]
@@ -171,4 +172,21 @@ pub struct UserLoginDto {
     pub account: String,
     #[validate(length(min = 1, max = 100))]
     pub password: String,
+}
+
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UserInfoDetailResult{
+    pub id: i64,
+    pub account_id: String,
+    pub account: String,
+    pub name: String,
+    pub role_type: RoleType,
+    pub create_by: String,
+    pub update_by: String,
+    pub create_time: NaiveDateTime,
+    pub update_time: NaiveDateTime,
+    pub comment: Option<String>,
+    pub relate_room_infos: Option<Vec<OwnerInfoResultDto>>,
 }

@@ -1,8 +1,9 @@
 use crate::controller::user::inner::ComputeUserResult;
-use crate::dto::user::{SearchType, UserChangePasswordDto, UserCreateDto, UserLoginDto, UserResultDto, UserSearchDto, UserUpdateDto};
+use crate::dto::owner_info::OwnerInfoResultDto;
+use crate::dto::user::{SearchType, UserChangePasswordDto, UserCreateDto, UserInfoDetailResult, UserLoginDto, UserResultDto, UserSearchDto, UserUpdateDto};
 use crate::dto::{ToInsertPO, ToUpdatePO};
 use actix_web::web::scope;
-use actix_web::{delete, get, post, put, web, HttpResponse};
+use actix_web::{delete, get, post, put, web, HttpRequest, HttpResponse};
 use common::data_result::{AppDataResult, PaginateSearch, WebResult};
 use common::db_config::db_get_connection;
 use common::error::BaseError::AnyhowError;
@@ -10,8 +11,10 @@ use common::error::USER_ACCOUNT_EXIST;
 use common::tools::jwt::create_jwt_token_cookie;
 use common::tools::time::now_utc_date_time_naive;
 use common::{result_success, validate};
+use repository::owner_info::OwnerBasicInfoPo;
 use repository::user::relate::UserRelateRoomPo;
-use repository::user::UserPo;
+use repository::user::{RoleType, UserPo};
+
 mod inner;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
@@ -22,6 +25,7 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         .service(delete_data)
         .service(login)
         .service(logout)
+        .service(get_by_account)
     );
 }
 
@@ -109,6 +113,49 @@ pub async fn get_binding_room(param: web::Query<SearchType>) -> WebResult<HttpRe
         }
     }
 
+}
+
+
+///
+/// 根据accountId获取用户信息
+///
+#[get("data_info")]
+pub async fn get_by_account(req:HttpRequest) -> WebResult<HttpResponse> {
+    let (user_po, room_numbers) = UserPo::current_user_info(&req)?;
+    //管理员有所有房间信息，所以不需要再返回房间信息了避免数据过大
+    let relate_owner_info = match user_po.role_type {
+        RoleType::User => {
+            OwnerBasicInfoPo::by_room_number_flow(room_numbers.as_ref(), 0, 100).ok()
+                .map(|e| {
+                    return e.into_iter()
+                        .map(|item| item.into())
+                        .collect::<Vec<OwnerInfoResultDto>>()
+                })
+        }
+        _ => {
+            // None
+            OwnerBasicInfoPo::by_room_number_flow(room_numbers.as_ref(), 0, 100).ok()
+                .map(|e| {
+                    return e.into_iter()
+                        .map(|item| item.into())
+                        .collect::<Vec<OwnerInfoResultDto>>()
+                })
+        }
+    };
+    let result = UserInfoDetailResult {
+        id: user_po.id,
+        account_id: user_po.account_id,
+        account: user_po.account,
+        name: user_po.name,
+        role_type: user_po.role_type,
+        create_by: user_po.create_by,
+        update_by: user_po.update_by,
+        create_time: user_po.create_time,
+        update_time: user_po.update_time,
+        comment: None,
+        relate_room_infos: relate_owner_info,
+    };
+    result_success!(result)
 }
 
 

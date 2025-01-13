@@ -47,24 +47,6 @@ pub struct RoomInfoDetailResultDto {
     pub update_time: NaiveDateTime,
 }
 
-//理论上由系统新增
-// #[derive(Deserialize, Validate)]
-// pub struct RoomInfoDetailInsertPo<'a> {
-//     pub room_number: Option<&'a str>,
-//     pub water_meter_num_before: Option<&'a i64>,
-//     pub water_meter_num: Option<&'a i64>,
-//     pub water_meter_sub: Option<&'a i64>,
-//     pub electricity_meter_num_before: Option<&'a i64>,
-//     pub electricity_meter_num: Option<&'a i64>,
-//     pub electricity_meter_sub: Option<&'a i64>,
-//     pub month_version: Option<&'a str>,
-//     pub comment: Option<&'a str>,
-//     pub create_by: Option<&'a str>,
-//     pub update_by: Option<&'a str>,
-//     pub create_time: Option<NaiveDateTime>,
-//     pub update_time: Option<NaiveDateTime>,
-// }
-
 #[derive(Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct RoomInfoDetailUpdateDto {

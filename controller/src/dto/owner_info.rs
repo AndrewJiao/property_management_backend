@@ -2,9 +2,9 @@ use crate::dto::{ToInsertPO, ToUpdatePO};
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use common::tools::serde::empty_string_or_null_as_none;
-
+use log::debug;
 use common::tools::time::now_local_date_time_naive;
-use repository::owner_info::{InsertOwnerBasicInfoPo, UpdateOwnerBasicInfoPo};
+use repository::owner_info::{InsertOwnerBasicInfoPo, OwnerBasicInfoPo, UpdateOwnerBasicInfoPo};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -109,13 +109,41 @@ pub struct OwnerInfoResultDto {
     id: i32,
     room_number: String,
     owner_name: Option<String>,
-    room_square: Option<String>,
+    room_square: Option<BigDecimal>,
     create_by: Option<String>,
     update_by: Option<String>,
-    create_time: Option<NaiveDateTime>,
-    update_time: Option<NaiveDateTime>,
+    create_time: NaiveDateTime,
+    update_time: NaiveDateTime,
     comment: Option<String>,
-    other_basic: Option<serde_json::Value>,
+    other_basic: Option<OtherPartResultDto>,
+}
+
+#[derive(Deserialize, Serialize,Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct OtherPartResultDto{
+    car_number: Option<i32>,
+    car_number_electron: Option<i32>,
+    motor_cycle_number: Option<i32>,
+}
+
+impl From<OwnerBasicInfoPo> for OwnerInfoResultDto {
+    fn from(po: OwnerBasicInfoPo) -> Self {
+        debug!("po={:?}", po);
+        let other_basic = po.other_basic.map(|e| serde_json::from_value::<OtherPartResultDto>(e).ok()).flatten();
+        debug!("other_basic={:?}", other_basic);
+        OwnerInfoResultDto {
+            id: po.id,
+            room_number: po.room_number,
+            owner_name: po.owner_name,
+            room_square: po.room_square,
+            create_by: po.create_by,
+            update_by: po.update_by,
+            create_time: po.create_time,
+            update_time: po.update_time,
+            comment: po.comment,
+            other_basic
+        }
+    }
 }
 
 #[derive(Deserialize)]

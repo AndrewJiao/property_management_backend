@@ -198,8 +198,7 @@ async fn get_data_card(req: HttpRequest, param: web::Query<OffsetSearch>) -> Web
     let param = param.into_inner();
     validate!(param);
     let (_, relate_room) = UserPo::current_user_info(&req)?;
-    let room_param = relate_room.as_ref().map(|item| item.iter().map(|item| item.as_str()).collect::<Vec<&str>>());
-    let data = OwnerBasicInfoPo::by_room_number_flow( room_param, param.offset, param.limit)?;
+    let data = OwnerBasicInfoPo::by_room_number_flow(relate_room.as_ref(), param.offset, param.limit)?;
     result_success!(data)
 }
 
