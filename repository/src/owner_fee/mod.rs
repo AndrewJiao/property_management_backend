@@ -90,6 +90,11 @@ pub fn with_room_number_like<'a>(value: &'a str) -> _ {
 }
 
 #[auto_type(no_type_alias)]
+pub fn with_room_number_match<'a>(value: &'a Vec<String>) -> _ {
+    room_number.eq_any(value)
+}
+
+#[auto_type(no_type_alias)]
 pub fn with_detail_type_in<'a>(value: &'a Vec<DetailType>) ->_
 {
    detail_type.eq_any(value)
@@ -102,6 +107,7 @@ impl OwnerFeeDetailPo {
     pub fn search_by_param<'a>(
          param_stream_id: Option<&'a str>,
          param_room_number: Option<&'a str>,
+         param_room_number_match: Option<&'a Vec<String>>,
          param_detail_type: Option<&'a Vec<DetailType>>,
          param_create_time_star: Option<&'a chrono::NaiveDateTime>,
          param_create_time_end: Option<&'a chrono::NaiveDateTime>,
@@ -111,6 +117,7 @@ impl OwnerFeeDetailPo {
         let mut statement = OwnerFeeDetailPo::all();
         if_filter!(statement = with_stream_id(param_stream_id));
         if_filter!(statement = with_room_number_like(param_room_number));
+        if_filter!(statement = with_room_number_match(param_room_number_match));
         if_filter!(statement = with_detail_type_in(param_detail_type));
         if_filter!(statement = with_create_time_between(param_create_time_star,param_create_time_end));
         if_filter!(statement = with_update_time_between(param_update_time_star,param_update_time_end));

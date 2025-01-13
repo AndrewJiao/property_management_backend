@@ -25,6 +25,7 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         .service(delete_data)
         .service(export_data)
         .service(get_data_card)
+        .service(data_detail)
     );
 }
 
@@ -182,6 +183,7 @@ async fn export_data(param: web::Query<PaginateSearch>) -> WebResult<HttpRespons
         .body(buffer))
 }
 
+#[allow(dead_code)]
 #[get("/data_card")]
 async fn get_data_card(req: HttpRequest, param: web::Query<OffsetSearch>) -> WebResult<HttpResponse> {
     let param = param.into_inner();
@@ -191,3 +193,21 @@ async fn get_data_card(req: HttpRequest, param: web::Query<OffsetSearch>) -> Web
     let data = PropertyFeeDetailPo::by_room_number_flow( room_param, param.offset, param.limit)?;
     result_success!(data)
 }
+
+
+///
+/// 获取计算明细，详细列出计算过程
+///
+#[get("/data_detail")]
+async fn data_detail(param: web::Query<PropertyFeeDetailSearchDto>) -> WebResult<HttpResponse> {
+    let param = param.into_inner();
+    validate!(param);
+    if let(Some(p_room_number), Some(p_record_version)) = (&param.room_number, &param.record_version) {
+        let data = PropertyFeeDetailPo::by_room_number_and_version(p_room_number, p_record_version, &mut db_get_connection())?;
+        result_success!(data)
+    } else {
+        result_success!()
+    }
+}
+
+

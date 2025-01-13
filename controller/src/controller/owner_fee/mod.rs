@@ -1,9 +1,9 @@
 use crate::dto::owner_fee::{OwnerFeeDetailResultDto, OwnerFeeDetailSearchDto, OwnerFeeDetailUpdateDto, StreamAddDetailType};
 use crate::dto::ToUpdatePO;
 use actix_web::web::scope;
-use actix_web::{get, post, put, web, HttpResponse};
+use actix_web::{get, post, put, web, HttpRequest, HttpResponse};
 use bigdecimal::{BigDecimal, Zero};
-use common::data_result::{PaginateSearch, WebResult};
+use common::data_result::{AppResult, PaginateSearch, WebResult};
 use common::db_config::db_get_connection;
 use common::error::BaseError::AnyhowError;
 use common::error::PARAM_NOT_SUPPORT;
@@ -14,6 +14,7 @@ use log::debug;
 use repository::component::page::Paginate;
 use repository::owner_fee::OwnerFeeDetailPo;
 use repository::schema::basic::t_owner_fee_detail::*;
+use repository::user::UserPo;
 use std::clone::Clone;
 use std::collections::HashSet;
 
@@ -22,6 +23,7 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         .service(get_data)
         .service(put_data)
         .service(add_data)
+        .service(get_data_with_auth)
     );
 }
 
@@ -32,9 +34,15 @@ pub fn config(cfg: &mut web::ServiceConfig) {
 #[get("/data")]
 async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpResponse> {
     let search_param: OwnerFeeDetailSearchDto = param.convert_param()?;
+    let (result_dto, total) = do_search(param.current_page(), param.limit(), search_param).await?;
+    result_success!(result_dto, param.produce_page_result(total))
+}
+
+async fn do_search(current_page: i64, page_size: i64, search_param: OwnerFeeDetailSearchDto) -> AppResult<(Vec<OwnerFeeDetailResultDto>, i64)> {
     let statement = OwnerFeeDetailPo::search_by_param(
         search_param.stream_id.as_deref(),
         search_param.room_number.as_deref(),
+        search_param.room_numbers.as_ref(),
         search_param.detail_type.as_ref(),
         search_param.create_time_star.as_ref(), search_param.create_time_end.as_ref(),
         search_param.update_time_star.as_ref(), search_param.update_time_end.as_ref(),
@@ -42,8 +50,8 @@ async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpResponse> 
 
     let (result, total) =
         OrderDsl::order(statement, create_time.desc())
-            .paginate(param.current_page())
-            .per_page(param.limit())
+            .paginate(current_page)
+            .per_page(page_size)
             .load_and_count_pages::<OwnerFeeDetailPo>(&mut db_get_connection())?;
 
     let record_ids = result.iter().map(|e| e.record_id.as_str()).collect::<Vec<&str>>();
@@ -52,8 +60,8 @@ async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpResponse> 
     //查询关联的流水
     let stream_id_list = result.iter().map(|e| e.stream_id.as_str()).collect();
     let all_relative_stream_data = OwnerFeeDetailPo::by_relative_order_number(&stream_id_list)?;
-    let all_hash_relative_stream_data_id:HashSet<String>  = all_relative_stream_data.into_iter()
-        .map(|e| (e.related_order_number ))
+    let all_hash_relative_stream_data_id: HashSet<String> = all_relative_stream_data.into_iter()
+        .map(|e| (e.related_order_number))
         .collect();
 
     let result_dto = result.into_iter()
@@ -61,13 +69,11 @@ async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpResponse> 
             let v_amount_balance = amount_map.get(e.stream_id.as_str())
                 .unwrap_or(&BigDecimal::zero())
                 .clone();
-            OwnerFeeDetailResultDto::new(e, v_amount_balance,&all_hash_relative_stream_data_id)
+            OwnerFeeDetailResultDto::new(e, v_amount_balance, &all_hash_relative_stream_data_id)
         })
         .collect::<Vec<OwnerFeeDetailResultDto>>();
-
-    result_success!(result_dto, param.produce_page_result(total))
+    Ok((result_dto, total))
 }
-
 
 ///
 /// 修改流水
@@ -110,4 +116,15 @@ where
             Err(AnyhowError(PARAM_NOT_SUPPORT()))
         }
     }
+}
+
+#[get("/auth_data")]
+async fn get_data_with_auth(param: web::Query<PaginateSearch>, req: HttpRequest) -> WebResult<HttpResponse> {
+    let mut search_param: OwnerFeeDetailSearchDto = param.convert_param()?;
+    validate!(param, search_param);
+    let (_, relate_room) = UserPo::current_user_info(&req)?;
+    search_param.room_numbers = relate_room;
+
+    let (result_dto, total) = do_search(param.current_page(), param.limit(), search_param).await?;
+    result_success!(result_dto, param.produce_page_result(total))
 }

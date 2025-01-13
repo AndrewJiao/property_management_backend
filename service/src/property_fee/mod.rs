@@ -1,32 +1,42 @@
 use crate::room_info;
+use bigdecimal::BigDecimal;
 use common::data_result::AppResult;
 use common::db_config::auto_trait::AutoOperation;
 use common::db_config::db_get_connection;
+use common::error::{BUSINESS_ERROR_OWNER_FEE_DETAIL_EXIST, DATA_NOT_FOUND};
 use common::CURRENT_USE;
 use diesel::dsl::insert_into;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SaveChangesDsl};
+use repository::component::operation_trait::FeeCalculator;
+use repository::owner_fee::OwnerFeeDetailPo;
 use repository::owner_info::OwnerBasicInfoPo;
 use repository::price_basic::{BasicPriceType, PriceBasicConfigGet, PriceBasicPo};
 use repository::property_fee::{PropertyFeeDetailInsertPo, PropertyFeeDetailPo, PropertyFeeDetailUpdatePo};
 use repository::room_info::RoomInfoDetailPo;
 use std::collections::{HashMap, HashSet};
-use bigdecimal::BigDecimal;
-use repository::component::operation_trait::FeeCalculator;
 
 ///
 /// 编辑的过程中尝试重新计算
 ///
 pub fn do_edit_update(update_po: PropertyFeeDetailUpdatePo) -> AppResult<PropertyFeeDetailPo>
 {
+    let conn = &mut db_get_connection();
+    //校验是否已生成费用明细
     let binding = &PropertyFeeDetailPo::by_id(update_po.id)
-        .get_result::<PropertyFeeDetailPo>(&mut db_get_connection())?;
+        .get_result::<PropertyFeeDetailPo>(conn)?;
+    let record = &vec![(binding.room_number.as_deref().ok_or(DATA_NOT_FOUND())?, binding.record_version.as_deref().ok_or(DATA_NOT_FOUND())?)];
+    let has_owner_fee_data = OwnerFeeDetailPo::by_room_number_and_relative_order_numbers(record, conn)?.is_empty();
+    if !has_owner_fee_data {
+        return Err(BUSINESS_ERROR_OWNER_FEE_DETAIL_EXIST());
+    }
+
     let mut exist_po: PropertyFeeDetailUpdatePo = binding.into();
     exist_po.update(update_po);
     exist_po.fee_calculate();
     //交给外部去修改
     let result = exist_po
         .update_time()
-        .save_changes::<PropertyFeeDetailPo>(&mut db_get_connection())?;
+        .save_changes::<PropertyFeeDetailPo>(conn)?;
     Ok(result)
 }
 
@@ -136,13 +146,13 @@ pub fn init_data(version: Option<&str>) -> AppResult<()> {
 
 pub mod excel{
     use bigdecimal::ToPrimitive;
+    use common::const_value::SETTINGS;
     use common::data_result::AppResult;
-    use itertools::{Itertools};
+    use itertools::Itertools;
     use lazy_static::lazy_static;
     use log::debug;
     use repository::property_fee::PropertyFeeDetailPo;
-    use rust_xlsxwriter::{ Format, FormatAlign, FormatBorder,  Workbook, Worksheet};
-    use common::const_value::SETTINGS;
+    use rust_xlsxwriter::{Format, FormatAlign, FormatBorder, Workbook, Worksheet};
 
     pub fn build_work_book (all_result:Vec<PropertyFeeDetailPo>) ->AppResult<Vec<u8>>{
         debug!("all_result.len:{}",all_result.len());

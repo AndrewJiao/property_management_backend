@@ -37,6 +37,7 @@ pub struct OwnerFeeDetailSearchDto {
     #[serde(default, deserialize_with = "empty_string_or_null_as_none")]
     #[validate(length(min = 0, max = 100))]
     pub room_number: Option<String>,
+    pub room_numbers: Option<Vec<String>>,
     pub detail_type: Option<Vec<DetailType>>,
     pub create_time_star: Option<NaiveDateTime>,
     pub create_time_end: Option<NaiveDateTime>,
