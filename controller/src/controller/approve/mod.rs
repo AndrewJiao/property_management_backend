@@ -34,6 +34,9 @@ pub async fn get_data(param: web::Query<PaginateSearch>) -> WebResult<HttpRespon
     result_success!(result, param.produce_page_result(total))
 }
 
+///
+/// 审批
+///
 #[put("/action/{id}")]
 pub async fn change_state(id: web::Path<i64>, param: web::Json<ApproveActionDto>) -> WebResult<HttpResponse> {
     let dto = param.into_inner();
@@ -41,7 +44,6 @@ pub async fn change_state(id: web::Path<i64>, param: web::Json<ApproveActionDto>
         .to_update_po(id.into_inner())
         .update_time();
     let result = service::approve::change_state(update_po)?;
-
     result_success!(result)
 }
 

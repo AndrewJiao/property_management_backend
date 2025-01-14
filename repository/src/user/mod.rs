@@ -69,7 +69,19 @@ pub struct UserPo {
     pub update_time: chrono::NaiveDateTime,
     pub comment: Option<String>,
     pub is_delete: bool,
+    pub relate_user_id: Option<String>,
 }
+
+impl UserPo {
+    pub fn by_relate_user_id(code: String) -> AppResult<UserPo> {
+        let result = table
+            .filter(relate_user_id.eq(code))
+            .filter(with_data_enable())
+            .first(&mut db_get_connection())?;
+        Ok(result)
+    }
+}
+
 type BoxedQuery<'a> = t_user::BoxedQuery<'a, Pg, crate::SqlType<UserPo>>;
 impl UserPo {
     pub fn all<'a>() -> BoxedQuery<'a> {
@@ -212,6 +224,7 @@ pub struct UserInsertPo<'a> {
     pub update_time: Option<chrono::NaiveDateTime>,
     pub comment: Option<&'a str>,
     pub is_delete: bool,
+    pub relate_user_id: Option<String>,
 }
 impl UserInsertPo<'_> {
     pub fn save(self,conn:&mut Conn) ->AppResult<UserPo>{

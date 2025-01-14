@@ -1,16 +1,20 @@
+use crate::user::value::{LoginType, WeChartSns};
 use base64::Engine;
 use common::const_value::SETTINGS;
 use common::data_result::{AppError, AppResult};
 use common::db_config::auto_trait::AutoOperation;
 use common::db_config::{db_get_connection, Conn};
 use common::error::{DATA_HAS_EXIST, DATA_NOT_EXIST, USER_PASSWORD_ERROR};
+use common::http::AppHttpClient;
+use common::tools::jwt::AppJwtToken;
 use diesel::{Connection, SaveChangesDsl};
 use hmac::Mac;
 use repository::owner_info::OwnerBasicInfoPo;
 use repository::user::relate::UserRelateRoomPo;
 use repository::user::{UserInsertPo, UserPo, UserUpdatePo};
 use sha2::Sha256;
-use common::tools::jwt::AppJwtToken;
+
+pub mod value;
 
 ///
 /// 如果是加密就生成解密后的字符串，如果是解密就生成加密后的字符串
@@ -66,6 +70,8 @@ pub fn verify_password(account: &String, password: String) -> AppResult<UserPo> 
 }
 
 pub fn create_account(mut po: UserInsertPo, room_number: Option<Vec<String>>,conn:&mut Conn) -> Result {
+
+
     let uuid = uuid_v7::gen_uuid_v7().to_string();
     po.account_id = Some(uuid);
     if let Some(encode_password) = po.parse_password() {
@@ -153,13 +159,37 @@ fn valid_has_being_bind(param: &Option<Vec<String>>)->AppResult<()> {
     Ok(())
 }
 
+
 ///
 /// 验证密码
 /// 设置jwtToken
 ///
-pub fn login(account: String, password: String) -> AppResult<(UserPo, String)> {
-    let user_po = verify_password(&account, password)?;
-    //设置jwtToken
+pub async fn login(auth: LoginType) -> AppResult<(UserPo, String)> {
+    let user_po = match auth {
+        LoginType::Password(p_account, p_password) => {
+            verify_password(&p_account, p_password)?
+            //设置jwtToken
+        }
+        LoginType::WeChartCode(code) => {
+            let we_chart_sns = we_chart_auth(code).await?;
+            UserPo::by_relate_user_id(we_chart_sns.session_key)?
+        }
+    };
     let token_str = AppJwtToken::create_token_str(user_po.clone())?;
     Ok((user_po,token_str))
+}
+
+///
+/// we_chart授权
+///
+pub async fn we_chart_auth(code: String) -> AppResult<WeChartSns> {
+    let config = &SETTINGS.we_chart_config;
+    let host = &config.host;
+    let app_id = &*config.app_id;
+    let app_secret = &config.app_secret;
+
+    AppHttpClient::get(&format!("https//{host}//sns/jscode2session"))
+        .query(&[("appid", app_id), ("secret", app_secret), ("js_code", &code), ("grant_type", "authorization_code")])
+        .send().await?
+        .json().await
 }

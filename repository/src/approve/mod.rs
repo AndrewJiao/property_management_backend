@@ -40,11 +40,13 @@ impl ApproveState{
 #[serde(rename_all = "PascalCase")]
 pub enum ApproveType{
     CreateUser,
+    MiniWechartCreateUser,
 }
 impl ApproveType{
     pub fn to_string(&self) -> String {
         match self {
             ApproveType::CreateUser => "创建用户".to_string(),
+            ApproveType::MiniWechartCreateUser => "微信小程序创建用户".to_string(),
         }
     }
 }

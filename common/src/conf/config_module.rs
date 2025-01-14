@@ -88,6 +88,13 @@ pub struct PictureConfig {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct WeChartConfig{
+    pub app_id: String,
+    pub app_secret: String,
+    pub host: String,
+}
+
+#[derive(Debug, Deserialize)]
 #[allow(unused)]
 pub struct Settings {
     pub web_config: WebConfig,
@@ -98,6 +105,7 @@ pub struct Settings {
     pub attachment_config: AttachmentConfig,
     pub picture_config: PictureConfig,
     pub open_ssl: OpenSSl,
+    pub we_chart_config: WeChartConfig,
 }
 impl Settings {
     pub fn new() -> Result<Self, ConfigError> {

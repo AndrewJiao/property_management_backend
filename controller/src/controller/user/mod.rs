@@ -1,6 +1,6 @@
 use crate::controller::user::inner::ComputeUserResult;
 use crate::dto::owner_info::OwnerInfoResultDto;
-use crate::dto::user::{SearchType, UserChangePasswordDto, UserCreateDto, UserInfoDetailResult, UserLoginDto, UserResultDto, UserSearchDto, UserUpdateDto};
+use crate::dto::user::{SearchType, UserChangePasswordDto, UserCreateDto, UserInfoDetailResult, UserLoginDto, UserResultDto, UserSearchDto, UserUpdateDto, WeChartUserLoginDto};
 use crate::dto::{ToInsertPO, ToUpdatePO};
 use actix_web::web::scope;
 use actix_web::{delete, get, post, put, web, HttpRequest, HttpResponse};
@@ -14,6 +14,7 @@ use common::{result_success, validate};
 use repository::owner_info::OwnerBasicInfoPo;
 use repository::user::relate::UserRelateRoomPo;
 use repository::user::{RoleType, UserPo};
+use service::user::value::LoginType;
 
 mod inner;
 
@@ -167,7 +168,25 @@ pub async fn get_by_account(req:HttpRequest) -> WebResult<HttpResponse> {
 pub async fn login(param: web::Json<UserLoginDto>) -> WebResult<HttpResponse> {
     validate!(param);
     let UserLoginDto { account, password } = param.into_inner();
-    let (user_po,token_string) = service::user::login(account, password)?;
+    let (user_po, token_string) = service::user::login(LoginType::Password(account, password)).await?;
+    let response = write_auth_cookie(user_po, &token_string);
+    Ok(response)
+}
+
+///
+/// 微信小程序登录
+///
+
+#[put("we_chart_login")]
+pub async fn we_chart_login(param: web::Json<WeChartUserLoginDto>) -> WebResult<HttpResponse> {
+    validate!(param);
+    let WeChartUserLoginDto { code } = param.into_inner();
+    let (user_po, token_string) = service::user::login(LoginType::WeChartCode(code)).await?;
+    let response = write_auth_cookie(user_po, &token_string);
+    Ok(response)
+}
+
+fn write_auth_cookie(user_po: UserPo, token_string: &String) -> HttpResponse {
     let response = HttpResponse::Ok()
         .cookie(create_jwt_token_cookie(&token_string))
         .json(
@@ -178,8 +197,8 @@ pub async fn login(param: web::Json<UserLoginDto>) -> WebResult<HttpResponse> {
                 time_stamp: now_utc_date_time_naive(),
                 paginate_result: None,
             }
-    );
-    Ok(response)
+        );
+    response
 }
 
 ///

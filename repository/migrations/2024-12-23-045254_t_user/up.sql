@@ -13,7 +13,9 @@ create table if not exists t_user
     create_time         timestamp       not null,
     update_time         timestamp       not null,
     comment             text,
-    is_delete           boolean         not null
+    is_delete           boolean         not null,
+    relate_user_id      varchar
+
 );
 
 alter table t_user

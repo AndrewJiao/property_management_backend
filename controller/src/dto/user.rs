@@ -38,6 +38,7 @@ impl ToInsertPO for UserCreateDto{
             update_time: None,
             comment: self.comment.as_deref(),
             is_delete: false,
+            relate_user_id: None,
         }
     }
 }
@@ -172,6 +173,13 @@ pub struct UserLoginDto {
     pub account: String,
     #[validate(length(min = 1, max = 100))]
     pub password: String,
+}
+
+#[derive(Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct WeChartUserLoginDto {
+    #[validate(length(min = 1, max = 100))]
+    pub code: String,
 }
 
 

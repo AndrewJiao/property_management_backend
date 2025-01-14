@@ -226,6 +226,7 @@ pub mod basic {
             update_time -> Timestamp,
             comment -> Nullable<Text>,
             is_delete -> Bool,
+            relate_user_id -> Nullable<Varchar>,
         }
     }
 
