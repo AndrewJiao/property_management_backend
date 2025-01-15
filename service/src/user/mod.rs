@@ -4,16 +4,16 @@ use common::const_value::SETTINGS;
 use common::data_result::{AppError, AppResult};
 use common::db_config::auto_trait::AutoOperation;
 use common::db_config::{db_get_connection, Conn};
-use common::error::{ACCOUNT_EXIST, DATA_HAS_EXIST, DATA_NOT_EXIST, USER_PASSWORD_ERROR, WE_CHART_SNS_ERROR};
+use common::error::{ACCOUNT_EXIST, ROOM_HAS_BEEN_BIND, ROOM_IS_NOT_EXIST, USER_PASSWORD_ERROR, WE_CHART_SNS_ERROR};
 use common::http::AppHttpClient;
 use common::tools::jwt::AppJwtToken;
+use common::tools::password::generate_password;
 use diesel::{Connection, SaveChangesDsl};
 use hmac::Mac;
 use repository::owner_info::OwnerBasicInfoPo;
 use repository::user::relate::UserRelateRoomPo;
 use repository::user::{RoleType, UserInsertPo, UserPo, UserUpdatePo};
 use sha2::Sha256;
-use common::tools::password::generate_password;
 
 pub mod value;
 
@@ -137,7 +137,7 @@ pub fn valid_room_number(param: &Option<Vec<String>>) -> AppResult<()> {
     if let Some(ref room_number) = param {
         for room_number in room_number {
             if OwnerBasicInfoPo::by_room_number(room_number, &mut db_get_connection()).is_err() {
-                return Err(DATA_NOT_EXIST());
+                return Err(ROOM_IS_NOT_EXIST());
             }
         }
     }
@@ -151,7 +151,7 @@ pub fn valid_has_being_bind(param: &Option<Vec<String>>)->AppResult<()> {
     if let Some(ref room_number) = param {
         for room_number in room_number {
             if UserRelateRoomPo::by_room_number(room_number).is_ok() {
-                return Err(DATA_HAS_EXIST());
+                return Err(ROOM_HAS_BEEN_BIND());
             }
         }
     }

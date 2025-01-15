@@ -136,10 +136,13 @@ pub const NO_AUTH: fn() -> anyhow::Error = || anyhow!("errorMsg = 无权限 code
 //approve
 pub const APPROVE_NOT_EXIST: fn() -> anyhow::Error = || anyhow!("errorMsg = 审批不存在 code = 20001");
 pub const APPROVE_STATE_ERROR: fn() -> anyhow::Error = || anyhow!("errorMsg = 审批状态错误 code = 20002");
+pub const ROOM_HAS_BEEN_BIND: fn() -> anyhow::Error = || anyhow!("errorMsg = 当前房间号已被绑定 code = 20003");
 //账户信息不存
 pub const ACCOUNT_NOT_EXIST: fn() -> anyhow::Error = || anyhow!("errorMsg = 账户信息不存在 code = 30001");
 pub const ACCOUNT_EXIST: fn() -> anyhow::Error = || anyhow!("errorMsg = 账户已创建 code = 30002");
 //外部接口error
 pub const WE_CHART_SNS_ERROR: fn() -> anyhow::Error = || anyhow!("errorMsg = 微信认证错误 code = 40001");
+//房间
+pub const ROOM_IS_NOT_EXIST: fn() -> anyhow::Error = || anyhow!("errorMsg = 指定的房号不存在 code = 50001");
 
 

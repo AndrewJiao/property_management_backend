@@ -1,8 +1,10 @@
 use crate::dto::{ToInsertPO, ToUpdatePO};
 use common::const_value::SYSTEM;
 use repository::approve::{ApproveInsertPo, ApprovePo, ApproveState, ApproveType, ApproveUpdatePo};
+use repository::user::UserPo;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ApproveResultDto {
@@ -18,9 +20,11 @@ pub struct ApproveResultDto {
     pub update_by: String,
     pub create_time: chrono::NaiveDateTime,
     pub update_time: chrono::NaiveDateTime,
+    //理论上不会有null的情况，但是为了避免接口返回错误，这里使用Option
+    pub relate_user_info: Option<UserPo>,
 }
-impl From<ApprovePo> for ApproveResultDto{
-    fn from(value: ApprovePo) -> Self {
+impl ApproveResultDto{
+    pub fn from_data(value: ApprovePo, user_po: Option<UserPo>) -> Self {
         ApproveResultDto{
             id: value.id,
             order_no: value.order_no,
@@ -34,9 +38,28 @@ impl From<ApprovePo> for ApproveResultDto{
             update_by: value.update_by,
             create_time: value.create_time,
             update_time: value.update_time,
+            relate_user_info: user_po,
         }
     }
 }
+// impl From<ApprovePo> for ApproveResultDto{
+//     fn from(value: ApprovePo) -> Self {
+//         ApproveResultDto{
+//             id: value.id,
+//             order_no: value.order_no,
+//             approve_state: value.approve_state,
+//             approve_state_desc: value.approve_state.to_string(),
+//             approve_type: value.approve_type,
+//             approve_type_desc: value.approve_type.to_string(),
+//             approve_data: value.approve_data,
+//             comment: value.comment,
+//             create_by: value.create_by,
+//             update_by: value.update_by,
+//             create_time: value.create_time,
+//             update_time: value.update_time,
+//         }
+//     }
+// }
 
 
 #[derive(Serialize, Deserialize, Validate, Default)]

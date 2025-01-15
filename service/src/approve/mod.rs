@@ -15,9 +15,8 @@ use repository::owner_info::UpdateOwnerBasicInfoPo;
 use repository::user::relate::UserRelateRoomPo;
 use repository::user::UserPo;
 
-pub async fn change_state(approve_insert_po: ApproveUpdatePo<'_>, http_request: HttpRequest) -> AppResult<ApprovePo> {
+pub async fn change_state(approve_insert_po: ApproveUpdatePo<'_>, _: HttpRequest) -> AppResult<ApprovePo> {
     let conn = &mut db_get_connection();
-    let current_user = UserPo::current_user_info(&http_request)?;
     let result = conn.transaction::<_, AppError, _>(|conn| {
         let state = approve_insert_po.approve_state.unwrap_or_default();
 
@@ -62,21 +61,20 @@ pub async fn change_state(approve_insert_po: ApproveUpdatePo<'_>, http_request: 
                         let _ = user::create_account(insert_po, room_number, conn)?;
                     },
                     ApproveType::BindingRooms => {
-                        let (user_po, _) = current_user;
                         let value = serde_json::from_value::<BindingRoomValue>(result.approve_data.clone())?;
                         //校验room数据是否存在,校验是否已经被绑定了
                         let room_number = Some(value.binding_room_number.clone());
                         user::valid_room_number(&room_number)?;
                         user::valid_has_being_bind(&room_number)?;
                         //合并relate_room和value中的room
-                        UserRelateRoomPo::bind(&user_po.account_id, &value.get_room_ref(), conn)?;
+                        UserRelateRoomPo::bind(&result.account_id, &value.get_room_ref(), conn)?;
                     }
                     ApproveType::ChangeRoomInfo => {
-                        let (user_po, relate_room) = current_user;
                         let value = serde_json::from_value::<ChangeRoomInfo>(result.approve_data.clone())?;
                         //判断是否有这个房间的权限
-                        if relate_room.map(|e| e.contains(&value.room_number)).is_none() {
-                            error!("no auth to change room info for user : {:?} in room number {:?}", &user_po.account, &value.room_number);
+                        let relate_rooms = UserRelateRoomPo::by_account_id(vec![&result.account_id])?;
+                        if !relate_rooms.iter().any(|e| e.relate_number == value.room_number) {
+                            error!("no auth to change room info for user : {:?} in room number {:?}", &result.account_id, &value.room_number);
                             return Err(NO_AUTH());
                         }
                         UpdateOwnerBasicInfoPo::update_other_part(&value.room_number, value.other_part_info, conn)?;

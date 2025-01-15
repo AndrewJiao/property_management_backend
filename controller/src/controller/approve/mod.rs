@@ -40,8 +40,19 @@ pub async fn get_data(param: web::Query<PaginateSearch>,req: HttpRequest) -> Web
         p_account_id,
         (param.current_page(), param.limit()),
     )?;
+    //获取关联的用户信息
+    let relate_account_id_vec = result.iter().map(|x| x.account_id.as_str()).collect::<Vec<&str>>();
 
-    let result = result.into_iter().map(|x| x.into()).collect::<Vec<ApproveResultDto>>();
+    let relate_user_info = &UserPo::by_account_id(&relate_account_id_vec)?
+        .into_iter().map(|x| (x.account_id.clone(), x)).collect::<std::collections::HashMap<String, UserPo>>();
+
+    let result = result.into_iter().map(|x|{
+        return if let Some(user_po) = relate_user_info.get(&x.account_id){
+            ApproveResultDto::from_data(x, Some(user_po.clone()))
+        } else {
+            ApproveResultDto::from_data(x, None)
+        }
+    } ).collect::<Vec<ApproveResultDto>>();
     result_success!(result, param.produce_page_result(total))
 }
 

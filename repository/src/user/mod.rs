@@ -110,6 +110,14 @@ impl UserPo {
         Ok(result)
     }
 
+    pub fn by_account_id(p_account_id: &Vec<&str>) -> AppResult<Vec<UserPo>> {
+        let result = Self::all()
+            .filter(account_id.eq_any(p_account_id))
+            .filter(with_data_enable())
+            .get_results(&mut db_get_connection())?;
+        Ok(result)
+    }
+
     ///
     /// 如果是管理员，就返回所有的roomNumber
     ///
