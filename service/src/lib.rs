@@ -8,3 +8,4 @@ pub mod room_info;
 pub mod user;
 pub mod property_fee;
 pub mod owner_fee;
+pub mod owner_basic_info;

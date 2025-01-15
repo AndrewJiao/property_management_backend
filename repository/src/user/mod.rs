@@ -73,7 +73,7 @@ pub struct UserPo {
 }
 
 impl UserPo {
-    pub fn by_relate_user_id(code: String) -> AppResult<UserPo> {
+    pub fn by_relate_user_id(code: &String) -> AppResult<UserPo> {
         let result = table
             .filter(relate_user_id.eq(code))
             .filter(with_data_enable())
@@ -235,6 +235,7 @@ impl UserInsertPo<'_> {
     }
 }
 
+
 #[derive(Identifiable, AsChangeset, Deserialize, Serialize, AutoOperation)]
 #[diesel(table_name = t_user)]
 #[serde(rename_all = "camelCase")]
@@ -269,3 +270,4 @@ pub fn delete_by_id(p_id: i64, conn: &mut Conn) -> AppResult<UserPo> {
         .get_result(conn)?;
     Ok(result)
 }
+

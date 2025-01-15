@@ -73,6 +73,7 @@ impl ToInsertPO for ApproveCreateDto {
             create_time: None,
             update_time: None,
             is_delete: false,
+            account_id: "",
         }
     }
 }

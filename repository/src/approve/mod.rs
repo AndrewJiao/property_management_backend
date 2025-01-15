@@ -40,13 +40,17 @@ impl ApproveState{
 #[serde(rename_all = "PascalCase")]
 pub enum ApproveType{
     CreateUser,
-    MiniWechartCreateUser,
+    WeChartCreateUser,
+    BindingRooms,
+    ChangeRoomInfo,
 }
 impl ApproveType{
     pub fn to_string(&self) -> String {
         match self {
             ApproveType::CreateUser => "创建用户".to_string(),
-            ApproveType::MiniWechartCreateUser => "微信小程序创建用户".to_string(),
+            ApproveType::WeChartCreateUser => "微信小程序创建用户".to_string(),
+            ApproveType::BindingRooms => "绑定房间".to_string(),
+            ApproveType::ChangeRoomInfo => "修改房间信息".to_string(),
         }
     }
 }
@@ -71,6 +75,7 @@ pub struct ApprovePo {
     pub create_time: chrono::NaiveDateTime,
     pub update_time: chrono::NaiveDateTime,
     pub is_delete: bool,
+    pub account_id: String,
 }
 type BoxedQuery<'a> = t_approve::BoxedQuery<'a, Pg, crate::SqlType<ApprovePo>>;
 impl ApprovePo{
@@ -98,11 +103,13 @@ impl ApprovePo{
         p_approve_state: Option<&ApproveState>,
         p_approve_type: Option<&ApproveType>,
         p_order_no: Option<&str>,
+        p_account_id: Option<String>,
         (p_current_page, p_page_size): (i64, i64),
     ) -> AppResult<(Vec<ApprovePo>, i64)> {
         let mut  statement = Self::all();
 
         if_filter!(statement = with_create_time_between(p_create_time_star,p_create_time_end));
+        if_filter!(statement = account_id.eq(p_account_id));
         if_filter!(statement = approve_state.eq(p_approve_state));
         if_filter!(statement = approve_type.eq(p_approve_type));
         if_filter!(statement = order_no.eq(p_order_no));
@@ -142,6 +149,7 @@ pub struct ApproveInsertPo<'a> {
     pub create_time: Option<chrono::NaiveDateTime>,
     pub update_time: Option<chrono::NaiveDateTime>,
     pub is_delete: bool,
+    pub account_id: &'a str,
 }
 
 impl ApproveInsertPo<'_>{

@@ -12,7 +12,8 @@ create table if not exists t_approve
     update_by     varchar               not null,
     create_time   timestamp             not null,
     update_time   timestamp             not null,
-    is_delete     boolean default false not null
+    is_delete     boolean default false not null,
+    account_id    varchar               not null
 );
 
 comment on table t_approve is '审批相关';
@@ -30,4 +31,7 @@ create index if not exists t_approve_id_index
 
 create index if not exists t_approve_order_no_index
     on t_approve (order_no);
+
+create index if not exists t_approve_account_id_index
+    on t_approve (account_id);
 

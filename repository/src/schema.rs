@@ -53,6 +53,7 @@ pub mod basic {
             create_time -> Timestamp,
             update_time -> Timestamp,
             is_delete -> Bool,
+            account_id -> Varchar,
         }
     }
 

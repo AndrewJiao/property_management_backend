@@ -42,6 +42,12 @@ impl UserRelateRoomPo{
         Ok(result)
     }
 
+    pub fn update_bind(p_account_id: &str, p_room_numbers: &Vec<&str>, conn: &mut Conn) -> AppResult<()> {
+        Self::unbind(&vec![p_account_id], conn)?;
+        Self::bind(p_account_id, p_room_numbers, conn)?;
+        Ok(())
+    }
+
     pub fn by_account_id(p_account_id:Vec<&str>)->AppResult<Vec<UserRelateRoomPo>>{
         let result = table.select(UserRelateRoomPo::as_select())
             .filter(relate_account_id.eq_any(p_account_id))

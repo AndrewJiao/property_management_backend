@@ -1,6 +1,6 @@
 use crate::controller::user::inner::ComputeUserResult;
 use crate::dto::owner_info::OwnerInfoResultDto;
-use crate::dto::user::{SearchType, UserChangePasswordDto, UserCreateDto, UserInfoDetailResult, UserLoginDto, UserResultDto, UserSearchDto, UserUpdateDto, WeChartUserLoginDto};
+use crate::dto::user::{SearchType, UserChangePasswordDto, UserCreateDto, UserInfoDetailResult, UserLoginDto, UserResultDto, UserSearchDto, UserUpdateDto, WeChartUserLoginDto, WeChartUserRegisterDto};
 use crate::dto::{ToInsertPO, ToUpdatePO};
 use actix_web::web::scope;
 use actix_web::{delete, get, post, put, web, HttpRequest, HttpResponse};
@@ -27,6 +27,8 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         .service(login)
         .service(logout)
         .service(get_by_account)
+        .service(we_chart_login)
+        .service(register)
     );
 }
 
@@ -176,7 +178,6 @@ pub async fn login(param: web::Json<UserLoginDto>) -> WebResult<HttpResponse> {
 ///
 /// 微信小程序登录
 ///
-
 #[put("we_chart_login")]
 pub async fn we_chart_login(param: web::Json<WeChartUserLoginDto>) -> WebResult<HttpResponse> {
     validate!(param);
@@ -185,6 +186,18 @@ pub async fn we_chart_login(param: web::Json<WeChartUserLoginDto>) -> WebResult<
     let response = write_auth_cookie(user_po, &token_string);
     Ok(response)
 }
+
+///
+/// 暂时只支持微信小程序注册
+///
+
+#[post("register")]
+pub async fn register(param: web::Json<WeChartUserRegisterDto>) -> WebResult<HttpResponse> {
+    validate!(param);
+    let user_info = service::user::register(&param.nick_name, &param.code).await?;
+    result_success!(user_info)
+}
+
 
 fn write_auth_cookie(user_po: UserPo, token_string: &String) -> HttpResponse {
     let response = HttpResponse::Ok()

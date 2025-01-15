@@ -118,6 +118,20 @@ pub struct UpdateOwnerBasicInfoPo<'a> {
     pub delete_at: Option<NaiveDateTime>,
 }
 
+impl UpdateOwnerBasicInfoPo<'_>{
+    pub fn update_other_part(p_room_number: &String, other_part_info: OtherPartInfo, conn: &mut Conn) -> AppResult<()> {
+        if let Ok(p_other_basic) = serde_json::to_value(other_part_info) {
+            let _ = diesel::update(table)
+                .set(other_basic.eq(p_other_basic))
+                .filter(room_number.eq(p_room_number))
+                .filter(is_delete.eq(false))
+                .execute(conn)?;
+        }
+        Ok(())
+    }
+
+}
+
 #[derive(Serialize, AutoOperation, Insertable)]
 #[diesel(table_name = t_owner_basic_info)]
 pub struct InsertOwnerBasicInfoPo<'a> {
@@ -141,4 +155,12 @@ pub fn update_amount(param_id:i32, amount:&BigDecimal, conn:&mut Conn)->AppResul
         .filter(id.eq(param_id))
         .execute(conn)?;
     if update_count!=1 { Err(DB_UPDATE_ERROR()) }else { Ok(()) }
+}
+
+#[derive(Deserialize, Serialize,Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct OtherPartInfo {
+    car_number: Option<i32>,
+    car_number_electron: Option<i32>,
+    motor_cycle_number: Option<i32>,
 }

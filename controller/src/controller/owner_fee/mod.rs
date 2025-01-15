@@ -122,11 +122,13 @@ where
 async fn get_data_with_auth(param: web::Query<PaginateSearch>, req: HttpRequest) -> WebResult<HttpResponse> {
     let mut search_param: OwnerFeeDetailSearchDto = param.convert_param()?;
     validate!(param, search_param);
+
     let (_, relate_room) = UserPo::current_user_info(&req)?;
     //管理员由所有的room权限，所以可以在这里筛选
-    if let (Some(mut p_room_param), Some(ref room_number_filter)) = (relate_room, &search_param.room_number) {
-        p_room_param.retain(|item| room_number_filter.contains(&item.to_string()));
-        search_param.room_numbers = Some(p_room_param);
+    search_param.room_numbers = Some(relate_room.unwrap_or_default());
+
+    if let Some(ref room_number_filter) = search_param.room_number {
+        search_param.room_numbers.as_mut().map(|e| e.retain(|item| room_number_filter.contains(&item.to_string())));
     }
 
     let (result_dto, total) = do_search(param.current_page(), param.limit(), search_param).await?;

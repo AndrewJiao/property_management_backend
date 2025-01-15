@@ -183,6 +183,15 @@ pub struct WeChartUserLoginDto {
 }
 
 
+#[derive(Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct WeChartUserRegisterDto {
+    #[validate(length(min = 1, max = 100))]
+    pub code: String,
+    #[validate(length(min = 1, max = 100))]
+    pub nick_name: String,
+}
+
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserInfoDetailResult{

@@ -1,7 +1,8 @@
-use serde::Deserialize;
 use common::const_value::SYSTEM;
 use common::tools::password::generate_password;
 use repository::user::{RoleType, UserInsertPo};
+use serde::Deserialize;
+use repository::owner_info::OtherPartInfo;
 
 ///
 /// 定义一个创建用户的json
@@ -37,11 +38,12 @@ impl UserCreateValue {
 #[serde(rename_all = "camelCase")]
 pub struct WeChartUserCreateValue {
     pub nick_name: String,
+    pub code: String,
     pub binding_room_number: Option<Vec<String>>,
 }
 
 impl WeChartUserCreateValue {
-    pub fn to_insert_po(&self) -> UserInsertPo<'_> {
+    pub fn to_insert_po(&self, relate_user_id: String) -> UserInsertPo<'_> {
         UserInsertPo {
             account_id: None,
             account: &self.nick_name,
@@ -54,8 +56,28 @@ impl WeChartUserCreateValue {
             update_time: None,
             comment: None,
             is_delete: false,
-            relate_user_id: None,
+            relate_user_id: Some(relate_user_id),
         }
     }
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct BindingRoomValue {
+    pub binding_room_number: Vec<String>,
+}
+impl BindingRoomValue{
+    pub fn get_room_ref(&self) -> Vec<&str> {
+        self.binding_room_number.iter()
+            .map(|e|e.as_str())
+            .collect()
+    }
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ChangeRoomInfo {
+    pub room_number: String,
+    pub other_part_info: OtherPartInfo,
 }
 

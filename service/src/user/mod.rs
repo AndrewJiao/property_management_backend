@@ -4,15 +4,16 @@ use common::const_value::SETTINGS;
 use common::data_result::{AppError, AppResult};
 use common::db_config::auto_trait::AutoOperation;
 use common::db_config::{db_get_connection, Conn};
-use common::error::{DATA_HAS_EXIST, DATA_NOT_EXIST, USER_PASSWORD_ERROR};
+use common::error::{ACCOUNT_EXIST, DATA_HAS_EXIST, DATA_NOT_EXIST, USER_PASSWORD_ERROR, WE_CHART_SNS_ERROR};
 use common::http::AppHttpClient;
 use common::tools::jwt::AppJwtToken;
 use diesel::{Connection, SaveChangesDsl};
 use hmac::Mac;
 use repository::owner_info::OwnerBasicInfoPo;
 use repository::user::relate::UserRelateRoomPo;
-use repository::user::{UserInsertPo, UserPo, UserUpdatePo};
+use repository::user::{RoleType, UserInsertPo, UserPo, UserUpdatePo};
 use sha2::Sha256;
+use common::tools::password::generate_password;
 
 pub mod value;
 
@@ -70,8 +71,6 @@ pub fn verify_password(account: &String, password: String) -> AppResult<UserPo> 
 }
 
 pub fn create_account(mut po: UserInsertPo, room_number: Option<Vec<String>>,conn:&mut Conn) -> Result {
-
-
     let uuid = uuid_v7::gen_uuid_v7().to_string();
     po.account_id = Some(uuid);
     if let Some(encode_password) = po.parse_password() {
@@ -134,7 +133,7 @@ pub fn delete_data(id: i64) ->Result{
     Ok((result, None))
 }
 
-fn valid_room_number(param: &Option<Vec<String>>) -> AppResult<()> {
+pub fn valid_room_number(param: &Option<Vec<String>>) -> AppResult<()> {
     if let Some(ref room_number) = param {
         for room_number in room_number {
             if OwnerBasicInfoPo::by_room_number(room_number, &mut db_get_connection()).is_err() {
@@ -148,7 +147,7 @@ fn valid_room_number(param: &Option<Vec<String>>) -> AppResult<()> {
 ///
 /// 校验是否有绑定
 ///
-fn valid_has_being_bind(param: &Option<Vec<String>>)->AppResult<()> {
+pub fn valid_has_being_bind(param: &Option<Vec<String>>)->AppResult<()> {
     if let Some(ref room_number) = param {
         for room_number in room_number {
             if UserRelateRoomPo::by_room_number(room_number).is_ok() {
@@ -171,8 +170,8 @@ pub async fn login(auth: LoginType) -> AppResult<(UserPo, String)> {
             //设置jwtToken
         }
         LoginType::WeChartCode(code) => {
-            let we_chart_sns = we_chart_auth(code).await?;
-            UserPo::by_relate_user_id(we_chart_sns.session_key)?
+            let we_chart_sns = we_chart_auth(&code).await?;
+            UserPo::by_relate_user_id(&we_chart_sns.session_key)?
         }
     };
     let token_str = AppJwtToken::create_token_str(user_po.clone())?;
@@ -182,14 +181,43 @@ pub async fn login(auth: LoginType) -> AppResult<(UserPo, String)> {
 ///
 /// we_chart授权
 ///
-pub async fn we_chart_auth(code: String) -> AppResult<WeChartSns> {
+pub async fn we_chart_auth(code: &String) -> AppResult<WeChartSns> {
     let config = &SETTINGS.we_chart_config;
     let host = &config.host;
-    let app_id = &*config.app_id;
+    let app_id = &config.app_id;
     let app_secret = &config.app_secret;
-
-    AppHttpClient::get(&format!("https//{host}//sns/jscode2session"))
-        .query(&[("appid", app_id), ("secret", app_secret), ("js_code", &code), ("grant_type", "authorization_code")])
+    let url = format!("https://{host}/sns/jscode2session");
+    AppHttpClient::get(&url)
+        .query(&[("appid", app_id), ("secret", app_secret), ("js_code", code), ("grant_type", &"authorization_code".to_string())])
         .send().await?
         .json().await
+        .map_err(|_| WE_CHART_SNS_ERROR())
+}
+
+pub async fn register(nick_name: &String, code: &String) ->AppResult<UserPo>{
+    let sns = we_chart_auth(code).await?;
+    //校验用户是否已存在
+    let po1 = UserPo::by_relate_user_id(&sns.session_key).ok();
+    let po2 = UserPo::by_account(nick_name).ok();
+    if po1.is_some() || po2.is_some() {
+        return Err(ACCOUNT_EXIST());
+    }
+
+    let user_po = UserInsertPo {
+        account_id: None,
+        password: generate_password(12),
+        account: nick_name,
+        name: nick_name,
+        role_type: RoleType::User,
+        create_by: "system",
+        update_by: "system",
+        create_time: None,
+        update_time: None,
+        comment: None,
+        is_delete: false,
+        relate_user_id: Some(sns.session_key),
+    };
+    //创建一个不绑定房间的用户
+    let (result, _) = create_account(user_po, None, &mut db_get_connection())?;
+    Ok(result)
 }

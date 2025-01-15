@@ -40,3 +40,4 @@ uuid_v7.workspace = true
 base64.workspace = true
 hmac.workspace = true
 sha2.workspace = true
+actix-web.workspace = true

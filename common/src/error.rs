@@ -138,5 +138,8 @@ pub const APPROVE_NOT_EXIST: fn() -> anyhow::Error = || anyhow!("errorMsg = 审�
 pub const APPROVE_STATE_ERROR: fn() -> anyhow::Error = || anyhow!("errorMsg = 审批状态错误 code = 20002");
 //账户信息不存
 pub const ACCOUNT_NOT_EXIST: fn() -> anyhow::Error = || anyhow!("errorMsg = 账户信息不存在 code = 30001");
+pub const ACCOUNT_EXIST: fn() -> anyhow::Error = || anyhow!("errorMsg = 账户已创建 code = 30002");
+//外部接口error
+pub const WE_CHART_SNS_ERROR: fn() -> anyhow::Error = || anyhow!("errorMsg = 微信认证错误 code = 40001");
 
 
