@@ -24,6 +24,9 @@ WORKDIR /usr/app
 # 安装 OpenSSL 运行时库
 RUN apt-get update && apt-get install -y libssl3 && rm -rf /var/lib/apt/lists/*
 
+# 更新证书
+RUN apt-get update && apt-get install -y ca-certificates && update-ca-certificates
+
 # 从构建阶段复制构建好的二进制文件到运行环境中
 COPY --from=builder /usr/src/app/target/release/ /usr/app/
 
