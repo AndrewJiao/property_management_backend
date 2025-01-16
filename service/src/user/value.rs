@@ -13,5 +13,5 @@ pub struct WeChartSns {
 
 pub enum LoginType{
     Password(String, String),
-    WeChartCode(String)
+    WeChartCode(String, bool)
 }

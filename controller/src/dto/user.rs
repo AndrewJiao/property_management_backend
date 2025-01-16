@@ -180,6 +180,7 @@ pub struct UserLoginDto {
 pub struct WeChartUserLoginDto {
     #[validate(length(min = 1, max = 100))]
     pub code: String,
+    pub fast_login_flag: bool,
 }
 
 

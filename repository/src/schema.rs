@@ -232,6 +232,14 @@ pub mod basic {
     }
 
     diesel::table! {
+        basic.t_user_fast_login (id) {
+            id -> Int8,
+            account_id -> Varchar,
+            create_time -> Timestamp,
+        }
+    }
+
+    diesel::table! {
         basic.t_user_relate_room (id) {
             id -> Int8,
             relate_account_id -> Varchar,
@@ -251,6 +259,7 @@ pub mod basic {
         t_room_info_detail,
         t_tool_table,
         t_user,
+        t_user_fast_login,
         t_user_relate_room,
     );
 }

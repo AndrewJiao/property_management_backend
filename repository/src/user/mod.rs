@@ -24,6 +24,7 @@ use common::error::ACCOUNT_NOT_EXIST;
 use crate::owner_info::OwnerBasicInfoPo;
 
 pub mod relate;
+pub mod fast_login;
 
 #[derive(Deserialize, Serialize, DbEnum, Debug, Clone, Copy)]
 #[ExistingTypePath = "crate::schema::basic::sql_types::RoleType"]

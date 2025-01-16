@@ -4,16 +4,18 @@ use common::const_value::SETTINGS;
 use common::data_result::{AppError, AppResult};
 use common::db_config::auto_trait::AutoOperation;
 use common::db_config::{db_get_connection, Conn};
-use common::error::{ACCOUNT_EXIST, ROOM_HAS_BEEN_BIND, ROOM_IS_NOT_EXIST, USER_PASSWORD_ERROR, WE_CHART_SNS_ERROR};
+use common::error::{ACCOUNT_EXIST, ACCOUNT_NOT_SUPPORT_FAST_LOGIN, ROOM_HAS_BEEN_BIND, ROOM_IS_NOT_EXIST, USER_PASSWORD_ERROR, WE_CHART_SNS_ERROR};
 use common::http::AppHttpClient;
 use common::tools::jwt::AppJwtToken;
 use common::tools::password::generate_password;
 use diesel::{Connection, SaveChangesDsl};
 use hmac::Mac;
+use log::info;
 use repository::owner_info::OwnerBasicInfoPo;
 use repository::user::relate::UserRelateRoomPo;
 use repository::user::{RoleType, UserInsertPo, UserPo, UserUpdatePo};
 use sha2::Sha256;
+use repository::user::fast_login::UserFastLoginPo;
 
 pub mod value;
 
@@ -167,13 +169,22 @@ pub async fn login(auth: LoginType) -> AppResult<(UserPo, String)> {
     let user_po = match auth {
         LoginType::Password(p_account, p_password) => {
             verify_password(&p_account, p_password)?
-            //设置jwtToken
         }
-        LoginType::WeChartCode(code) => {
+        LoginType::WeChartCode(code,fast_login_flag) => {
             let we_chart_sns = we_chart_auth(&code).await?;
-            UserPo::by_relate_user_id(&we_chart_sns.session_key)?
+            let user_po = UserPo::by_relate_user_id(&we_chart_sns.session_key)?;
+            let flag = !UserFastLoginPo::is_fast_login(&user_po.account_id);
+            info!("fast_login_flag = {} flag = {}",fast_login_flag,flag);
+            if fast_login_flag && flag {
+                return Err(ACCOUNT_NOT_SUPPORT_FAST_LOGIN());
+            }
+            user_po
         }
     };
+    //用户登录之后做个标记，以后可以尝试快速登录
+    UserFastLoginPo::add_user_fast_login(&user_po.account_id, &mut db_get_connection())?;
+
+    //设置jwtToken
     let token_str = AppJwtToken::create_token_str(user_po.clone())?;
     Ok((user_po,token_str))
 }

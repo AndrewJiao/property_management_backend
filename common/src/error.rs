@@ -140,6 +140,7 @@ pub const ROOM_HAS_BEEN_BIND: fn() -> anyhow::Error = || anyhow!("errorMsg = 当
 //账户信息不存
 pub const ACCOUNT_NOT_EXIST: fn() -> anyhow::Error = || anyhow!("errorMsg = 账户信息不存在 code = 30001");
 pub const ACCOUNT_EXIST: fn() -> anyhow::Error = || anyhow!("errorMsg = 账户已创建 code = 30002");
+pub const ACCOUNT_NOT_SUPPORT_FAST_LOGIN: fn() -> anyhow::Error = || anyhow!("errorMsg = 当前账号不允许快速登录 code = 30003");
 //外部接口error
 pub const WE_CHART_SNS_ERROR: fn() -> anyhow::Error = || anyhow!("errorMsg = 微信认证错误 code = 40001");
 //房间

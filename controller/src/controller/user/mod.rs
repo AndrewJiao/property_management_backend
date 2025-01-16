@@ -14,6 +14,7 @@ use common::{result_success, validate};
 use repository::owner_info::OwnerBasicInfoPo;
 use repository::user::relate::UserRelateRoomPo;
 use repository::user::{RoleType, UserPo};
+use repository::user::fast_login::UserFastLoginPo;
 use service::user::value::LoginType;
 
 mod inner;
@@ -181,8 +182,8 @@ pub async fn login(param: web::Json<UserLoginDto>) -> WebResult<HttpResponse> {
 #[put("we_chart_login")]
 pub async fn we_chart_login(param: web::Json<WeChartUserLoginDto>) -> WebResult<HttpResponse> {
     validate!(param);
-    let WeChartUserLoginDto { code } = param.into_inner();
-    let (user_po, token_string) = service::user::login(LoginType::WeChartCode(code)).await?;
+    let WeChartUserLoginDto { code ,fast_login_flag} = param.into_inner();
+    let (user_po, token_string) = service::user::login(LoginType::WeChartCode(code,fast_login_flag)).await?;
     let response = write_auth_cookie(user_po, &token_string);
     Ok(response)
 }
@@ -218,7 +219,10 @@ fn write_auth_cookie(user_po: UserPo, token_string: &String) -> HttpResponse {
 /// 登出
 ///
 #[put("logout")]
-pub async fn logout() -> WebResult<HttpResponse> {
+pub async fn logout(http_request: HttpRequest) -> WebResult<HttpResponse> {
+    let (user_po,_) = UserPo::current_user_info(&http_request)?;
+    UserFastLoginPo::delete_user_fast_login(&user_po.account_id, &mut db_get_connection())?;
+
     let result = HttpResponse::Ok()
         .cookie(create_jwt_token_cookie(""))
         .json(
