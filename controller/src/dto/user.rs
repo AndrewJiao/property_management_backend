@@ -50,11 +50,11 @@ pub struct UserUpdateDto {
     #[validate(length(min = 1, max = 100))]
     #[serde(default, deserialize_with = "empty_string_or_null_as_none")]
     pub name: Option<String>,
-    pub role_type: RoleType,
+    pub role_type: Option<RoleType>,
     #[validate(length(min = 1, max = 5000))]
     #[serde(default, deserialize_with = "empty_string_or_null_as_none")]
     pub comment: Option<String>,
-    #[validate(length(min = 1, max = 100))]
+    #[validate(length(min = 0, max = 100))]
     #[serde(default)]
     pub binding_room_number: Option<Vec<String>>,
 }
@@ -67,7 +67,7 @@ impl ToUpdatePO for UserUpdateDto{
             account: None,
             password: None,
             name: self.name.as_deref(),
-            role_type: Some(self.role_type),
+            role_type: self.role_type,
             update_by: None,
             update_time: None,
             comment: self.comment.as_deref(),

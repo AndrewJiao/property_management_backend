@@ -9,6 +9,7 @@ use common::db_config::auto_trait::AutoOperation;
 use common::db_config::db_get_connection;
 use common::error::{APPROVE_STATE_ERROR, NO_AUTH, USER_ACCOUNT_EXIST};
 use diesel::{Connection, SaveChangesDsl};
+use itertools::Itertools;
 use log::{error, info};
 use repository::approve::{ApprovePo, ApproveState, ApproveType, ApproveUpdatePo};
 use repository::owner_info::UpdateOwnerBasicInfoPo;
