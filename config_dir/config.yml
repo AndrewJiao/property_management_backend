@@ -58,7 +58,3 @@ we_chart_config:
     app_id: "wx613da588948efef3"
     app_secret: "2b034c3afef9f01ca33c8bd9d10878e9"
     host: "api.weixin.qq.com"
-
-
-
-

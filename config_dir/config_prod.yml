@@ -24,7 +24,7 @@ app_config:
   jwt_expire_time: 1296000
   jwt_renew_time: 864000
   jwt_secret: "[r!7!)%@r^eyt9q,gI#*5d=%.cZCcm=)"
-  jwt_handler_ignore_path: ["/user_info/login"]
+  jwt_handler_ignore_path: [ "/user_info/login","/user_info/we_chart_login","/user_info/register" ]
 
 open_ssl:
   private_key: "openssl/localhost.key"
