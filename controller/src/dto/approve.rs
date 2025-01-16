@@ -1,4 +1,5 @@
 use crate::dto::{ToInsertPO, ToUpdatePO};
+use common::tools::serde::empty_string_or_null_as_none;
 use common::const_value::SYSTEM;
 use repository::approve::{ApproveInsertPo, ApprovePo, ApproveState, ApproveType, ApproveUpdatePo};
 use repository::user::UserPo;
@@ -66,8 +67,9 @@ impl ApproveResultDto{
 #[serde(rename_all = "camelCase")]
 pub struct ApproveSearchDto {
     #[validate(length(min = 1, max = 100))]
+    #[serde(default, deserialize_with = "empty_string_or_null_as_none")]
     pub order_no: Option<String>,
-    pub approve_state: Option<ApproveState>,
+    pub approve_state: Option<Vec<ApproveState>>,
     pub approve_type: Option<ApproveType>,
     pub create_time_star: Option<chrono::NaiveDateTime>,
     pub create_time_end: Option<chrono::NaiveDateTime>,

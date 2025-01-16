@@ -100,7 +100,7 @@ impl ApprovePo{
 
     pub fn by_search_param(
         (p_create_time_star, p_create_time_end): (Option<&chrono::NaiveDateTime>, Option<&chrono::NaiveDateTime>),
-        p_approve_state: Option<&ApproveState>,
+        p_approve_state: Option<&Vec<ApproveState>>,
         p_approve_type: Option<&ApproveType>,
         p_order_no: Option<&str>,
         p_account_id: Option<String>,
@@ -110,7 +110,7 @@ impl ApprovePo{
 
         if_filter!(statement = with_create_time_between(p_create_time_star,p_create_time_end));
         if_filter!(statement = account_id.eq(p_account_id));
-        if_filter!(statement = approve_state.eq(p_approve_state));
+        if_filter!(statement = approve_state.eq_any(p_approve_state));
         if_filter!(statement = approve_type.eq(p_approve_type));
         if_filter!(statement = order_no.eq(p_order_no));
         filter_data_enable!(statement);
