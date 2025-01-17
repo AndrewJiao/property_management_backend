@@ -61,12 +61,14 @@ pub fn init_data(version: Option<&str>) -> AppResult<()> {
 
         room_info = table
             .filter(month_version.eq(n_month_version))
+            .filter(is_delete.eq(false))
             .select(all_columns).get_results::<RoomInfoDetailPo>(&mut db_get_connection())?;
     }
     let owner_info_config;
     {
         use repository::schema::basic::t_owner_basic_info::*;
         owner_info_config = table
+            .filter(is_delete.eq(false))
             .select(all_columns).get_results::<OwnerBasicInfoPo>(&mut db_get_connection())?
             .into_iter()
             .map(|info| (info.room_number.clone(), info)

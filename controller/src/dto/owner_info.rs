@@ -1,9 +1,8 @@
-use crate::dto::{ToInsertPO, ToUpdatePO};
+use crate::dto::{ToDesc, ToInsertPO, ToUpdatePO};
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use common::tools::serde::empty_string_or_null_as_none;
 use common::tools::time::now_local_date_time_naive;
-use log::debug;
 use repository::owner_info::{InsertOwnerBasicInfoPo, OtherPartInfo, OwnerBasicInfoPo, RoomType, UpdateOwnerBasicInfoPo};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
@@ -122,14 +121,14 @@ pub struct OwnerInfoResultDto {
     comment: Option<String>,
     other_basic: Option<OtherPartInfo>,
     room_type: RoomType,
+    room_type_desc: String,
+    amount_balance: BigDecimal,
 }
 
 
 impl From<OwnerBasicInfoPo> for OwnerInfoResultDto {
     fn from(po: OwnerBasicInfoPo) -> Self {
-        debug!("po={:?}", po);
         let other_basic = po.other_basic.map(|e| serde_json::from_value::<OtherPartInfo>(e).ok()).flatten();
-        debug!("other_basic={:?}", other_basic);
         OwnerInfoResultDto {
             id: po.id,
             room_number: po.room_number,
@@ -142,6 +141,17 @@ impl From<OwnerBasicInfoPo> for OwnerInfoResultDto {
             comment: po.comment,
             other_basic,
             room_type: po.room_type,
+            room_type_desc: po.room_type.to_desc(),
+            amount_balance: po.amount_balance,
+        }
+    }
+}
+
+impl ToDesc for RoomType {
+    fn to_desc(&self) -> String {
+        match self {
+            RoomType::Common => "住户".to_string(),
+            RoomType::Business => "商户".to_string(),
         }
     }
 }

@@ -1,4 +1,4 @@
-use crate::dto::owner_info::{OwnerInfoInsertDto, OwnerInfoSearchDto, OwnerInfoSearchType, OwnerInfoUpdateDto};
+use crate::dto::owner_info::{OwnerInfoInsertDto, OwnerInfoResultDto, OwnerInfoSearchDto, OwnerInfoSearchType, OwnerInfoUpdateDto};
 use crate::dto::{ToInsertPO, ToUpdatePO};
 #[cfg(feature = "picture_extract")]
 use crate::AppData;
@@ -64,9 +64,10 @@ async fn get_info(param: web::Query<PaginateSearch>) -> WebResult<HttpResponse> 
         OrderDsl::order(statement
                             .filter(is_delete.eq(false))
                             .select(OwnerBasicInfoPo::as_select()),
-                        create_time.desc())
+                        room_number.desc())
             .paginate(param.current_page()).per_page(param.limit())
             .load_and_count_pages(&mut db_get_connection())?;
+    let result = result.into_iter().map(OwnerInfoResultDto::from).collect::<Vec<OwnerInfoResultDto>>();
     result_success!(result, param.produce_page_result(total))
 }
 
