@@ -25,6 +25,10 @@ pub mod basic {
         #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
         #[diesel(postgres_type(name = "role_type", schema = "basic"))]
         pub struct RoleType;
+
+        #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
+        #[diesel(postgres_type(name = "room_type", schema = "basic"))]
+        pub struct RoomType;
     }
 
     diesel::table! {
@@ -77,6 +81,9 @@ pub mod basic {
     }
 
     diesel::table! {
+        use diesel::sql_types::*;
+        use super::sql_types::RoomType;
+
         basic.t_owner_basic_info (id) {
             id -> Int4,
             room_number -> Varchar,
@@ -91,6 +98,7 @@ pub mod basic {
             other_basic -> Nullable<Json>,
             delete_at -> Nullable<Timestamp>,
             amount_balance -> Numeric,
+            room_type -> RoomType,
         }
     }
 

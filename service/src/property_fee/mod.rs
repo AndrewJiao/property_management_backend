@@ -53,7 +53,6 @@ pub fn init_data(version: Option<&str>) -> AppResult<()> {
                 .to_price_type_map();
     }
     let room_info;
-
     let temp = room_info::init_current_month_version(chrono::Local::now());
     let n_month_version = version
         .unwrap_or(temp.as_str());
@@ -97,8 +96,8 @@ pub fn init_data(version: Option<&str>) -> AppResult<()> {
                 Some(owner_info) => {
                     let machine_room_fee = basic_price_config.get(&BasicPriceType::MachineRoomRenovationFee).map(|info| info.basic_number.clone()).flatten();
 
-                    let (ele_total, ele_share) = info.calculate_electric(&basic_price_config, owner_info.room_square.as_ref());
-                    let (water_total, water_share) = info.calculate_water(&basic_price_config).unzip();
+                    let (ele_total, ele_share) = info.calculate_electric(&basic_price_config, owner_info.room_square.as_ref(), owner_info.room_type);
+                    let (water_total, water_share) = info.calculate_water(&basic_price_config, owner_info.room_type).unzip();
 
                     let lift_fee_basic = basic_price_config.get(&BasicPriceType::LiftFeeBasic).map(|info| info.basic_number.clone()).flatten();
                     let lift_fee_plus = basic_price_config.get(&BasicPriceType::LiftFeePlus).map(|info| info.basic_number.clone()).flatten();

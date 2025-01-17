@@ -13,6 +13,9 @@ use management_macro::AutoOperation;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
+use diesel_derive_enum::DbEnum;
+
+pub mod value;
 
 #[derive(Selectable, Queryable, Deserialize, Serialize, Debug)]
 #[diesel(table_name = t_owner_basic_info)]
@@ -32,6 +35,7 @@ pub struct OwnerBasicInfoPo {
     pub other_basic: Option<serde_json::Value>,
     pub delete_at: Option<NaiveDateTime>,
     pub amount_balance: BigDecimal,
+    pub room_type: RoomType,
 
 }
 
@@ -76,30 +80,35 @@ impl OwnerBasicInfoPo {
         }
     }
 
+    ///
+    /// 停车费包括电动车，汽车，电东汽车
+    ///
     pub fn calculate_part_fee(&self, basic_config: &HashMap<BasicPriceType, PriceBasicPo>) -> Option<BigDecimal> {
         let new_car_basic_price = basic_config.get(&BasicPriceType::CarPartFee).map(|info| info.basic_number.clone()).flatten();
         let motor_basic_price = basic_config.get(&BasicPriceType::MotorCyclePartFee).map(|info| info.basic_number.clone()).flatten();
+        let electron_car_basic_price = basic_config.get(&BasicPriceType::ElectronCarPartFee).map(|info| info.basic_number.clone()).flatten();
 
-        if let (Some((car_num, motor_num)), (Some(ref car_pri), Some(ref motor_pri)))
-            = (self.get_vehicle_num(), (new_car_basic_price, motor_basic_price))
+        if let (Some((car_num, car_electron_num, motor_num)), (Some(ref car_pri), Some(ref motor_pri), Some(ref electron_car_pri)))
+            = (self.get_vehicle_num(), (new_car_basic_price, motor_basic_price, electron_car_basic_price))
         {
-            Some((car_pri * car_num) + (motor_pri * motor_num))
+            Some((car_pri * car_num) + (motor_pri * motor_num) + (electron_car_pri * car_electron_num))
         } else {
             None
         }
     }
 
-    fn get_vehicle_num(&self) -> Option<(u64, u64)> {
+    fn get_vehicle_num(&self) -> Option<(u64, u64, u64)> {
         match self.other_basic {
             Some(Value::Object(ref map)) => {
                 println!("carNumber={:?}", map.get("carNumber"));
                 println!("motorCycleNumber={:?}", map.get("motorCycleNumber"));
                 return Some((
                     map.get("carNumber").map(|value| value.as_u64()).flatten().unwrap_or(0),
+                    map.get("carNumberElectron").map(|value| value.as_u64()).flatten().unwrap_or(0),
                     map.get("motorCycleNumber").map(|value| value.as_u64()).flatten().unwrap_or(0),
                 ));
             }
-            _ => Some((0, 0))
+            _ => Some((0, 0, 0))
         }
     }
 }
@@ -116,6 +125,7 @@ pub struct UpdateOwnerBasicInfoPo<'a> {
     pub other_basic: Option<&'a serde_json::Value>,
     pub update_time: Option<NaiveDateTime>,
     pub delete_at: Option<NaiveDateTime>,
+    pub room_type: Option<RoomType>,
 }
 
 impl UpdateOwnerBasicInfoPo<'_>{
@@ -147,6 +157,7 @@ pub struct InsertOwnerBasicInfoPo<'a> {
     pub other_basic: Option<serde_json::Value>,
     pub delete_at: Option<NaiveDateTime>,
     pub amount_balance: BigDecimal,
+    pub room_type: RoomType,
 }
 
 pub fn update_amount(param_id:i32, amount:&BigDecimal, conn:&mut Conn)->AppResult<()>{
@@ -163,4 +174,12 @@ pub struct OtherPartInfo {
     car_number: Option<i32>,
     car_number_electron: Option<i32>,
     motor_cycle_number: Option<i32>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, DbEnum)]
+#[serde(rename_all = "PascalCase")]
+#[ExistingTypePath = "crate::schema::basic::sql_types::RoomType"]
+pub enum RoomType{
+    Common,
+    Business,
 }

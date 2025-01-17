@@ -56,6 +56,10 @@ async fn get_info(param: web::Query<PaginateSearch>) -> WebResult<HttpResponse> 
     if let Some(e) = search_param.room_number.as_deref() {
         statement = statement.filter(room_number.like(format!("%{}%", e)));
     }
+    if let Some(e) = search_param.room_type {
+        statement = statement.filter(room_type.eq_any(e));
+    }
+
     let (result, total) =
         OrderDsl::order(statement
                             .filter(is_delete.eq(false))

@@ -14,7 +14,8 @@ create table if not exists t_owner_basic_info
     comment        text,
     other_basic    json,
     delete_at      timestamp,
-    amount_balance numeric(10, 2)          not null
+    amount_balance numeric(10, 2)          not null,
+    room_type      basic.room_type         not null
     );
 
 comment on table t_owner_basic_info is '业主信息表';

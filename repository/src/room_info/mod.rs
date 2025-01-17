@@ -1,11 +1,15 @@
+use crate::owner_info::RoomType;
 use crate::price_basic::{BasicPriceType, PriceBasicPo};
-use crate::schema::basic::t_room_info_detail::*;
 use crate::schema::basic::t_room_info_detail;
+use crate::schema::basic::t_room_info_detail::*;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use common::data_result::AppResult;
 use common::db_config::{db_get_connection, Conn};
+use common::tools::time::DEFAULT_TIME;
+use diesel::dsl::auto_type;
 use diesel::pg::Pg;
+use diesel::sql_types::Bool;
 use diesel::{AsChangeset, BoolExpressionMethods, ExpressionMethods, Identifiable, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper};
 use log::debug;
 use management_macro::AutoOperation;
@@ -13,9 +17,6 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::str::FromStr;
-use diesel::dsl::auto_type;
-use diesel::sql_types::Bool;
-use common::tools::time::DEFAULT_TIME;
 
 #[auto_type(no_type_alias)]
 pub fn with_not_completed()->_{
@@ -167,9 +168,22 @@ impl<'a> RoomInfoDetailUpdatePo<'a> {
 }
 
 impl RoomInfoDetailPo {
-    pub fn calculate_electric(&self, basic_config: &HashMap<BasicPriceType, PriceBasicPo>, room_square: Option<&BigDecimal>) -> (Option<BigDecimal>, Option<BigDecimal>) {
-        let electric_price = basic_config.get(&BasicPriceType::ElectricFee).map(|info| info.basic_number.clone()).flatten();
-        let electric_share_price = basic_config.get(&BasicPriceType::ElectricShareFee).map(|info| info.basic_number.clone()).flatten();
+    ///
+    /// 电费分为商用和民用
+    /// 公摊和个人
+    /// 两个维度
+    ///
+    pub fn calculate_electric(&self, basic_config: &HashMap<BasicPriceType, PriceBasicPo>, room_square: Option<&BigDecimal>, room_type: RoomType) -> (Option<BigDecimal>, Option<BigDecimal>) {
+        let (electric_price, electric_share_price) = match room_type {
+            RoomType::Common => (
+                basic_config.get(&BasicPriceType::ElectricFee).map(|info| info.basic_number.clone()).flatten(),
+                basic_config.get(&BasicPriceType::ElectricShareFee).map(|info| info.basic_number.clone()).flatten()
+            ),
+            RoomType::Business => (
+                basic_config.get(&BasicPriceType::BusinessElectricFee).map(|info| info.basic_number.clone()).flatten(),
+                basic_config.get(&BasicPriceType::BusinessElectricShareFee).map(|info| info.basic_number.clone()).flatten()
+            )
+        };
 
         let mut ele_total = None;
         if let (Some(electric_num), Some(electric_pri)) = (self.electricity_meter_sub, electric_price)
@@ -184,15 +198,23 @@ impl RoomInfoDetailPo {
         (ele_total, ele_share)
     }
 
-    pub fn calculate_water(&self, basic_config: &HashMap<BasicPriceType, PriceBasicPo>) -> Option<(BigDecimal, BigDecimal)> {
-        let water_price = basic_config.get(&BasicPriceType::WaterFee).map(|info| info.basic_number.clone()).flatten();
-        let water_share_price = basic_config.get(&BasicPriceType::WaterShareFee).map(|info| info.basic_number.clone()).flatten();
+    pub fn calculate_water(&self, basic_config: &HashMap<BasicPriceType, PriceBasicPo>, room_type: RoomType) -> Option<(BigDecimal, BigDecimal)> {
+        let (water_price, water_share_price) = match room_type {
+            RoomType::Common => (
+                basic_config.get(&BasicPriceType::WaterFee).map(|info| info.basic_number.clone()).flatten(),
+                basic_config.get(&BasicPriceType::WaterShareFee).map(|info| info.basic_number.clone()).flatten()
+            ),
+            RoomType::Business => (
+                basic_config.get(&BasicPriceType::BusinessWaterFee).map(|info| info.basic_number.clone()).flatten(),
+                basic_config.get(&BasicPriceType::BusinessWaterShareFee).map(|info| info.basic_number.clone()).flatten()
+            )
+        };
 
         if let (Some(water_num), Some(water_pri), Some(water_share_pri))
             = (self.water_meter_sub, water_price, water_share_price)
         {
             let water_total = water_pri * water_num;
-            let water_share = water_total.clone() * water_share_pri;
+            let water_share = water_share_pri * water_num;
             Some((water_total, water_share))
         } else {
             None
@@ -243,3 +265,4 @@ impl ReCalculator for RoomInfoDetailInsertPo<'_> {
         self
     }
 }
+

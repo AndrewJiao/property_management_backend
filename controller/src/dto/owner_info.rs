@@ -4,7 +4,7 @@ use chrono::NaiveDateTime;
 use common::tools::serde::empty_string_or_null_as_none;
 use common::tools::time::now_local_date_time_naive;
 use log::debug;
-use repository::owner_info::{InsertOwnerBasicInfoPo, OtherPartInfo, OwnerBasicInfoPo, UpdateOwnerBasicInfoPo};
+use repository::owner_info::{InsertOwnerBasicInfoPo, OtherPartInfo, OwnerBasicInfoPo, RoomType, UpdateOwnerBasicInfoPo};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -22,6 +22,7 @@ pub struct OwnerInfoSearchDto {
     #[validate(length(min = 0, max = 100))]
     #[serde(deserialize_with = "empty_string_or_null_as_none")]
     pub owner_name: Option<String>,
+    pub room_type: Option<Vec<RoomType>>,
 }
 
 
@@ -42,6 +43,7 @@ pub struct OwnerInfoUpdateDto {
     pub room_square: Option<BigDecimal>,
     // #[serde(deserialize_with = "json_verify")]
     pub other_basic: Option<serde_json::Value>,
+    pub room_type: Option<RoomType>,
 }
 
 
@@ -59,6 +61,7 @@ impl ToUpdatePO for OwnerInfoUpdateDto {
             other_basic: self.other_basic.as_ref(),
             update_time: None,
             delete_at: None,
+            room_type: self.room_type,
         }
     }
 }
@@ -80,6 +83,7 @@ pub struct OwnerInfoInsertDto {
     pub comment: Option<String>,
     // #[serde(deserialize_with = "json_verify")]
     pub other_basic: Option<serde_json::Value>,
+    pub room_type: RoomType,
 }
 
 impl ToInsertPO for OwnerInfoInsertDto {
@@ -99,6 +103,7 @@ impl ToInsertPO for OwnerInfoInsertDto {
             other_basic: self.other_basic.clone(),
             delete_at: Some(NaiveDateTime::UNIX_EPOCH),
             amount_balance: BigDecimal::from(0),
+            room_type: self.room_type,
         }
     }
 }
@@ -116,6 +121,7 @@ pub struct OwnerInfoResultDto {
     update_time: NaiveDateTime,
     comment: Option<String>,
     other_basic: Option<OtherPartInfo>,
+    room_type: RoomType,
 }
 
 
@@ -134,7 +140,8 @@ impl From<OwnerBasicInfoPo> for OwnerInfoResultDto {
             create_time: po.create_time,
             update_time: po.update_time,
             comment: po.comment,
-            other_basic
+            other_basic,
+            room_type: po.room_type,
         }
     }
 }
