@@ -126,7 +126,7 @@ pub fn init_data(version: Option<&str>) -> AppResult<()> {
                         water_fee: water_total,
                         water_share_fee: water_share,
                         liquidate_fee,
-                        pre_store_fee: if owner_info.amount_balance < BigDecimal::zero() { Some(owner_info.amount_balance.abs()) } else { None },
+                        pre_store_fee: None,
                         record_version: n_month_version.as_ref(),
                         create_by: CURRENT_USE,
                         update_by: CURRENT_USE,
