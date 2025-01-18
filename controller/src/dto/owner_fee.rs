@@ -65,6 +65,7 @@ impl ToUpdatePO for OwnerFeeDetailUpdateDto {
             update_by: Some(CURRENT_USE),
             update_time: None,
             is_delete: None,
+            settle_down_order_number: None,
         }
     }
 }
@@ -135,7 +136,7 @@ impl SettleType{
                     SettleType::NotSettle
                 }
             }
-            DetailType::PreStoreFee|DetailType::SettlementFee => SettleType::NoNeedSettle
+            DetailType::PreStoreFee|DetailType::SettlementFee|DetailType::PreStoreDeduction => SettleType::NoNeedSettle
         }
     }
 

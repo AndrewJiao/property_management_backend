@@ -21,6 +21,7 @@ use diesel::serialize::{Output, ToSql};
 use diesel::sql_types::Text;
 use diesel::{AsChangeset, BoolExpressionMethods, Expression, ExpressionMethods, Identifiable, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper, TextExpressionMethods};
 use diesel_derive_enum::DbEnum;
+use log::debug;
 use management_macro::AutoOperation;
 use serde::{Deserialize, Serialize};
 
@@ -44,6 +45,20 @@ pub struct OwnerFeeDetailPo {
     pub record_id: String,
     //这里时版本号
     pub related_order_number: String,
+    pub settle_down_order_number: Option<String>,
+}
+
+impl OwnerFeeDetailPo {
+    pub fn by_all_un_payment_stream(p_room_number: &Vec<String>) -> AppResult<Vec<OwnerFeeDetailPo>> {
+        let result = OwnerFeeDetailPo::all()
+            .filter(room_number.eq_any(p_room_number))
+            //目前只有物业费需要结算
+            .filter(detail_type.eq(DetailType::ManagementFee))
+            .filter(settle_down_order_number.is_null())
+            .filter(is_delete.eq(false))
+            .get_results(&mut db_get_connection())?;
+        Ok(result)
+    }
 }
 
 pub struct AllRelativeStream{
@@ -155,8 +170,6 @@ impl OwnerFeeDetailPo {
             .filter(is_delete.eq(false))
             .get_results(&mut db_get_connection())?;
         Ok(result)
-
-
     }
 
 }
@@ -195,6 +208,7 @@ pub struct OwnerFeeDetailInsertPo<'a> {
     pub update_time: Option<chrono::NaiveDateTime>,
     pub record_id:&'a str,
     pub related_order_number:&'a str,
+    pub settle_down_order_number: Option<&'a str>,
 }
 
 pub fn create_new_owner_fee_detail_stream<'a>(
@@ -220,10 +234,12 @@ pub fn create_new_owner_fee_detail_stream<'a>(
         update_time: None,
         record_id:param_record_id,
         related_order_number:param_relative_order_number,
+        settle_down_order_number: None,
     }.create_time();
     let result = diesel::insert_into(table).values(po).get_result::<OwnerFeeDetailPo>(conn)?;
     Ok(result)
 }
+
 
 
 #[derive(Serialize, Debug, Identifiable, AsChangeset, AutoOperation)]
@@ -235,8 +251,20 @@ pub struct OwnerFeeDetailUpdatePo<'a> {
     pub update_by: Option<&'a str>,
     pub update_time: Option<chrono::NaiveDateTime>,
     pub is_delete: Option<&'a bool>,
+    pub settle_down_order_number: Option<&'a str>,
 }
 
+impl OwnerFeeDetailUpdatePo<'_> {
+    pub fn update_settle_related_order_number<'a>(p_related_order_number: &'a str, new_settle_order_number: &'a str, conn: &mut Conn) -> AppResult<()> {
+        debug!("settle a stream: {} {}", p_related_order_number, new_settle_order_number);
+        diesel::update(table)
+            .set(settle_down_order_number.eq(new_settle_order_number))
+            .filter(stream_id.eq(p_related_order_number))
+            .execute(conn)?;
+
+        Ok(())
+    }
+}
 
 #[derive(Deserialize, Serialize, DbEnum, Debug, Clone,PartialEq,Eq)]
 #[ExistingTypePath = "crate::schema::basic::sql_types::DetailType"]
@@ -244,12 +272,14 @@ pub struct OwnerFeeDetailUpdatePo<'a> {
 pub enum DetailType {
     //物业费
     ManagementFee,
-    //滞纳
+    //滞纳(暂时放到物业费里面,不作为一个单独的扣除项目)
     LiquidatedDamages,
     //预存
     PreStoreFee,
     //结算
     SettlementFee,
+    //预存扣除
+    PreStoreDeduction,
 }
 
 
@@ -260,6 +290,7 @@ impl DetailType{
             DetailType::LiquidatedDamages => "滞纳金",
             DetailType::PreStoreFee => "预存",
             DetailType::SettlementFee => "结算",
+            DetailType::PreStoreDeduction => "预存扣除",
         }
     }
     pub fn calculate_type(&self) ->CalculateType{
@@ -268,6 +299,7 @@ impl DetailType{
             DetailType::LiquidatedDamages => CalculateType::Add,
             DetailType::PreStoreFee => CalculateType::Subtract,
             DetailType::SettlementFee => CalculateType::Subtract,
+            DetailType::PreStoreDeduction => CalculateType::Add,
         }
     }
 }

@@ -1,5 +1,5 @@
 use crate::room_info;
-use bigdecimal::BigDecimal;
+use bigdecimal::{BigDecimal, FromPrimitive, Zero};
 use common::data_result::AppResult;
 use common::db_config::auto_trait::AutoOperation;
 use common::db_config::db_get_connection;
@@ -7,6 +7,8 @@ use common::error::{BUSINESS_ERROR_OWNER_FEE_DETAIL_EXIST, DATA_NOT_FOUND};
 use common::CURRENT_USE;
 use diesel::dsl::insert_into;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SaveChangesDsl};
+use itertools::Itertools;
+use log::info;
 use repository::component::operation_trait::FeeCalculator;
 use repository::owner_fee::OwnerFeeDetailPo;
 use repository::owner_info::OwnerBasicInfoPo;
@@ -86,6 +88,8 @@ pub fn init_data(version: Option<&str>) -> AppResult<()> {
             .into_iter().flatten().collect::<HashSet<String>>();
     }
 
+    //找到有会产生违约金的数据
+    let un_payment_streams = try_get_un_payment_stream_data()?;
 
     //基于room_info生成费用数据
     let data_insert = room_info.iter()
@@ -104,6 +108,12 @@ pub fn init_data(version: Option<&str>) -> AppResult<()> {
                     let lift_fee_basic = basic_price_config.get(&BasicPriceType::LiftFeeBasic).map(|info| info.basic_number.clone()).flatten();
                     let lift_fee_plus = basic_price_config.get(&BasicPriceType::LiftFeePlus).map(|info| info.basic_number.clone()).flatten();
                     let lift_fee: Option<BigDecimal> = info.calculate_lift(lift_fee_basic, lift_fee_plus);
+                    //计算违约金
+                    let liquidate_fee = un_payment_streams.get(room_num_ref).map(|stream_vec| {
+                        stream_vec.iter().map(|e| e.amount.clone()).reduce(|a, b| a + b)
+                    //如果还有余额，把它计入预存
+
+                    }).flatten().map(|arrears| calculate_liquidate_fee(arrears, &basic_price_config));
                     Some(PropertyFeeDetailInsertPo {
                         room_number: info.room_number.as_deref().unwrap(),
                         room_owner_name: owner_info.owner_name.as_deref(),
@@ -115,8 +125,8 @@ pub fn init_data(version: Option<&str>) -> AppResult<()> {
                         electric_share_fee: ele_share,
                         water_fee: water_total,
                         water_share_fee: water_share,
-                        liquidate_fee: None,
-                        pre_store_fee: None,
+                        liquidate_fee,
+                        pre_store_fee: if owner_info.amount_balance < BigDecimal::zero() { Some(owner_info.amount_balance.abs()) } else { None },
                         record_version: n_month_version.as_ref(),
                         create_by: CURRENT_USE,
                         update_by: CURRENT_USE,
@@ -143,6 +153,29 @@ pub fn init_data(version: Option<&str>) -> AppResult<()> {
         statement.execute(&mut db_get_connection())?;
     }
     Ok(())
+}
+
+
+///
+/// 找到有欠款的用户，获取三个月前的未缴费数据
+///
+pub fn try_get_un_payment_stream_data()->AppResult<HashMap<String,Vec<OwnerFeeDetailPo>>> {
+    let room_infos = OwnerBasicInfoPo::by_all_un_payment()?
+        .into_iter().map(|info| info.room_number).collect::<Vec<String>>();
+    let result = OwnerFeeDetailPo::by_all_un_payment_stream(&room_infos)?
+        //分个组
+        .into_iter().into_group_map_by(|info| info.room_number.clone())
+        //累计了2个月才计算
+        .into_iter().filter(|(_, v)| v.len() >= 2)
+        .collect::<HashMap<String, Vec<OwnerFeeDetailPo>>>();
+    info!("un_payment_stream_data:{:?}",result.iter().map(|(e,v)|(e.clone(),v.iter().map(|x|x.stream_id.clone()).join(","))).collect::<HashMap<String,String>>());
+    Ok(result)
+}
+
+pub fn calculate_liquidate_fee(arrears: BigDecimal, price_config: &HashMap<BasicPriceType, PriceBasicPo>) -> BigDecimal {
+    let liquidate_rate = price_config.get(&BasicPriceType::LiquidateFee).map(|info| info.basic_number.as_ref()).flatten().ok_or(DATA_NOT_FOUND()).expect("违约金费率未配置");
+    //违约金 = 欠费 * 0.01
+    arrears * liquidate_rate * BigDecimal::from_f64(0.01).expect("liquidate_rate is not a number")
 }
 
 pub mod excel{

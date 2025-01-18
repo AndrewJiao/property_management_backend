@@ -5,12 +5,13 @@ use actix_web::{get, post, put, web,  HttpRequest, HttpResponse};
 use common::data_result::{OffsetSearch, PaginateSearch, WebResult};
 use common::db_config::auto_trait::AutoOperation;
 use common::db_config::db_get_connection;
-use common::error::{BaseError, DATA_HAS_EXIST};
+use common::error::{BaseError, BUSINESS_ERROR, DATA_HAS_EXIST, ROOM_IS_NOT_EXIST};
 use common::{result_success, validate};
 use diesel::query_dsl::methods::GroupByDsl;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SaveChangesDsl, SelectableHelper, Table, TextExpressionMethods};
 use log::info;
 use repository::component::page::Paginate;
+use repository::property_fee::PropertyFeeDetailPo;
 use repository::room_info::{ReCalculator, RoomInfoDetailPo};
 
 pub fn config(cfg: &mut web::ServiceConfig) {
@@ -71,6 +72,12 @@ async fn put_data(path_param: web::Path<i64>, body_param: web::Json<RoomInfoDeta
     validate!(body_param);
     let data_id = path_param.into_inner();
     let save_data_before = table.find(data_id).first::<RoomInfoDetailPo>(&mut db_get_connection())?;
+    let property_fee = PropertyFeeDetailPo::by_room_number_and_version(
+        save_data_before.room_number.as_deref().ok_or(ROOM_IS_NOT_EXIST())?,
+        save_data_before.month_version.as_deref().ok_or(ROOM_IS_NOT_EXIST())?, &mut db_get_connection()).ok();
+    if property_fee.is_some() {
+        return Err(BaseError::AnyhowError(BUSINESS_ERROR("费用已生成，不允许修改", 99999)));
+    }
     let result: RoomInfoDetailPo = body_param.to_update_po(data_id)
         .full_filed(&save_data_before)
         .re_calculate()

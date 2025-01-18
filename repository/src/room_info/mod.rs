@@ -172,29 +172,31 @@ impl RoomInfoDetailPo {
     /// 电费分为商用和民用
     /// 公摊和个人
     /// 两个维度
+    /// 其中，用户电费分摊用的是房间面积
+    /// 商户电费分摊用的是商户的电表数
     ///
     pub fn calculate_electric(&self, basic_config: &HashMap<BasicPriceType, PriceBasicPo>, room_square: Option<&BigDecimal>, room_type: RoomType) -> (Option<BigDecimal>, Option<BigDecimal>) {
         let (electric_price, electric_share_price) = match room_type {
             RoomType::Common => (
-                basic_config.get(&BasicPriceType::ElectricFee).map(|info| info.basic_number.clone()).flatten(),
-                basic_config.get(&BasicPriceType::ElectricShareFee).map(|info| info.basic_number.clone()).flatten()
+                basic_config.get(&BasicPriceType::ElectricFee).and_then(|info| info.basic_number.clone()),
+                basic_config.get(&BasicPriceType::ElectricShareFee).and_then(|info| info.basic_number.clone())
             ),
             RoomType::Business => (
-                basic_config.get(&BasicPriceType::BusinessElectricFee).map(|info| info.basic_number.clone()).flatten(),
-                basic_config.get(&BasicPriceType::BusinessElectricShareFee).map(|info| info.basic_number.clone()).flatten()
+                basic_config.get(&BasicPriceType::BusinessElectricFee).and_then(|info| info.basic_number.clone()),
+                basic_config.get(&BasicPriceType::BusinessElectricShareFee).and_then(|info| info.basic_number.clone())
             )
         };
 
-        let mut ele_total = None;
-        if let (Some(electric_num), Some(electric_pri)) = (self.electricity_meter_sub, electric_price)
-        {
-            ele_total =  Some(electric_pri * electric_num)
-        }
-        let mut ele_share =None;
-        if let (Some(share_price), Some(square)) = (electric_share_price, room_square)
-        {
-            ele_share = Some(share_price * square);
+        let ele_total = self.electricity_meter_sub.and_then(|electric_num| {
+            electric_price.map(|electric_pri| electric_pri * electric_num)
+        });
+
+        let ele_share = match (electric_share_price, room_square, room_type) {
+            (Some(share_price), Some(square), RoomType::Common) => Some(share_price * square),
+            (Some(share_price), _, RoomType::Business) => Some(share_price * self.electricity_meter_sub.unwrap_or_default()),
+            _ => None,
         };
+
         (ele_total, ele_share)
     }
 

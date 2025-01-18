@@ -1,6 +1,6 @@
 use common::data_result::AppResult;
 use common::db_config::{db_get_connection, Conn};
-use common::tools::time::now_local_date;
+use common::tools::time::{before_month_local_date, now_local_date};
 use diesel::{QueryableByName, RunQueryDsl};
 
 #[derive(Debug)]
@@ -68,6 +68,12 @@ pub fn current_date_count_with_conn(count_type: CountType, conn: &mut Conn) -> A
         }
     };
     Ok(order_number)
+}
+
+pub fn get_special_prefix() -> String {
+    format!("{}{}",
+            "HSMZ",
+            before_month_local_date("%Y%m%d", 3))
 }
 
 pub fn current_date_count(count_type: CountType) -> AppResult<String> {

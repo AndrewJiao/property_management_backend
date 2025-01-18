@@ -9,6 +9,9 @@ use diesel::prelude::*;
 use management_macro::AutoOperation;
 use serde::Serialize;
 use std::collections::HashMap;
+use std::fmt::Display;
+use common::data_result::AppResult;
+use common::db_config::db_get_connection;
 
 #[derive(Selectable, Queryable, Serialize)]
 #[diesel(table_name = t_price_basic)]
@@ -49,6 +52,12 @@ impl PriceBasicPo {
     pub fn all() -> BoxedQuery<'static> {
         table.select(PriceBasicPo::as_select()).into_boxed()
     }
+
+    pub fn with_price_type(price_type: BasicPriceType) -> AppResult<PriceBasicPo> {
+        let result = table.filter(basic_code.eq(price_type.to_string())).select(PriceBasicPo::as_select())
+            .first::<PriceBasicPo>(&mut db_get_connection())?;
+        Ok(result)
+    }
 }
 
 #[derive(Hash, Eq, PartialEq, Debug, Serialize, Clone)]
@@ -69,7 +78,33 @@ pub enum BasicPriceType {
     BusinessElectricFee,
     BusinessWaterShareFee,
     BusinessElectricShareFee,
-    ElectronCarPartFee
+    ElectronCarPartFee,
+    BusinessManageFee
+}
+impl Display for BasicPriceType{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
+            BasicPriceType::ManagementFee => { "ManagementFee".to_string() }
+            BasicPriceType::CarPartFee => { "CarPartFee".to_string() }
+            BasicPriceType::MotorCyclePartFee => { "MotorCyclePartFee".to_string() }
+            BasicPriceType::MachineRoomRenovationFee => { "MachineRoomRenovationFee".to_string() }
+            BasicPriceType::ElectricFee => { "ElectricFee".to_string() }
+            BasicPriceType::ElectricShareFee => { "ElectricShareFee".to_string() }
+            BasicPriceType::WaterFee => { "WaterFee".to_string() }
+            BasicPriceType::WaterShareFee => { "WaterShareFee".to_string() }
+            BasicPriceType::LiquidateFee => { "LiquidateFee".to_string() }
+            BasicPriceType::PreStoreFee => { "PreStoreFee".to_string() }
+            BasicPriceType::LiftFeeBasic => { "LiftFeeBasic".to_string() }
+            BasicPriceType::LiftFeePlus => { "LiftFeePlus".to_string() }
+            BasicPriceType::BusinessWaterFee => { "BusinessWaterFee".to_string() }
+            BasicPriceType::BusinessElectricFee => { "BusinessElectricFee".to_string() }
+            BasicPriceType::BusinessWaterShareFee => { "BusinessWaterShareFee".to_string() }
+            BasicPriceType::BusinessElectricShareFee => { "BusinessElectricShareFee".to_string() }
+            BasicPriceType::ElectronCarPartFee => { "ElectronCarPartFee".to_string() }
+            BasicPriceType::BusinessManageFee => { "BusinessManageFee".to_string() }
+        };
+        write!(f, "{}", str)
+    }
 }
 
 impl FromSql<diesel::sql_types::Text, Pg> for BasicPriceType {
@@ -93,6 +128,7 @@ impl FromSql<diesel::sql_types::Text, Pg> for BasicPriceType {
             "BusinessWaterShareFee" => { Ok(BasicPriceType::BusinessWaterShareFee) }
             "BusinessElectricShareFee" => { Ok(BasicPriceType::BusinessElectricShareFee) }
             "ElectronCarPartFee" => { Ok(BasicPriceType::ElectronCarPartFee) }
+            "BusinessManageFee" => { Ok(BasicPriceType::BusinessManageFee) }
             _ => { Err(Box::from(format!("Invalid BasicPriceType for type {}", str))) }
         }
     }

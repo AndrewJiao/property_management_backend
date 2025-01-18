@@ -121,6 +121,7 @@ pub mod basic {
             is_delete -> Bool,
             record_id -> Varchar,
             related_order_number -> Varchar,
+            settle_down_order_number -> Nullable<Varchar>,
         }
     }
 

@@ -2,7 +2,7 @@ use crate::common_type;
 use crate::component::operation_trait::FeeCalculator;
 use crate::schema::basic::t_property_fee_detail;
 use crate::schema::basic::t_property_fee_detail::*;
-use bigdecimal::BigDecimal;
+use bigdecimal::{BigDecimal, Zero};
 use chrono::NaiveDateTime;
 use common::data_result::AppResult;
 use common::db_config::{db_get_connection, Conn};
@@ -87,6 +87,42 @@ impl PropertyFeeDetailPo{
             .filter(is_delete.eq(false))
             .get_results(conn)?;
         Ok(result)
+    }
+
+    ///
+    /// tips：这里的计算不会算上预存
+    ///
+    pub fn fee_calculate(&self) -> BigDecimal {
+        let mut v_total_fee = BigDecimal::from(0);
+        if let Some(ref v_management_fee) = self.management_fee {
+            v_total_fee += v_management_fee;
+        }
+        if let Some(ref v_part_fee) = self.part_fee {
+            v_total_fee += v_part_fee;
+        }
+        if let Some(ref v_lift_fee) = self.lift_fee {
+            v_total_fee += v_lift_fee;
+        }
+        if let Some(ref v_machine_room_renovation_fee) = self.machine_room_renovation_fee {
+            v_total_fee += v_machine_room_renovation_fee;
+        }
+        if let Some(ref v_electric_fee) = self.electric_fee {
+            v_total_fee += v_electric_fee;
+        }
+        if let Some(ref v_electric_share_fee) = self.electric_share_fee {
+            v_total_fee += v_electric_share_fee;
+        }
+        if let Some(ref v_water_fee) = self.water_fee {
+            v_total_fee += v_water_fee;
+        }
+        if let Some(ref v_water_share_fee) = self.water_share_fee {
+            v_total_fee += v_water_share_fee;
+        }
+        if let Some(ref v_liquidate_fee) = self.liquidate_fee {
+            v_total_fee += v_liquidate_fee;
+        }
+        //如果小于0说明预存是足够的，就把账单变为0也就是total
+        v_total_fee
     }
 
 }
@@ -208,9 +244,10 @@ impl FeeCalculator for PropertyFeeDetailUpdatePo<'_> {
             v_total_fee += v_liquidate_fee;
         }
         if let Some(v_pre_store_fee) = self.pre_store_fee {
-            v_total_fee += v_pre_store_fee;
+            v_total_fee -= v_pre_store_fee;
         }
-        self.total_fee = Some(v_total_fee);
+        //如果小于0说明预存是足够的，就把账单变为0也就是total
+        self.total_fee = Some(if v_total_fee < BigDecimal::zero() { BigDecimal::zero() } else { v_total_fee });
     }
 }
 
@@ -271,8 +308,9 @@ impl PropertyFeeDetailInsertPo<'_>{
             v_total_fee += v_liquidate_fee;
         }
         if let Some(ref v_pre_store_fee) = self.pre_store_fee {
-            v_total_fee += v_pre_store_fee;
+            v_total_fee -= v_pre_store_fee;
         }
-        self.total_fee = Some(v_total_fee);
+        //如果小于0说明预存是足够的，就把账单变为0也就是total
+        self.total_fee = Some(if v_total_fee < BigDecimal::zero() { BigDecimal::zero() } else { v_total_fee });
     }
 }

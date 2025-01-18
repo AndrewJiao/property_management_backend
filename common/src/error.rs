@@ -121,10 +121,10 @@ pub const DB_UPDATE_ERROR: fn() -> anyhow::Error = || anyhow!("db update error")
 pub const DB_INSERT_ERROR: fn() -> anyhow::Error = || anyhow!("db insert error");
 pub const DB_DELETE_ERROR: fn() -> anyhow::Error = || anyhow!("db delete error");
 pub const BUSINESS_ERROR: fn(&str, u32) -> anyhow::Error = |msg, code| anyhow!("errorMsg = {} code = {}",msg,code);
+pub const APP_ERROR: fn(&str) -> anyhow::Error = |msg| anyhow!("system_error = {}",msg);
 //费用明细
 pub const BUSINESS_ERROR_NO_PROPERTY_FEE_INFO: fn() -> anyhow::Error = || anyhow!("errorMsg = 当前单据没有费用明细 code = 10001");
 pub const BUSINESS_ERROR_OWNER_FEE_DETAIL_EXIST: fn() -> anyhow::Error = || anyhow!("errorMsg = 费用已生成 code = 10002");
-pub const APP_ERROR: fn(&str) -> anyhow::Error = |msg| anyhow!("system_error = {}",msg);
 //common
 pub const DATA_NOT_EXIST: fn() -> anyhow::Error = || anyhow!("errorMsg = 数据不存在 code = 00001");
 pub const DATA_HAS_EXIST: fn() -> anyhow::Error = || anyhow!("errorMsg = 数据已存在 code = 00002");

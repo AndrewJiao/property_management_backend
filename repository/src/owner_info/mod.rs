@@ -40,6 +40,17 @@ pub struct OwnerBasicInfoPo {
 }
 
 impl OwnerBasicInfoPo {
+    pub fn by_all_un_payment() -> AppResult<Vec<OwnerBasicInfoPo>> {
+        let result = Self::all()
+            .filter(is_delete.eq(false))
+            .filter(amount_balance.gt(BigDecimal::from(0)))
+            .select(OwnerBasicInfoPo::as_select())
+            .load::<OwnerBasicInfoPo>(&mut db_get_connection())?;
+        Ok(result)
+    }
+}
+
+impl OwnerBasicInfoPo {
     pub fn by_room_number_flow(p_room_number: Option<&Vec<String>>, p1: i64, p2: i64) -> AppResult<Vec<OwnerBasicInfoPo>> {
         if let Some(p_room_number) = p_room_number {
             let result = Self::all()
@@ -72,7 +83,14 @@ impl OwnerBasicInfoPo {
     }
 
     pub fn calculate_management_fee(&self, basic_config: &HashMap<BasicPriceType, PriceBasicPo>) -> Option<BigDecimal> {
-        let new_basic_price = basic_config.get(&BasicPriceType::ManagementFee).map(|info| info.basic_number.clone()).flatten();
+        let new_basic_price = match self.room_type {
+            RoomType::Common => {
+                basic_config.get(&BasicPriceType::ManagementFee).map(|info| info.basic_number.clone()).flatten()
+            },
+            RoomType::Business => {
+                basic_config.get(&BasicPriceType::BusinessManageFee).map(|info| info.basic_number.clone()).flatten()
+            }
+        };
         if let (Some(square), Some(fee)) = (&self.room_square, new_basic_price) {
             Some(fee * square)
         } else {

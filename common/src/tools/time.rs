@@ -1,6 +1,6 @@
-use std::ops::Add;
-use chrono::NaiveDateTime;
+use chrono::{Months, NaiveDateTime};
 use lazy_static::lazy_static;
+use std::ops::Add;
 
 pub fn now_local_date_time_naive() -> NaiveDateTime {
     chrono::Local::now().naive_local()
@@ -14,6 +14,14 @@ pub fn now_local_date(fmt: &str) -> String {
     now.format(fmt).to_string()
 }
 
+///
+/// 获取指定数量月份前的string
+///
+pub fn before_month_local_date(fmt: &str, month: u32) -> String {
+    let now = now_local_date_time_naive();
+    let before_month = now.checked_sub_months(Months::new(month)).expect("before_month_get_error");
+    before_month.format(fmt).to_string()
+}
 
 pub fn now_utc_date_time_naive() -> NaiveDateTime {
     chrono::Utc::now().naive_utc()
@@ -37,3 +45,4 @@ pub fn nexted_time_stamp(stamp: i64) -> i64 {
 pub fn current_time_stamp() -> i64 {
     chrono::Utc::now().timestamp()
 }
+

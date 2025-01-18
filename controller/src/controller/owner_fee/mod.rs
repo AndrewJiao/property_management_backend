@@ -86,6 +86,9 @@ async fn put_data(path_param: web::Path<i64>, param: web::Json<OwnerFeeDetailUpd
     result_success!(result)
 }
 
+///
+/// 新增流水
+///
 #[post("/data")]
 async fn add_data(param: web::Json<serde_json::Value>) -> WebResult<HttpResponse>
 where

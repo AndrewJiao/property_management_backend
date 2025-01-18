@@ -19,7 +19,7 @@ app_config:
   json_length: 10000
   number_max: 100000000
   number_min: -100000000
-  record_max: 2 #生成多少条流水就创建新的记录
+  record_max: 100 #生成多少条流水就创建新的记录
   liquidated_damages_rate: 0.1 #违约金比例
   password_sec_key: "[,85/ASVR\"}UYn~&:fUrg$ei$Y!{u#|X"
   jwt_expire_time: 1296000
