@@ -91,7 +91,9 @@ impl PropertyFeeDetailPo{
 
     ///
     /// tips：这里的计算不会算上预存
+    /// (废弃)
     ///
+    #[deprecated(note = "这里的计算不会算上预存")]
     pub fn fee_calculate(&self) -> BigDecimal {
         let mut v_total_fee = BigDecimal::from(0);
         if let Some(ref v_management_fee) = self.management_fee {
@@ -244,10 +246,9 @@ impl FeeCalculator for PropertyFeeDetailUpdatePo<'_> {
             v_total_fee += v_liquidate_fee;
         }
         if let Some(v_pre_store_fee) = self.pre_store_fee {
-            v_total_fee -= v_pre_store_fee;
+            v_total_fee += v_pre_store_fee;
         }
-        //如果小于0说明预存是足够的，就把账单变为0也就是total
-        self.total_fee = Some(if v_total_fee < BigDecimal::zero() { BigDecimal::zero() } else { v_total_fee });
+        self.total_fee = Some(v_total_fee);
     }
 }
 
@@ -308,9 +309,8 @@ impl PropertyFeeDetailInsertPo<'_>{
             v_total_fee += v_liquidate_fee;
         }
         if let Some(ref v_pre_store_fee) = self.pre_store_fee {
-            v_total_fee -= v_pre_store_fee;
+            v_total_fee += v_pre_store_fee;
         }
-        //如果小于0说明预存是足够的，就把账单变为0也就是total
-        self.total_fee = Some(if v_total_fee < BigDecimal::zero() { BigDecimal::zero() } else { v_total_fee });
+        self.total_fee = Some(v_total_fee);
     }
 }

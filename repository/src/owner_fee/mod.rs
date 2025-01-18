@@ -278,7 +278,7 @@ pub enum DetailType {
     PreStoreFee,
     //结算
     SettlementFee,
-    //预存扣除
+    //预存扣除(废弃)
     PreStoreDeduction,
 }
 

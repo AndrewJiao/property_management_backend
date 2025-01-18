@@ -63,10 +63,11 @@ pub fn new_data(mut value: StreamAddVal) -> AppResult<OwnerFeeDetailPo> {
         //如果是结算流水，就更新要结算的流水信息
         if value.stream_type == DetailType::SettlementFee {
             OwnerFeeDetailUpdatePo::update_settle_related_order_number(&value.relative_order_number, new_stream_order_number, conn)?;
-        } else if value.stream_type == DetailType::ManagementFee && result.amount == BigDecimal::zero() {
-            //如果结算金额为0，就自动结算
-            manually_add_settle_data(result.stream_id.clone())?;
         }
+        // else if value.stream_type == DetailType::ManagementFee && result.amount == BigDecimal::zero() {
+        //     //如果结算金额为0，就自动结算
+        //     manually_add_settle_data(result.stream_id.clone())?;
+        // }
         Ok(result)
     })?;
     Ok(result)
@@ -77,6 +78,7 @@ pub fn new_data(mut value: StreamAddVal) -> AppResult<OwnerFeeDetailPo> {
 /// 如果预存足额扣除，则会返回0
 /// 如果预存不能足额扣除，则返回差额用于生成部分扣除流水
 ///
+#[deprecated(note = "use pre_store_deduction instead")]
 pub fn pre_store_deduction(fee: &PropertyFeeDetailPo) -> AppResult<BigDecimal> {
     let room_number = fee.room_number.clone().expect("data_not_exist");
     let relate_version = fee.record_version.as_deref().expect("data_not_exit");
@@ -173,14 +175,14 @@ pub fn add_data(param_room_number:&str, param_version:&str) ->AppResult<OwnerFee
     let conn = &mut db_get_connection();
     //查询是否有物业费
     let property_fee = PropertyFeeDetailPo::by_room_number_and_version(param_room_number, param_version, conn)?;
-    let exist_owner_fees = OwnerFeeDetailPo::by_room_number_and_relative_order_numbers(&vec![(param_room_number, param_version)],conn)?;
+    let exist_owner_fees = OwnerFeeDetailPo::by_room_number_and_relative_order_numbers(&vec![(param_room_number, param_version)], conn)?;
     debug!("exist_owner_fees: {:?}", exist_owner_fees);
     //有就直接返回
     if exist_owner_fees.len() > 0 {
         return Ok(exist_owner_fees.into_iter().next().unwrap());
     }
     //预存扣除
-    let _ = self::pre_store_deduction(&property_fee);
+    // let _ = self::pre_store_deduction(&property_fee);
 
     self::new_data(StreamAddVal {
         stream_type: DetailType::ManagementFee,
@@ -210,7 +212,7 @@ pub fn add_datas(param_version:&str) ->AppResult<()>{
         need_create.into_iter()
             .for_each(|each_fee|{
                 //预存扣除
-                let _ = self::pre_store_deduction(&each_fee);
+                // let _ = self::pre_store_deduction(&each_fee);
                 let _ = self::new_data(StreamAddVal {
                     stream_type: DetailType::ManagementFee,
                     room_number: each_fee.room_number.ok_or(DATA_NOT_EXIST()).unwrap(),
