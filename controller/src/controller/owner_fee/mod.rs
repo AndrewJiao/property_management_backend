@@ -105,7 +105,7 @@ where
             service::owner_fee::add_datas(&e.version)?;
             result_success!()
         }
-        StreamAddDetailType::PreStoreFee(e) => {
+        StreamAddDetailType::AdjustOrder(e) => {
             validate!(e);
             let result = service::owner_fee::manually_add_data(e.amount, e.room_number)?;
             result_success!(result)

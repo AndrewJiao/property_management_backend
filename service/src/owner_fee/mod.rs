@@ -79,6 +79,7 @@ pub fn new_data(mut value: StreamAddVal) -> AppResult<OwnerFeeDetailPo> {
 /// 如果预存不能足额扣除，则返回差额用于生成部分扣除流水
 ///
 #[deprecated(note = "use pre_store_deduction instead")]
+#[allow(dead_code)]
 pub fn pre_store_deduction(fee: &PropertyFeeDetailPo) -> AppResult<BigDecimal> {
     let room_number = fee.room_number.clone().expect("data_not_exist");
     let relate_version = fee.record_version.as_deref().expect("data_not_exit");
@@ -95,6 +96,7 @@ pub fn pre_store_deduction(fee: &PropertyFeeDetailPo) -> AppResult<BigDecimal> {
     match fee.pre_store_fee {
         None => { fee.total_fee.clone().ok_or(DATA_NOT_EXIST()) }
         Some(ref pre_store_fee) => {
+            #[warn(deprecated)]
             let total_fee = fee.fee_calculate();
             let sub = pre_store_fee - total_fee.clone();
             if sub>=BigDecimal::zero() {
@@ -242,7 +244,7 @@ impl Contains for Vec<OwnerFeeDetailPo>  {
 ///
 pub fn manually_add_data(amount:BigDecimal,room_number:String) -> AppResult<OwnerFeeDetailPo> {
     debug!("manually_add_data: {}", amount);
-    let detail_type = DetailType::PreStoreFee;
+    let detail_type = DetailType::AdjustOrder;
     //没有就抛出错
     OwnerBasicInfoPo::by_room_number(&room_number, &mut db_get_connection())?;
 

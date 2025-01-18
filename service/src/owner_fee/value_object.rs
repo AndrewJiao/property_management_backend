@@ -23,7 +23,7 @@ impl StreamAddVal {
             DetailType::ManagementFee | DetailType::PreStoreDeduction => {
                 amount_balance + self.amount.as_ref().expect("need amount")
             }
-            DetailType::PreStoreFee | DetailType::SettlementFee => {
+            DetailType::PreStoreFee | DetailType::SettlementFee | DetailType::AdjustOrder => {
                 amount_balance - self.amount.as_ref().expect("need amount")
             }
         }

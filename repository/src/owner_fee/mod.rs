@@ -274,12 +274,14 @@ pub enum DetailType {
     ManagementFee,
     //滞纳(暂时放到物业费里面,不作为一个单独的扣除项目)
     LiquidatedDamages,
-    //预存
+    //预存(暂时无用)
     PreStoreFee,
     //结算
     SettlementFee,
     //预存扣除(废弃)
     PreStoreDeduction,
+    //调整单
+    AdjustOrder,
 }
 
 
@@ -291,6 +293,7 @@ impl DetailType{
             DetailType::PreStoreFee => "预存",
             DetailType::SettlementFee => "结算",
             DetailType::PreStoreDeduction => "预存扣除",
+            DetailType::AdjustOrder => "调整单",
         }
     }
     pub fn calculate_type(&self) ->CalculateType{
@@ -300,6 +303,7 @@ impl DetailType{
             DetailType::PreStoreFee => CalculateType::Subtract,
             DetailType::SettlementFee => CalculateType::Subtract,
             DetailType::PreStoreDeduction => CalculateType::Add,
+            DetailType::AdjustOrder => CalculateType::Subtract,
         }
     }
 }

@@ -1,5 +1,5 @@
 use crate::room_info;
-use bigdecimal::{BigDecimal, FromPrimitive, Zero};
+use bigdecimal::{BigDecimal, FromPrimitive };
 use common::data_result::AppResult;
 use common::db_config::auto_trait::AutoOperation;
 use common::db_config::db_get_connection;

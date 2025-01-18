@@ -136,7 +136,7 @@ impl SettleType{
                     SettleType::NotSettle
                 }
             }
-            DetailType::PreStoreFee|DetailType::SettlementFee|DetailType::PreStoreDeduction => SettleType::NoNeedSettle
+            DetailType::PreStoreFee | DetailType::SettlementFee | DetailType::PreStoreDeduction | DetailType::AdjustOrder => SettleType::NoNeedSettle
         }
     }
 
@@ -147,8 +147,8 @@ pub enum StreamAddDetailType {
     ManagementFee(OwnerFeeAssignedAddDto),
     //批量物业费
     ManagementFeeBatch(OwnerFeeAssignedAddDtos),
-    //预存
-    PreStoreFee(OwnerFeeAssignedManuallyAddDto),
+    //调整单
+    AdjustOrder(OwnerFeeAssignedManuallyAddDto),
     //结算
     SettlementFee(OwnerFeeAssignedManuallySettleDto),
     //
@@ -164,7 +164,7 @@ impl From<serde_json::Value> for StreamAddDetailType{
         match detail_type {
             "ManagementFee" => serde_json::from_value(value).map(|e| StreamAddDetailType::ManagementFee(e)).unwrap_or(NoMatch),
             "ManagementFeeBatch" => serde_json::from_value(value).map(|e| StreamAddDetailType::ManagementFeeBatch(e)).unwrap_or(NoMatch),
-            "PreStoreFee" => serde_json::from_value(value).map(|e| StreamAddDetailType::PreStoreFee(e)).unwrap_or(NoMatch),
+            "AdjustOrder" => serde_json::from_value(value).map(|e| StreamAddDetailType::AdjustOrder(e)).unwrap_or(NoMatch),
             "SettlementFee" => serde_json::from_value(value).map(|e| StreamAddDetailType::SettlementFee(e)).unwrap_or(NoMatch),
             _ => NoMatch,
         }
