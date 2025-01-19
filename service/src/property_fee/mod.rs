@@ -136,6 +136,7 @@ pub fn init_data(version: Option<&str>) -> AppResult<()> {
                         delete_at: None,
                         comment: None,
                         total_fee: None,
+                        total_charge: None,
                     })
                 }
             }

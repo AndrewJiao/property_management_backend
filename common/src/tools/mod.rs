@@ -6,6 +6,7 @@ pub mod jwt;
 pub mod tls;
 pub mod room_data;
 pub mod password;
+pub mod transaction;
 ///
 /// 查看当前泛型的类型
 ///

@@ -2,12 +2,12 @@ use crate::owner_fee::value_object::StreamAddVal;
 use bigdecimal::{BigDecimal, Zero};
 use common::data_result::{AppError, AppResult};
 use common::db_config::auto_trait::AutoOperation;
-use common::db_config::db_get_connection;
+use common::db_config::{db_get_connection, Conn};
 use common::error::{BUSINESS_ERROR, DATA_NOT_EXIST};
 use common::tools::lock::LOCK_OWNER_FEE;
 use diesel::{Connection, SaveChangesDsl};
 use itertools::Itertools;
-use log::{debug, info };
+use log::{debug, info};
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
 use repository::owner_fee::{create_new_owner_fee_detail_stream, AllRelativeStream, DetailType, OwnerFeeDetailPo, OwnerFeeDetailRecordPo, OwnerFeeDetailUpdatePo};
@@ -32,18 +32,21 @@ pub fn put_data(po: OwnerFeeDetailUpdatePo) -> AppResult<OwnerFeeDetailPo> {
 /// 初始化一个新的流水
 ///
 pub fn new_data(mut value: StreamAddVal) -> AppResult<OwnerFeeDetailPo> {
+    new_data_with_conn(mut value: StreamAddVal, &mut db_get_connection())
+}
+pub fn new_data_with_conn(mut value: StreamAddVal, conn: &mut Conn) -> AppResult<OwnerFeeDetailPo> {
     info!("添加流水数据: {:?}", value);
     let p_room_number = &value.room_number.clone();
     //生成一个单号
-    let conn = &mut db_get_connection();
     //查询业主信息
     let mut basic_info = OwnerBasicInfoPo::by_room_number(p_room_number, conn)?;
 
     let _guard = LOCK_OWNER_FEE.try_lock(basic_info.room_number.as_str())?;
+
     let result = conn.transaction::<_, AppError, _>(|conn| {
         //计算
         let new_amount_balance = value.calculate(&mut basic_info.amount_balance);
-        //更新结余，更新记录表，新增流水数据（非业务逻辑)
+        //更新记录表，新增流水数据（非业务逻辑)
         let record = owner_fee::try_record_data(&new_amount_balance, p_room_number, conn)?;
         //更新余额
         owner_info::update_amount(basic_info.id, &new_amount_balance, conn)?;
@@ -55,32 +58,32 @@ pub fn new_data(mut value: StreamAddVal) -> AppResult<OwnerFeeDetailPo> {
             p_room_number,
             basic_info.owner_name.as_deref(),
             &value.stream_type,
-            &value.amount.ok_or(BUSINESS_ERROR("amount is required", 1001))?,
+            &value.amount.clone().ok_or(BUSINESS_ERROR("amount is required", 1001))?,
             &record.record_id,
             value.relative_order_number.as_str(),
             conn,
         )?;
         //如果是结算流水，就更新要结算的流水信息
         if value.stream_type == DetailType::SettlementFee {
-            OwnerFeeDetailUpdatePo::update_settle_related_order_number(&value.relative_order_number, new_stream_order_number, conn)?;
+            OwnerFeeDetailUpdatePo::settle_post_processer(&value.relative_order_number, new_stream_order_number, conn)?;
+        } else if value.stream_type == DetailType::ManagementFee && new_amount_balance <= BigDecimal::zero() {
+            // 如果是物业费，且欠款余额小于等于0，就自动结算
+            new_data(StreamAddVal{
+                stream_type: DetailType::SettlementFee,
+                room_number: p_room_number.clone(),
+                amount: value.amount,
+                relative_order_number: new_stream_order_number.clone(),
+            })?;
         }
-        // else if value.stream_type == DetailType::ManagementFee && result.amount == BigDecimal::zero() {
-        //     //如果结算金额为0，就自动结算
-        //     manually_add_settle_data(result.stream_id.clone())?;
-        // }
         Ok(result)
     })?;
     Ok(result)
 }
 
 ///
-/// 预存扣除
-/// 如果预存足额扣除，则会返回0
-/// 如果预存不能足额扣除，则返回差额用于生成部分扣除流水
+/// 如果有预存提前生成预存单
 ///
-#[deprecated(note = "use pre_store_deduction instead")]
-#[allow(dead_code)]
-pub fn pre_store_deduction(fee: &PropertyFeeDetailPo) -> AppResult<BigDecimal> {
+pub fn try_pre_store_deduction(fee: &PropertyFeeDetailPo) ->AppResult<()> {
     let room_number = fee.room_number.clone().expect("data_not_exist");
     let relate_version = fee.record_version.as_deref().expect("data_not_exit");
     //先判断是否已有预存单生成，因为没有涉及事务
@@ -90,35 +93,19 @@ pub fn pre_store_deduction(fee: &PropertyFeeDetailPo) -> AppResult<BigDecimal> {
         .into_iter()
         .filter(|e| e.detail_type == DetailType::PreStoreFee).collect::<Vec<_>>();
     if exist_owner_fees.len() > 0 {
-        return Ok(BigDecimal::zero());
+        return Ok(());
     }
 
-    match fee.pre_store_fee {
-        None => { fee.total_fee.clone().ok_or(DATA_NOT_EXIST()) }
-        Some(ref pre_store_fee) => {
-            #[warn(deprecated)]
-            let total_fee = fee.fee_calculate();
-            let sub = pre_store_fee - total_fee.clone();
-            if sub>=BigDecimal::zero() {
-                let _ = new_data(StreamAddVal {
-                    stream_type: DetailType::PreStoreDeduction,
-                    room_number,
-                    amount: Some(total_fee),
-                    relative_order_number: relate_version.to_string(),
-                })?;
-                Ok(BigDecimal::zero())
-            }else{
-                let _ = new_data(StreamAddVal {
-                    stream_type: DetailType::PreStoreDeduction,
-                    room_number,
-                    amount: Some(pre_store_fee.clone()),
-                    relative_order_number: relate_version.to_string(),
-                })?;
-                Ok(sub.abs())
-            }
-        }
+    if let Some(pre_store) = &fee.pre_store_fee {
+        new_data(StreamAddVal {
+            stream_type: DetailType::PreStoreFee,
+            room_number,
+            amount: Some(pre_store.clone()),
+            //手动添添加没有单号，先固定-
+            relative_order_number: relate_version.to_string(),
+        })?;
     }
-
+    Ok(())
 
 }
 
@@ -184,7 +171,7 @@ pub fn add_data(param_room_number:&str, param_version:&str) ->AppResult<OwnerFee
         return Ok(exist_owner_fees.into_iter().next().unwrap());
     }
     //预存扣除
-    // let _ = self::pre_store_deduction(&property_fee);
+    let _ = self::try_pre_store_deduction(&property_fee);
 
     self::new_data(StreamAddVal {
         stream_type: DetailType::ManagementFee,
@@ -214,7 +201,7 @@ pub fn add_datas(param_version:&str) ->AppResult<()>{
         need_create.into_iter()
             .for_each(|each_fee|{
                 //预存扣除
-                // let _ = self::pre_store_deduction(&each_fee);
+                let _ = self::try_pre_store_deduction(&each_fee);
                 let _ = self::new_data(StreamAddVal {
                     stream_type: DetailType::ManagementFee,
                     room_number: each_fee.room_number.ok_or(DATA_NOT_EXIST()).unwrap(),
@@ -267,8 +254,8 @@ pub fn manually_add_settle_data(p_stream_id:String) -> AppResult<OwnerFeeDetailP
     //查询要结算的流水判断状态是否可以结算(目前只有物业费和滞纳金可以结算)
     let detail_types = vec![DetailType::ManagementFee, DetailType::LiquidatedDamages];
     let AllRelativeStream{common_stream, deduction_streams } = OwnerFeeDetailPo::all_relative_stream_by_stream_id(p_stream_id, detail_types, &mut db_get_connection())?;
-   if !deduction_streams.is_empty(){
-         return Err(BUSINESS_ERROR("已有结算流水", 1001));
+    if !deduction_streams.is_empty() {
+        return Err(BUSINESS_ERROR("已有结算流水", 1001));
     }
     let result = new_data(StreamAddVal {
         stream_type: detail_type,

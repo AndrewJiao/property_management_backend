@@ -7,7 +7,6 @@ create table if not exists t_property_fee_detail
     room_owner_name             varchar,
     management_fee              numeric(10, 2),
     part_fee                    numeric(10, 2),
-    lift_fee                    numeric(10, 2)
     machine_room_renovation_fee numeric(10, 2),
     electric_fee                numeric(10, 2),
     electric_share_fee          numeric(10, 2),
@@ -24,6 +23,8 @@ create table if not exists t_property_fee_detail
     delete_at                   timestamp,
     comment                     text,
     total_fee                   numeric(10, 2),
+    lift_fee                    numeric(10, 2),
+    total_charge                numeric(10, 2)          not null
     );
 
 comment on column t_property_fee_detail.room_number is '房间号';
@@ -49,6 +50,8 @@ comment on column t_property_fee_detail.pre_store_fee is '预存金';
 comment on column t_property_fee_detail.record_version is '记录版本如：20210101，by每月更新';
 
 comment on column t_property_fee_detail.total_fee is '总费用';
+
+comment on column t_property_fee_detail.total_charge is '总收款';
 
 alter table t_property_fee_detail
     owner to postgres;

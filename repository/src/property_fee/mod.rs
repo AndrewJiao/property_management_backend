@@ -40,6 +40,7 @@ pub struct PropertyFeeDetailPo {
     pub comment: Option<String>,
     pub total_fee: Option<BigDecimal>,
     pub lift_fee: Option<BigDecimal>,
+    pub total_charge: BigDecimal,
 }
 
 
@@ -93,7 +94,7 @@ impl PropertyFeeDetailPo{
     /// tips：这里的计算不会算上预存
     /// (废弃)
     ///
-    #[deprecated(note = "这里的计算不会算上预存")]
+    // #[deprecated(note = "这里的计算不会算上预存")]
     pub fn fee_calculate(&self) -> BigDecimal {
         let mut v_total_fee = BigDecimal::from(0);
         if let Some(ref v_management_fee) = self.management_fee {
@@ -149,6 +150,7 @@ pub struct PropertyFeeDetailUpdatePo<'a> {
     pub delete_at: Option<NaiveDateTime>,
     pub comment: Option<&'a str>,
     pub total_fee: Option<BigDecimal>,
+    pub total_charge: Option<BigDecimal>,
 }
 impl <'c> PropertyFeeDetailUpdatePo<'c>{
     pub fn update<'a, 'b>(&'a mut self, update_po: PropertyFeeDetailUpdatePo<'b>)
@@ -211,6 +213,7 @@ impl<'a> From<&'a PropertyFeeDetailPo> for PropertyFeeDetailUpdatePo<'a> {
             delete_at: po.delete_at,
             comment: po.comment.as_deref(),
             total_fee: po.total_fee.clone(),
+            total_charge: Some(po.total_charge.clone())
         }
     }
 }
@@ -245,10 +248,12 @@ impl FeeCalculator for PropertyFeeDetailUpdatePo<'_> {
         if let Some(v_liquidate_fee) = self.liquidate_fee {
             v_total_fee += v_liquidate_fee;
         }
+        self.total_fee = Some(v_total_fee.clone());
+
         if let Some(v_pre_store_fee) = self.pre_store_fee {
             v_total_fee += v_pre_store_fee;
         }
-        self.total_fee = Some(v_total_fee);
+        self.total_charge = Some(v_total_fee);
     }
 }
 
@@ -276,6 +281,7 @@ pub struct PropertyFeeDetailInsertPo<'a> {
     pub delete_at: Option<NaiveDateTime>,
     pub comment: Option<&'a str>,
     pub total_fee: Option<BigDecimal>,
+    pub total_charge: Option<BigDecimal>,
 }
 
 impl PropertyFeeDetailInsertPo<'_>{
@@ -308,9 +314,11 @@ impl PropertyFeeDetailInsertPo<'_>{
         if let Some(ref v_liquidate_fee) = self.liquidate_fee {
             v_total_fee += v_liquidate_fee;
         }
+        self.total_fee = Some(v_total_fee.clone());
+
         if let Some(ref v_pre_store_fee) = self.pre_store_fee {
             v_total_fee += v_pre_store_fee;
         }
-        self.total_fee = Some(v_total_fee);
+        self.total_charge = Some(v_total_fee);
     }
 }

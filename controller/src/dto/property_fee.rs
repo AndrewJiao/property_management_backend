@@ -72,6 +72,7 @@ impl ToUpdatePO for PropertyFeeDetailUpdateDto {
             delete_at: None,
             comment: self.comment.as_deref(),
             total_fee: None,
+            total_charge: None,
         }
     }
 }
@@ -110,6 +111,7 @@ pub struct PropertyFeeDetailResultDto {
     pub comment: Option<String>,
     pub total_fee: Option<BigDecimal>,
     pub related_order_number: Option<String>,
+    pub total_charge: BigDecimal,
 }
 impl From<PropertyFeeDetailPo> for PropertyFeeDetailResultDto{
     fn from(po: PropertyFeeDetailPo) -> Self {
@@ -137,6 +139,7 @@ impl From<PropertyFeeDetailPo> for PropertyFeeDetailResultDto{
             comment: po.comment,
             total_fee: po.total_fee,
             related_order_number: None,
+            total_charge: po.total_charge,
         }
     }
 }

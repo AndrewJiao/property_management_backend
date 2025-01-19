@@ -184,6 +184,7 @@ pub mod basic {
             comment -> Nullable<Text>,
             total_fee -> Nullable<Numeric>,
             lift_fee -> Nullable<Numeric>,
+            total_charge -> Numeric,
         }
     }
 

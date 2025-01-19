@@ -255,7 +255,7 @@ pub struct OwnerFeeDetailUpdatePo<'a> {
 }
 
 impl OwnerFeeDetailUpdatePo<'_> {
-    pub fn update_settle_related_order_number<'a>(p_related_order_number: &'a str, new_settle_order_number: &'a str, conn: &mut Conn) -> AppResult<()> {
+    pub fn settle_post_processer<'a>(p_related_order_number: &'a str, new_settle_order_number: &'a str, conn: &mut Conn) -> AppResult<()> {
         debug!("settle a stream: {} {}", p_related_order_number, new_settle_order_number);
         diesel::update(table)
             .set(settle_down_order_number.eq(new_settle_order_number))
