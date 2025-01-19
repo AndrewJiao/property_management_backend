@@ -1,5 +1,5 @@
 use crate::room_info;
-use bigdecimal::{BigDecimal, FromPrimitive };
+use bigdecimal::{BigDecimal, FromPrimitive};
 use common::data_result::AppResult;
 use common::db_config::auto_trait::AutoOperation;
 use common::db_config::db_get_connection;
@@ -136,7 +136,7 @@ pub fn init_data(version: Option<&str>) -> AppResult<()> {
                         delete_at: None,
                         comment: None,
                         total_fee: None,
-                        total_charge: None,
+                        is_settle_down: false,
                     })
                 }
             }

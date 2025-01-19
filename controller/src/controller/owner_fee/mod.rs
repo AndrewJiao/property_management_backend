@@ -112,7 +112,7 @@ where
         }
         StreamAddDetailType::SettlementFee(e) => {
             validate!(e);
-            let result = service::owner_fee::manually_add_settle_data(e.stream_id)?;
+            let result = service::owner_fee::manually_add_settle_data(e.stream_id, e.settle_amount)?;
             result_success!(result)
         }
         StreamAddDetailType::NoMatch => {

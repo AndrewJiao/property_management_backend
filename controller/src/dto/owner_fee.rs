@@ -174,8 +174,9 @@ impl From<serde_json::Value> for StreamAddDetailType{
 #[derive(Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct OwnerFeeAssignedManuallySettleDto {
-    #[validate(length(min=0, max=100))]
+    #[validate(length(min = 0, max = 100))]
     pub stream_id: String,
+    pub settle_amount: BigDecimal,
 }
 
 

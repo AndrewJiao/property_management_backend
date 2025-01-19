@@ -24,7 +24,7 @@ create table if not exists t_property_fee_detail
     comment                     text,
     total_fee                   numeric(10, 2),
     lift_fee                    numeric(10, 2),
-    total_charge                numeric(10, 2)          not null
+    is_settle_down              boolean   default false not null
     );
 
 comment on column t_property_fee_detail.room_number is '房间号';
@@ -51,7 +51,7 @@ comment on column t_property_fee_detail.record_version is '记录版本如：202
 
 comment on column t_property_fee_detail.total_fee is '总费用';
 
-comment on column t_property_fee_detail.total_charge is '总收款';
+comment on column t_property_fee_detail.is_settle_down is '是否已结算';
 
 alter table t_property_fee_detail
     owner to postgres;
