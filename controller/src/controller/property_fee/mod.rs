@@ -74,7 +74,8 @@ fn do_search(current_page: i64, page_size: i64, order_types: &Option<Vec<Order>>
         .if_filter(&search_param.room_number, |sub_sql, p| sub_sql.filter(room_number.like(format!("%{}%", p))))
         .if_filter(&search_param.room_owner_name, |sub_statement, value| sub_statement.filter(room_owner_name.like(format!("%{}%", value))))
         .if_filter(&search_param.record_version, |sub_statement, value| sub_statement.filter(record_version.eq(value)))
-        .filter(is_delete.eq(false));
+        .filter(is_delete.eq(false))
+        .filter(is_settle_down.eq(search_param.is_settle_down));
 
     if let Some(order_types) = order_types{
         for order in order_types {

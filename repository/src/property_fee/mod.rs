@@ -55,9 +55,6 @@ impl PropertyFeeDetailPo {
             .execute(conn)?;
         Ok(())
     }
-}
-
-impl PropertyFeeDetailPo {
     ///
     /// 标记已结算
     ///
