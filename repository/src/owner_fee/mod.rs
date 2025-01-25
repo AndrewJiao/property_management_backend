@@ -73,15 +73,15 @@ impl AllRelativeStream {
 }
 
 impl OwnerFeeDetailPo {
-    pub fn all_relative_stream_by_stream_id(p_stream_id: String, p_detail_types: Vec<DetailType>,conn: &mut Conn) -> AppResult<AllRelativeStream> {
+    pub fn all_relative_stream_by_stream_id(p_stream_id: &str, p_detail_types: Vec<DetailType>,conn: &mut Conn) -> AppResult<AllRelativeStream> {
         let common_stream = OwnerFeeDetailPo::all()
-            .filter(stream_id.eq(p_stream_id.as_str()))
+            .filter(stream_id.eq(p_stream_id))
             .filter(detail_type.eq_any(p_detail_types))
             .first::<OwnerFeeDetailPo>(conn)?;
 
         //看看是否已有抵扣的流水
         let deduction_stream = OwnerFeeDetailPo::all()
-            .filter(related_order_number.eq(p_stream_id.as_str()))
+            .filter(related_order_number.eq(p_stream_id))
             .load::<OwnerFeeDetailPo>(conn)?;
         Ok(AllRelativeStream{
             common_stream,
@@ -255,7 +255,7 @@ pub struct OwnerFeeDetailUpdatePo<'a> {
 }
 
 impl OwnerFeeDetailUpdatePo<'_> {
-    pub fn settle_post_processer<'a>(p_related_order_number: &'a str, new_settle_order_number: &'a str, conn: &mut Conn) -> AppResult<()> {
+    pub fn mark_settle_down<'a>(p_related_order_number: &'a str, new_settle_order_number: &'a str, conn: &mut Conn) -> AppResult<()> {
         debug!("settle a stream: {} {}", p_related_order_number, new_settle_order_number);
         diesel::update(table)
             .set(settle_down_order_number.eq(new_settle_order_number))

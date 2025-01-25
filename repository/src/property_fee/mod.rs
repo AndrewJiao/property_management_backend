@@ -43,6 +43,33 @@ pub struct PropertyFeeDetailPo {
     pub is_settle_down: bool,
 }
 
+impl PropertyFeeDetailPo {
+    ///
+    /// 添加预存
+    ///
+    pub fn add_pre_store_deduction(p_record_version: &str, p_room_number: &str, p_pre_store_fee: &BigDecimal, conn: &mut Conn) -> AppResult<()> {
+        diesel::update(table)
+            .filter(record_version.eq(p_record_version))
+            .filter(room_number.eq(p_room_number))
+            .set(pre_store_fee.eq(p_pre_store_fee))
+            .execute(conn)?;
+        Ok(())
+    }
+}
+
+impl PropertyFeeDetailPo {
+    ///
+    /// 标记已结算
+    ///
+    pub fn update_settle_down(p_record_version: &str, p_room_number: &str, conn: &mut Conn) -> AppResult<()> {
+        diesel::update(table)
+            .filter(record_version.eq(p_record_version))
+            .filter(room_number.eq(p_room_number))
+            .set(is_settle_down.eq(true))
+            .execute(conn)?;
+        Ok(())
+    }
+}
 
 type BoxedQuery<'a> = t_property_fee_detail::BoxedQuery<'a,Pg,crate::SqlType<PropertyFeeDetailPo>>;
 impl PropertyFeeDetailPo{

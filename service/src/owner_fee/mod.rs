@@ -1,5 +1,5 @@
 use crate::owner_fee::value_object::StreamAddVal;
-use bigdecimal::{BigDecimal };
+use bigdecimal::BigDecimal;
 use common::data_result::{AppError, AppResult};
 use common::db_config::auto_trait::AutoOperation;
 use common::db_config::{db_get_connection, Conn};
@@ -45,59 +45,83 @@ pub fn new_data_with_conn(mut value: StreamAddVal, conn: Option<&mut Conn>) -> A
         let result;
         //生成一个单号
         let new_stream_order_number = &repository::tool_table::current_date_count_with_conn(CountType::OwnerFeeSeqNumber, conn)?;
-        //计算余额
-        let new_amount_balance = value.calculate(&mut basic_info.amount_balance);
-        info!("room_number = {:?} stream_type = {:?} stream_amount = {:?} before_amount = {:?} after_amount= {:?}",  value.room_number,value.stream_type,value.amount, basic_info.amount_balance, &new_amount_balance);
-        //更新记录表，新增流水数据（非业务逻辑)
-        let record = owner_fee::try_record_data(&new_amount_balance, p_room_number, conn)?;
-        //开始创建新流水
-        result = create_new_owner_fee_detail_stream(
-            new_stream_order_number,
-            p_room_number,
-            basic_info.owner_name.as_deref(),
-            &value.stream_type,
-            &value.amount.clone().ok_or(BUSINESS_ERROR("amount is required", 1001))?,
-            &record.record_id,
-            value.relative_order_number.as_str(),
-            conn,
-        )?;
-        //更新余额
-        owner_info::update_amount(basic_info.id, &new_amount_balance, conn)?;
-        //如果是结算流水，就更新要结算的流水信息
         if value.stream_type == DetailType::SettlementFee {
-            OwnerFeeDetailUpdatePo::settle_post_processer(&value.relative_order_number, &result.stream_id, conn)?;
+            result = try_pre_store_deduction(&value, &basic_info,new_stream_order_number,conn)?;
+        }else{
+            //计算余额
+            let new_amount_balance = value.calculate(&mut basic_info.amount_balance);
+            info!("room_number = {:?} stream_type = {:?} stream_amount = {:?} before_amount = {:?} after_amount= {:?}",  value.room_number,value.stream_type,value.amount, basic_info.amount_balance, &new_amount_balance);
+            //更新记录表，新增流水数据（非业务逻辑)
+            let record = owner_fee::try_record_data(&new_amount_balance, p_room_number, conn)?;
+            //开始创建新流水
+            result = create_new_owner_fee_detail_stream(
+                new_stream_order_number,
+                p_room_number,
+                basic_info.owner_name.as_deref(),
+                &value.stream_type,
+                &value.amount.clone().ok_or(BUSINESS_ERROR("amount is required", 1001))?,
+                &record.record_id,
+                value.relative_order_number.as_str(),
+                conn,
+            )?;
+            //更新余额
+            owner_info::update_amount(basic_info.id, &new_amount_balance, conn)?;
         }
         Ok(result)
     })?;
     Ok(result)
 }
 ///
-/// 如果有预存提前生成预存单
+/// 结算
 ///
-pub fn try_pre_store_deduction(fee: &PropertyFeeDetailPo) ->AppResult<()> {
-    let room_number = fee.room_number.clone().expect("data_not_exist");
-    let relate_version = fee.record_version.as_deref().expect("data_not_exit");
-    //先判断是否已有预存单生成，因为没有涉及事务
+pub fn try_pre_store_deduction(value: &StreamAddVal, basic_info: &OwnerBasicInfoPo, new_stream_order_number: &str, conn: &mut Conn) -> AppResult<OwnerFeeDetailPo> {
+    let basic_amount = value.amount.clone().expect("amount is required");
+    let mut abs = None;
+    let mut settle_amount = basic_amount.clone();
+    let AllRelativeStream { common_stream, deduction_streams: _deduction_streams } = OwnerFeeDetailPo::all_relative_stream_by_stream_id(&value.relative_order_number, vec![DetailType::ManagementFee], conn)?;
+    if common_stream.amount > basic_amount {
+        return Err(BUSINESS_ERROR("结算金额不能小于原流水金额", 1002));
+    } else if common_stream.amount < basic_amount {
+        //超额结清,超出的部分生成预存流水
+        abs = Some(&basic_amount - &common_stream.amount);
+        settle_amount = &basic_amount - (&basic_amount - &common_stream.amount);
 
-    let conn = &mut db_get_connection();
-    let exist_owner_fees = OwnerFeeDetailPo::by_room_number_and_relative_order_numbers(&vec![(room_number.as_str(), relate_version)], conn)?
-        .into_iter()
-        .filter(|e| e.detail_type == DetailType::PreStoreFee).collect::<Vec<_>>();
-    if exist_owner_fees.len() > 0 {
-        return Ok(());
     }
 
-    if let Some(pre_store) = &fee.pre_store_fee {
-        new_data(StreamAddVal {
+    let settle_amount_balance = &basic_info.amount_balance - &settle_amount;
+    info!("room_number = {:?} stream_type = {:?} stream_amount = {:?} before_amount = {:?} after_amount= {:?}",  value.room_number,value.stream_type,value.amount, basic_info.amount_balance, &settle_amount_balance);
+    //更新记录表，新增流水数据（非业务逻辑)
+    let record = owner_fee::try_record_data(&settle_amount_balance, &value.room_number, conn)?;
+    //开始创建新流水
+    let result = create_new_owner_fee_detail_stream(
+        new_stream_order_number,
+        value.room_number.as_str(),
+        basic_info.owner_name.as_deref(),
+        &value.stream_type,
+        &settle_amount,
+        &record.record_id,
+        value.relative_order_number.as_str(),
+        conn,
+    )?;
+    //更新余额
+    owner_info::update_amount(basic_info.id, &settle_amount_balance, conn)?;
+
+    let p_record_version = &common_stream.related_order_number;
+    debug!("[settle mark] record_id = {:?} stream_id = {:?} room_number = {:?} amount = {:?} relative_order_number = {:?}",
+           record.record_id, result.stream_id, value.room_number, settle_amount, value.relative_order_number);
+    OwnerFeeDetailUpdatePo::mark_settle_down(&value.relative_order_number, &result.stream_id, conn)?;
+    PropertyFeeDetailPo::update_settle_down(&p_record_version, &basic_info.room_number, conn)?;
+
+    if let Some(abs) = abs {
+        PropertyFeeDetailPo::add_pre_store_deduction( &p_record_version, &basic_info.room_number, &abs, conn)?;
+        new_data_with_conn(StreamAddVal {
             stream_type: DetailType::PreStoreFee,
-            room_number,
-            amount: Some(pre_store.clone()),
-            //手动添添加没有单号，先固定-
-            relative_order_number: relate_version.to_string(),
-        })?;
+            room_number: value.room_number.clone(),
+            amount: Some(abs),
+            relative_order_number: "--".to_string(),
+        }, Some(conn))?;
     }
-    Ok(())
-
+    Ok(result)
 }
 
 
@@ -221,7 +245,7 @@ impl Contains for Vec<OwnerFeeDetailPo>  {
 /// 手动添加数据，预存
 ///
 pub fn manually_add_data(amount:BigDecimal,room_number:String) -> AppResult<OwnerFeeDetailPo> {
-    debug!("manually_add_data: {}", amount);
+    debug!("manually_add_data: {}", &amount);
     let detail_type = DetailType::AdjustOrder;
     //没有就抛出错
     OwnerBasicInfoPo::by_room_number(&room_number, &mut db_get_connection())?;
@@ -244,7 +268,7 @@ pub fn manually_add_settle_data(p_stream_id: String, p_amount: BigDecimal) -> Ap
     let detail_type = DetailType::SettlementFee;
     //查询要结算的流水判断状态是否可以结算(目前只有物业费和滞纳金可以结算)
     let detail_types = vec![DetailType::ManagementFee, DetailType::LiquidatedDamages];
-    let AllRelativeStream{common_stream, deduction_streams } = OwnerFeeDetailPo::all_relative_stream_by_stream_id(p_stream_id, detail_types, &mut db_get_connection())?;
+    let AllRelativeStream{common_stream, deduction_streams } = OwnerFeeDetailPo::all_relative_stream_by_stream_id(&p_stream_id, detail_types, &mut db_get_connection())?;
     if !deduction_streams.is_empty() {
         return Err(BUSINESS_ERROR("已有结算流水", 1001));
     }
