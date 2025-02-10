@@ -173,16 +173,16 @@ pub async fn login(auth: LoginType) -> AppResult<(UserPo, String)> {
         LoginType::PasswordAndBindCode(p_account, p_password, bind_code) => {
             let user_po = verify_password(&p_account, p_password)?;
             let we_chart_sns = we_chart_auth(&bind_code).await?;
-            let other_user_po_may_be_bind_code = UserPo::by_relate_user_id(&we_chart_sns.session_key).ok();
+            let other_user_po_may_be_bind_code = UserPo::by_relate_user_id(&we_chart_sns.openid).ok();
             //没绑定就绑定，绑定了就不管了
             if user_po.relate_user_id.is_none() && other_user_po_may_be_bind_code.is_none() {
-                UserPo::bind_code_by_account_id(&user_po.account_id, &we_chart_sns.session_key)?;
+                UserPo::bind_code_by_account_id(&user_po.account_id, &we_chart_sns.openid)?;
             }
             user_po
         }
         LoginType::WeChartCode(code,fast_login_flag) => {
             let we_chart_sns = we_chart_auth(&code).await?;
-            let user_po = UserPo::by_relate_user_id(&we_chart_sns.session_key)?;
+            let user_po = UserPo::by_relate_user_id(&we_chart_sns.openid)?;
             let flag = !UserFastLoginPo::is_fast_login(&user_po.account_id);
             info!("fast_login_flag = {} flag = {}",fast_login_flag,flag);
             if fast_login_flag && flag {
@@ -218,7 +218,7 @@ pub async fn we_chart_auth(code: &String) -> AppResult<WeChartSns> {
 pub async fn register(nick_name: &String, code: &String) ->AppResult<UserPo>{
     let sns = we_chart_auth(code).await?;
     //校验用户是否已存在
-    let po1 = UserPo::by_relate_user_id(&sns.session_key).ok();
+    let po1 = UserPo::by_relate_user_id(&sns.openid).ok();
     let po2 = UserPo::by_account(nick_name).ok();
     if po1.is_some() || po2.is_some() {
         return Err(ACCOUNT_EXIST());
@@ -236,7 +236,7 @@ pub async fn register(nick_name: &String, code: &String) ->AppResult<UserPo>{
         update_time: None,
         comment: None,
         is_delete: false,
-        relate_user_id: Some(sns.session_key),
+        relate_user_id: Some(sns.openid),
     };
     //创建一个不绑定房间的用户
     let (result, _) = create_account(user_po, None, &mut db_get_connection())?;

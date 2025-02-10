@@ -52,7 +52,7 @@ pub async fn change_state(approve_insert_po: ApproveUpdatePo<'_>, _: HttpRequest
                         let sns = futures::executor::block_on(sns_future)?;
                         let room_number = value.binding_room_number.clone();
                         //验证账户已存在
-                        let insert_po = value.to_insert_po(sns.session_key);
+                        let insert_po = value.to_insert_po(sns.openid);
                         if UserPo::by_account(&insert_po.account).is_ok() {
                             return Err(USER_ACCOUNT_EXIST());
                         }
