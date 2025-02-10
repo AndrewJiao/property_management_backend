@@ -12,10 +12,10 @@ use diesel::{Connection, SaveChangesDsl};
 use hmac::Mac;
 use log::info;
 use repository::owner_info::OwnerBasicInfoPo;
+use repository::user::fast_login::UserFastLoginPo;
 use repository::user::relate::UserRelateRoomPo;
 use repository::user::{RoleType, UserInsertPo, UserPo, UserUpdatePo};
 use sha2::Sha256;
-use repository::user::fast_login::UserFastLoginPo;
 
 pub mod value;
 
@@ -169,6 +169,16 @@ pub async fn login(auth: LoginType) -> AppResult<(UserPo, String)> {
     let user_po = match auth {
         LoginType::Password(p_account, p_password) => {
             verify_password(&p_account, p_password)?
+        }
+        LoginType::PasswordAndBindCode(p_account, p_password, bind_code) => {
+            let user_po = verify_password(&p_account, p_password)?;
+            let we_chart_sns = we_chart_auth(&bind_code).await?;
+            let other_user_po_may_be_bind_code = UserPo::by_relate_user_id(&we_chart_sns.session_key).ok();
+            //没绑定就绑定，绑定了就不管了
+            if user_po.relate_user_id.is_none() && other_user_po_may_be_bind_code.is_none() {
+                UserPo::bind_code_by_account_id(&user_po.account_id, &we_chart_sns.session_key)?;
+            }
+            user_po
         }
         LoginType::WeChartCode(code,fast_login_flag) => {
             let we_chart_sns = we_chart_auth(&code).await?;

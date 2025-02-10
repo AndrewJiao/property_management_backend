@@ -173,6 +173,10 @@ pub struct UserLoginDto {
     pub account: String,
     #[validate(length(min = 1, max = 100))]
     pub password: String,
+    #[validate(length(min = 1, max = 100))]
+    #[serde(default, deserialize_with = "empty_string_or_null_as_none")]
+    pub code: Option<String>,
+
 }
 
 #[derive(Deserialize, Validate)]

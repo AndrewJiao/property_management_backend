@@ -48,7 +48,7 @@ pub struct PropertyFeeDetailSearchDto {
     pub create_time_end: Option<NaiveDateTime>,
     pub update_time_star: Option<NaiveDateTime>,
     pub update_time_end: Option<NaiveDateTime>,
-    pub is_settle_down: bool,
+    pub is_settle_down: Option<bool>,
 }
 
 impl ToUpdatePO for PropertyFeeDetailUpdateDto {

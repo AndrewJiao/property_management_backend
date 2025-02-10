@@ -1,5 +1,5 @@
-use crate::schema::basic::t_user_relate_room::*;
 use crate::schema::basic::t_user_relate_room;
+use crate::schema::basic::t_user_relate_room::*;
 use common::data_result::AppResult;
 use common::db_config::{db_get_connection, Conn};
 use diesel::{BoolExpressionMethods, ExpressionMethods, Insertable, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper, TextExpressionMethods};

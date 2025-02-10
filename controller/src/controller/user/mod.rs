@@ -170,9 +170,15 @@ pub async fn get_by_account(req:HttpRequest) -> WebResult<HttpResponse> {
 #[put("login")]
 pub async fn login(param: web::Json<UserLoginDto>) -> WebResult<HttpResponse> {
     validate!(param);
-    let UserLoginDto { account, password } = param.into_inner();
-    let (user_po, token_string) = service::user::login(LoginType::Password(account, password)).await?;
-    let response = write_auth_cookie(user_po, &token_string);
+    let UserLoginDto { account, password, code } = param.into_inner();
+    let response;
+    if let Some(code) = code {
+        let (user_po, token_string) = service::user::login(LoginType::PasswordAndBindCode(account, password, code)).await?;
+        response = write_auth_cookie(user_po, &token_string);
+    } else {
+        let (user_po, token_string) = service::user::login(LoginType::Password(account, password)).await?;
+        response = write_auth_cookie(user_po, &token_string);
+    }
     Ok(response)
 }
 

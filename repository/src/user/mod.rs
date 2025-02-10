@@ -1,5 +1,6 @@
 use crate::common_type;
 use crate::component::page::Paginate;
+use crate::owner_info::OwnerBasicInfoPo;
 use crate::schema::basic::t_user;
 use crate::schema::basic::t_user::*;
 use crate::user::relate::UserRelateRoomPo;
@@ -7,6 +8,7 @@ use actix_web::{HttpMessage, HttpRequest};
 use chrono::NaiveDateTime;
 use common::data_result::AppResult;
 use common::db_config::{db_get_connection, AppConn, Conn};
+use common::error::ACCOUNT_NOT_EXIST;
 use common::tools::jwt::{AccountInfo, JwtTokenInfoTrait};
 use common::tools::time::DEFAULT_TIME;
 use diesel::dsl::auto_type;
@@ -20,8 +22,6 @@ use management_macro::AutoOperation;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
-use common::error::ACCOUNT_NOT_EXIST;
-use crate::owner_info::OwnerBasicInfoPo;
 
 pub mod relate;
 pub mod fast_login;
@@ -79,6 +79,14 @@ impl UserPo {
             .filter(relate_user_id.eq(code))
             .filter(with_data_enable())
             .first(&mut db_get_connection())?;
+        Ok(result)
+    }
+
+    pub fn bind_code_by_account_id(p_account_id: &str, bind_code: &str) -> AppResult<UserPo> {
+        let result: UserPo = diesel::update(table)
+            .set(relate_user_id.eq(bind_code))
+            .filter(account_id.eq(p_account_id))
+            .get_result(&mut db_get_connection())?;
         Ok(result)
     }
 }

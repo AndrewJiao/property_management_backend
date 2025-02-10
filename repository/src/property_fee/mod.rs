@@ -48,10 +48,18 @@ impl PropertyFeeDetailPo {
     /// 添加预存
     ///
     pub fn add_pre_store_deduction(p_record_version: &str, p_room_number: &str, p_pre_store_fee: &BigDecimal, conn: &mut Conn) -> AppResult<()> {
+        let mut origin = Self::all()
+            .filter(record_version.eq(p_record_version))
+            .filter(room_number.eq(p_room_number))
+            .filter(is_delete.eq(false))
+            .first::<PropertyFeeDetailPo>(conn)?;
+        origin.pre_store_fee = Some(p_pre_store_fee.clone());
+        origin.fee_calculate();
+
         diesel::update(table)
             .filter(record_version.eq(p_record_version))
             .filter(room_number.eq(p_room_number))
-            .set(pre_store_fee.eq(p_pre_store_fee))
+            .set((pre_store_fee.eq(origin.pre_store_fee),total_fee.eq(origin.total_fee)))
             .execute(conn)?;
         Ok(())
     }
@@ -148,7 +156,9 @@ impl PropertyFeeDetailPo{
         if let Some(ref v_liquidate_fee) = self.liquidate_fee {
             v_total_fee += v_liquidate_fee;
         }
-        //如果小于0说明预存是足够的，就把账单变为0也就是total
+        if let Some(ref v_pre_store_fee) = self.pre_store_fee {
+            v_total_fee += v_pre_store_fee;
+        }
         v_total_fee
     }
 
