@@ -22,6 +22,7 @@ pub struct OwnerInfoSearchDto {
     #[serde(deserialize_with = "empty_string_or_null_as_none")]
     pub owner_name: Option<String>,
     pub room_type: Option<Vec<RoomType>>,
+    pub focus_vehicle: Option<bool>,
 }
 
 
@@ -43,6 +44,7 @@ pub struct OwnerInfoUpdateDto {
     // #[serde(deserialize_with = "json_verify")]
     pub other_basic: Option<serde_json::Value>,
     pub room_type: Option<RoomType>,
+
 }
 
 
@@ -50,19 +52,24 @@ impl ToUpdatePO for OwnerInfoUpdateDto {
     type PO<'a> = UpdateOwnerBasicInfoPo<'a>;
 
     fn to_update_po(&self, id: i64) -> Self::PO<'_> {
+        //如果车辆数据是0则删除这个字段json
+        let vehicle_flag = if let Some((a, b, c)) = repository::owner_info::get_vehicle_num(&self.other_basic) {
+            a + b + c != 0
+        } else { false };
         UpdateOwnerBasicInfoPo {
-            id:id as i32,
+            id: id as i32,
             room_number: self.room_number.as_deref(),
             owner_name: self.owner_name.as_deref(),
             is_delete: None,
             comment: self.comment.as_deref(),
             room_square: self.room_square.as_ref(),
-            other_basic: self.other_basic.as_ref(),
+            other_basic: if vehicle_flag { self.other_basic.as_ref() } else { None },
             update_time: None,
             delete_at: None,
             room_type: self.room_type,
         }
     }
+
 }
 
 #[derive(Deserialize, Serialize, Validate)]
@@ -88,6 +95,10 @@ pub struct OwnerInfoInsertDto {
 impl ToInsertPO for OwnerInfoInsertDto {
     type PO<'a> = InsertOwnerBasicInfoPo<'a>;
     fn to_insert_po(&self) -> Self::PO<'_> {
+        //如果车辆数据是0则删除这个字段json
+        let vehicle_flag = if let Some((a, b, c)) = repository::owner_info::get_vehicle_num(&self.other_basic) {
+            a + b + c != 0
+        } else { false };
         let now = now_local_date_time_naive();
         InsertOwnerBasicInfoPo {
             room_number: self.room_number.as_deref(),
@@ -99,7 +110,7 @@ impl ToInsertPO for OwnerInfoInsertDto {
             update_time: Some(now),
             is_delete: false,
             comment: self.comment.as_deref(),
-            other_basic: self.other_basic.clone(),
+            other_basic: if vehicle_flag { self.other_basic.clone() } else { None },
             delete_at: Some(NaiveDateTime::UNIX_EPOCH),
             amount_balance: BigDecimal::from(0),
             room_type: self.room_type,

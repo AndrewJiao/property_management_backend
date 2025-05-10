@@ -115,19 +115,22 @@ impl OwnerBasicInfoPo {
         }
     }
 
-    fn get_vehicle_num(&self) -> Option<(u64, u64, u64)> {
-        match self.other_basic {
-            Some(Value::Object(ref map)) => {
-                println!("carNumber={:?}", map.get("carNumber"));
-                println!("motorCycleNumber={:?}", map.get("motorCycleNumber"));
-                return Some((
-                    map.get("carNumber").map(|value| value.as_u64()).flatten().unwrap_or(0),
-                    map.get("carNumberElectron").map(|value| value.as_u64()).flatten().unwrap_or(0),
-                    map.get("motorCycleNumber").map(|value| value.as_u64()).flatten().unwrap_or(0),
-                ));
-            }
-            _ => Some((0, 0, 0))
+    pub fn get_vehicle_num(&self) -> Option<(u64, u64, u64)> {
+        get_vehicle_num(&self.other_basic)
+    }
+}
+pub fn get_vehicle_num(vehicle_value: &Option<serde_json::Value>) -> Option<(u64, u64, u64)> {
+    match vehicle_value {
+        Some(Value::Object(ref map)) => {
+            println!("carNumber={:?}", map.get("carNumber"));
+            println!("motorCycleNumber={:?}", map.get("motorCycleNumber"));
+            Some((
+                map.get("carNumber").map(|value| value.as_u64()).flatten().unwrap_or(0),
+                map.get("carNumberElectron").map(|value| value.as_u64()).flatten().unwrap_or(0),
+                map.get("motorCycleNumber").map(|value| value.as_u64()).flatten().unwrap_or(0),
+            ))
         }
+        _ => Some((0, 0, 0))
     }
 }
 
@@ -140,6 +143,7 @@ pub struct UpdateOwnerBasicInfoPo<'a> {
     pub is_delete: Option<bool>,
     pub comment: Option<&'a str>,
     pub room_square: Option<&'a BigDecimal>,
+    #[diesel(treat_none_as_null = true)]
     pub other_basic: Option<&'a serde_json::Value>,
     pub update_time: Option<NaiveDateTime>,
     pub delete_at: Option<NaiveDateTime>,
