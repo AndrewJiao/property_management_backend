@@ -100,7 +100,8 @@ impl RoomInfoDetailPo {
         if let (Some(basic), Some(plus)) = (basic, plus) {
             if let Some(ref room_num) = self.room_number {
                 if let Some(ref capture) = pattern.captures(room_num) {
-                    let floor_num = i32::from_str(&capture["floor"]).unwrap();
+                    //按楼层-1计算
+                    let floor_num = i32::from_str(&capture["floor"]).unwrap() - 1;
                     debug!("room_number:{} floor_num:{} plus:{} basic:{}", room_num,floor_num, plus, basic);
                     return Some(basic + (floor_num * plus));
                 }
