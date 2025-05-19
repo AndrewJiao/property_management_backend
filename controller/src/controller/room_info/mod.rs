@@ -1,7 +1,7 @@
-use crate::dto::room_info::{RoomInfoDetailOffsetSearchDto, RoomInfoDetailSearchDto, RoomInfoDetailUpdateDto, RoomInfoManuallyInsertDto, RoomInfoSearchType};
+use crate::dto::room_info::{RoomInfoDetailOffsetSearchDto, RoomInfoDetailSearchDto, RoomInfoDetailUpdateDto, RoomInfoInitParam, RoomInfoManuallyInsertDto, RoomInfoSearchType};
 use crate::dto::{ToInsertPO, ToUpdatePO};
 use actix_web::web::scope;
-use actix_web::{get, post, put, web,  HttpRequest, HttpResponse};
+use actix_web::{get, post, put, web, HttpRequest, HttpResponse};
 use common::data_result::{OffsetSearch, PaginateSearch, WebResult};
 use common::db_config::auto_trait::AutoOperation;
 use common::db_config::db_get_connection;
@@ -123,8 +123,10 @@ async fn get_find(param: web::Query<RoomInfoSearchType>) -> WebResult<HttpRespon
 /// 初始化数据
 ///
 #[post("/init")]
-async fn init_data() -> WebResult<HttpResponse> {
-    init_room_data()?;
+async fn init_data(param: web::Json<RoomInfoInitParam>) -> WebResult<HttpResponse> {
+    let param = param.into_inner();
+    validate!(param);
+    init_room_data(&param.month_version)?;
     result_success!()
 }
 ///

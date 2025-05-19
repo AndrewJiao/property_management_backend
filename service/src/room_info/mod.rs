@@ -1,17 +1,47 @@
 use chrono::{Datelike, Local, Months};
+use common::data_result::AppResult;
 use common::db_config::db_get_connection;
+use common::error::BUSINESS_ERROR;
+use common::tools::time::now_local_date_time_naive;
 use common::CURRENT_USE;
 use diesel::{insert_into, ExpressionMethods, QueryDsl, RunQueryDsl};
+use regex::Regex;
 use repository::owner_info::OwnerBasicInfoPo;
 use repository::room_info::{RoomInfoDetailInsertPo, RoomInfoDetailPo};
 use repository::schema::basic::t_room_info_detail::dsl::t_room_info_detail;
 use std::collections::{HashMap, HashSet};
-use common::data_result::AppResult;
-use common::tools::time::now_local_date_time_naive;
 
-pub fn init_room_data() -> AppResult<()> {
-    let current_version = init_current_month_version(chrono::Local::now());
-    let last_version = init_current_month_version(chrono::Local::now().checked_sub_months(Months::new(1)).unwrap());
+
+///
+/// 根据入参的month_version获取上一个月的month_version
+/// eg. HSMZ-2025-5 -> (HSMZ-2025-5, Option(HSMZ-2025-4))
+///
+pub fn verify_month_version_and_get_last_month_version(month_version: &str) -> Option<(String, String)> {
+    Regex::new(r"\w+-(?P<year>\d+)-(?P<month>\d+)").unwrap().captures(month_version)
+        .map(|cap| {
+            if let (Some(year), Some(month)) = (cap.name("year").map(|e| e.as_str()), cap.name("month").map(|m| m.as_str())) {
+                let year = year.parse::<i32>().unwrap_or_default();
+                let month = month.parse::<u32>().unwrap_or_default();
+                Some(Local::now().with_year(year).map(|e| e.with_month(month)).flatten().unwrap())
+            } else {
+                None
+            }
+        }).flatten()
+        .map(|time| {
+            let last_version = init_current_month_version(time.checked_sub_months(Months::new(1)).unwrap());
+            Some((month_version.to_string(), last_version))
+        }).flatten()
+}
+
+pub fn init_room_data(month_version: &str) -> AppResult<()> {
+    let (current_version,last_version) = if let Some((current_version, last_version)) = verify_month_version_and_get_last_month_version(month_version) {
+        if current_version == last_version {
+            return Err(BUSINESS_ERROR("月份版本不合法", 23));
+        }
+        (current_version, last_version)
+    }else{
+        return Err(BUSINESS_ERROR("月份版本不合法", 23));
+    };
 
     //获取上月的读数
     let last_room_info_data;

@@ -136,3 +136,11 @@ impl ToInsertPO for RoomInfoManuallyInsertDto {
         }
     }
 }
+
+
+#[derive(Serialize, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct RoomInfoInitParam {
+    #[validate(length(min = 0, max = 100))]
+    pub month_version: String,
+}
