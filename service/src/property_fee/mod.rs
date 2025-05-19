@@ -198,9 +198,10 @@ pub mod excel{
         //分组all_result，每20个为一组
         let per_form_row:u32 = 20;
         let part_results: Vec<Vec<&PropertyFeeDetailPo>> = all_result.chunks(per_form_row as usize).map(|e|e.iter().map(|a|a).collect_vec() ).collect();
+        let mut current_row = 0;
 
         for ref part_result in part_results{
-            sheet.build_a_form(part_result,&mut 0,per_form_row)?;
+            sheet.build_a_form(part_result,&mut current_row,per_form_row)?;
         }
 
         let  buffer = workbook.save_to_buffer()?;

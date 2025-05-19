@@ -1,4 +1,3 @@
-use actix::fut::result;
 use crate::dto::owner_info::{OwnerInfoInsertDto, OwnerInfoResultDto, OwnerInfoSearchDto, OwnerInfoSearchType, OwnerInfoUpdateDto};
 use crate::dto::{ToInsertPO, ToUpdatePO};
 #[cfg(feature = "picture_extract")]
@@ -84,7 +83,7 @@ async fn put_info(path: web::Path<i64>, body_param: web::Json<OwnerInfoUpdateDto
     let info_id = path.into_inner();
     validate!(body_param);
     info!("param = {:?}", body_param);
-    let mut result: OwnerBasicInfoPo = body_param
+    let result: OwnerBasicInfoPo = body_param
         .to_update_po(info_id)
         .update_time()
         .save_changes(&mut db_get_connection())?;
