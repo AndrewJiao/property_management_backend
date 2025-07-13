@@ -1,13 +1,13 @@
 // @generated automatically by Diesel CLI.
 
-pub mod basic {
+pub mod public {
     pub mod sql_types {
         #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
-        #[diesel(postgres_type(name = "approve_state", schema = "basic"))]
+        #[diesel(postgres_type(name = "approve_state"))]
         pub struct ApproveState;
 
         #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
-        #[diesel(postgres_type(name = "approve_type", schema = "basic"))]
+        #[diesel(postgres_type(name = "approve_type"))]
         pub struct ApproveType;
 
         #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
@@ -19,20 +19,20 @@ pub mod basic {
         pub struct CalculateOperation;
 
         #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
-        #[diesel(postgres_type(name = "detail_type", schema = "basic"))]
+        #[diesel(postgres_type(name = "detail_type"))]
         pub struct DetailType;
 
         #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
-        #[diesel(postgres_type(name = "role_type", schema = "basic"))]
+        #[diesel(postgres_type(name = "role_type"))]
         pub struct RoleType;
 
         #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
-        #[diesel(postgres_type(name = "room_type", schema = "basic"))]
+        #[diesel(postgres_type(name = "room_type"))]
         pub struct RoomType;
     }
 
     diesel::table! {
-        basic.posts (id) {
+        posts (id) {
             id -> Int4,
             title -> Varchar,
             body -> Text,
@@ -45,7 +45,7 @@ pub mod basic {
         use super::sql_types::ApproveState;
         use super::sql_types::ApproveType;
 
-        basic.t_approve (id) {
+        t_approve (id) {
             id -> Int8,
             order_no -> Varchar,
             approve_state -> ApproveState,
@@ -84,7 +84,7 @@ pub mod basic {
         use diesel::sql_types::*;
         use super::sql_types::RoomType;
 
-        basic.t_owner_basic_info (id) {
+        t_owner_basic_info (id) {
             id -> Int4,
             room_number -> Varchar,
             owner_name -> Nullable<Varchar>,
@@ -106,7 +106,7 @@ pub mod basic {
         use diesel::sql_types::*;
         use super::sql_types::DetailType;
 
-        basic.t_owner_fee_detail (id) {
+        t_owner_fee_detail (id) {
             id -> Int8,
             stream_id -> Varchar,
             room_number -> Varchar,
@@ -126,7 +126,7 @@ pub mod basic {
     }
 
     diesel::table! {
-        basic.t_owner_fee_detail_record (id) {
+        t_owner_fee_detail_record (id) {
             id -> Int8,
             record_id -> Varchar,
             room_number -> Varchar,
@@ -145,7 +145,7 @@ pub mod basic {
         use diesel::sql_types::*;
         use super::sql_types::CalculateOperation;
 
-        basic.t_price_basic (id) {
+        t_price_basic (id) {
             id -> Int8,
             name -> Nullable<Varchar>,
             basic_number -> Nullable<Numeric>,
@@ -161,7 +161,7 @@ pub mod basic {
     }
 
     diesel::table! {
-        basic.t_property_fee_detail (id) {
+        t_property_fee_detail (id) {
             id -> Int8,
             room_number -> Nullable<Varchar>,
             room_owner_name -> Nullable<Varchar>,
@@ -189,7 +189,7 @@ pub mod basic {
     }
 
     diesel::table! {
-        basic.t_room_info_detail (id) {
+        t_room_info_detail (id) {
             id -> Int8,
             room_number -> Nullable<Varchar>,
             water_meter_num_before -> Nullable<Int8>,
@@ -211,7 +211,7 @@ pub mod basic {
     }
 
     diesel::table! {
-        basic.t_tool_table (id) {
+        t_tool_table (id) {
             id -> Int4,
             code -> Varchar,
             value -> Varchar,
@@ -224,7 +224,7 @@ pub mod basic {
         use diesel::sql_types::*;
         use super::sql_types::RoleType;
 
-        basic.t_user (id) {
+        t_user (id) {
             id -> Int8,
             account_id -> Varchar,
             account -> Varchar,
@@ -242,7 +242,7 @@ pub mod basic {
     }
 
     diesel::table! {
-        basic.t_user_fast_login (id) {
+        t_user_fast_login (id) {
             id -> Int8,
             account_id -> Varchar,
             create_time -> Timestamp,
@@ -250,7 +250,7 @@ pub mod basic {
     }
 
     diesel::table! {
-        basic.t_user_relate_room (id) {
+        t_user_relate_room (id) {
             id -> Int8,
             relate_account_id -> Varchar,
             relate_number -> Varchar,

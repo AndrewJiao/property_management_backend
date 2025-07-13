@@ -1,6 +1,6 @@
 use crate::price_basic::{BasicPriceType, PriceBasicPo};
-use crate::schema::basic::t_owner_basic_info;
-use crate::schema::basic::t_owner_basic_info::*;
+use crate::schema::public::t_owner_basic_info;
+use crate::schema::public::t_owner_basic_info::*;
 use crate::SqlType;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
@@ -200,7 +200,7 @@ pub struct OtherPartInfo {
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, DbEnum)]
 #[serde(rename_all = "PascalCase")]
-#[ExistingTypePath = "crate::schema::basic::sql_types::RoomType"]
+#[ExistingTypePath = "crate::schema::public::sql_types::RoomType"]
 pub enum RoomType{
     Common,
     Business,

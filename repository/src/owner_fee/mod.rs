@@ -4,8 +4,8 @@ pub use record::try_record_data;
 pub use record::OwnerFeeDetailRecordPo;
 use std::cmp::Ordering;
 
-use crate::schema::basic::t_owner_fee_detail;
-use crate::schema::basic::t_owner_fee_detail::*;
+use crate::schema::public::t_owner_fee_detail;
+use crate::schema::public::t_owner_fee_detail::*;
 use crate::tool_table::{current_date_count, CountType};
 use crate::{common_type, filter_data_enable, if_filter};
 use bigdecimal::BigDecimal;
@@ -267,7 +267,7 @@ impl OwnerFeeDetailUpdatePo<'_> {
 }
 
 #[derive(Deserialize, Serialize, DbEnum, Debug, Clone,PartialEq,Eq)]
-#[ExistingTypePath = "crate::schema::basic::sql_types::DetailType"]
+#[ExistingTypePath = "crate::schema::public::sql_types::DetailType"]
 #[serde(rename_all = "PascalCase")]
 pub enum DetailType {
     //物业费

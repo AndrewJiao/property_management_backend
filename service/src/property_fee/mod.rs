@@ -48,7 +48,7 @@ pub fn do_edit_update(update_po: PropertyFeeDetailUpdatePo) -> AppResult<Propert
 pub fn init_data(version: Option<&str>) -> AppResult<()> {
     let basic_price_config;
     {
-        use repository::schema::basic::t_price_basic::*;
+        use repository::schema::public::t_price_basic::*;
         basic_price_config =
             table.select(all_columns)
                 .get_results::<PriceBasicPo>(&mut db_get_connection())?
@@ -59,7 +59,7 @@ pub fn init_data(version: Option<&str>) -> AppResult<()> {
     let n_month_version = version
         .unwrap_or(temp.as_str());
     {
-        use repository::schema::basic::t_room_info_detail::*;
+        use repository::schema::public::t_room_info_detail::*;
 
         room_info = table
             .filter(month_version.eq(n_month_version))
@@ -68,7 +68,7 @@ pub fn init_data(version: Option<&str>) -> AppResult<()> {
     }
     let owner_info_config;
     {
-        use repository::schema::basic::t_owner_basic_info::*;
+        use repository::schema::public::t_owner_basic_info::*;
         owner_info_config = table
             .filter(is_delete.eq(false))
             .select(all_columns).get_results::<OwnerBasicInfoPo>(&mut db_get_connection())?
@@ -79,7 +79,7 @@ pub fn init_data(version: Option<&str>) -> AppResult<()> {
     //排除掉已有数据
     let exist_room_number;
     {
-        use repository::schema::basic::t_property_fee_detail::*;
+        use repository::schema::public::t_property_fee_detail::*;
         exist_room_number = table
             .filter(record_version.eq(n_month_version))
             .filter(is_delete.eq(false))
@@ -148,7 +148,7 @@ pub fn init_data(version: Option<&str>) -> AppResult<()> {
         return Ok(());
     }
     {
-        use repository::schema::basic::t_property_fee_detail::table;
+        use repository::schema::public::t_property_fee_detail::table;
         let statement = insert_into(table).values(data_insert);
         println!("{}", diesel::debug_query::<diesel::pg::Pg, _>(&statement));
         statement.execute(&mut db_get_connection())?;

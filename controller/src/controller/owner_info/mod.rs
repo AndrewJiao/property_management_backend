@@ -22,7 +22,7 @@ use diesel::{ExpressionMethods, Insertable, QueryDsl, RunQueryDsl, SaveChangesDs
 use log::info;
 use repository::component::page::Paginate;
 use repository::owner_info::OwnerBasicInfoPo;
-use repository::schema::basic::t_owner_basic_info::*;
+use repository::schema::public::t_owner_basic_info::*;
 use repository::soft_delete_by_id;
 use repository::user::UserPo;
 #[cfg(feature = "picture_extract")]

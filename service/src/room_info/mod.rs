@@ -8,7 +8,7 @@ use diesel::{insert_into, ExpressionMethods, QueryDsl, RunQueryDsl};
 use regex::Regex;
 use repository::owner_info::OwnerBasicInfoPo;
 use repository::room_info::{RoomInfoDetailInsertPo, RoomInfoDetailPo};
-use repository::schema::basic::t_room_info_detail::dsl::t_room_info_detail;
+use repository::schema::public::t_room_info_detail::dsl::t_room_info_detail;
 use std::collections::{HashMap, HashSet};
 
 
@@ -46,7 +46,7 @@ pub fn init_room_data(month_version: &str) -> AppResult<()> {
     //获取上月的读数
     let last_room_info_data;
     {
-        use repository::schema::basic::t_room_info_detail::*;
+        use repository::schema::public::t_room_info_detail::*;
         last_room_info_data = table
             .filter(is_delete.eq(false))
             .filter(month_version.eq(last_version))
@@ -56,7 +56,7 @@ pub fn init_room_data(month_version: &str) -> AppResult<()> {
     // 获取业主数据
     let owner_info_data;
     {
-        use repository::schema::basic::t_owner_basic_info::*;
+        use repository::schema::public::t_owner_basic_info::*;
         owner_info_data = table
             .filter(is_delete.eq(false))
             .get_results::<OwnerBasicInfoPo>(&mut db_get_connection())?;
@@ -64,7 +64,7 @@ pub fn init_room_data(month_version: &str) -> AppResult<()> {
     //获取已有水电数据
     let exists_room_info;
     {
-        use repository::schema::basic::t_room_info_detail::*;
+        use repository::schema::public::t_room_info_detail::*;
         exists_room_info = table
             .filter(is_delete.eq(false))
             .filter(month_version.eq(&current_version))

@@ -26,8 +26,8 @@ pub fn config(cfg: &mut web::ServiceConfig) {
 }
 
 use crate::controller::IfFilter;
-use repository::schema::basic::t_room_info_detail::dsl::t_room_info_detail;
-use repository::schema::basic::t_room_info_detail::*;
+use repository::schema::public::t_room_info_detail::dsl::t_room_info_detail;
+use repository::schema::public::t_room_info_detail::*;
 use repository::user::UserPo;
 use service::room_info::init_room_data;
 

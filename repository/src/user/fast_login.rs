@@ -1,5 +1,5 @@
-use crate::schema::basic::t_user_fast_login;
-use crate::schema::basic::t_user_fast_login::*;
+use crate::schema::public::t_user_fast_login;
+use crate::schema::public::t_user_fast_login::*;
 use common::data_result::AppResult;
 use common::db_config::{db_get_connection, Conn};
 use diesel::{ExpressionMethods, QueryDsl, Queryable, RunQueryDsl, Selectable, SelectableHelper};

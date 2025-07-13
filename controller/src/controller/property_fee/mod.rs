@@ -31,7 +31,7 @@ pub fn config(cfg: &mut web::ServiceConfig) {
 
 use crate::controller::IfFilter;
 use crate::dto::ToUpdatePO;
-use repository::schema::basic::t_property_fee_detail::*;
+use repository::schema::public::t_property_fee_detail::*;
 use repository::user::UserPo;
 use service::property_fee::do_edit_update;
 

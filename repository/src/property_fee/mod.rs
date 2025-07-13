@@ -1,7 +1,7 @@
 use crate::common_type;
 use crate::component::operation_trait::FeeCalculator;
-use crate::schema::basic::t_property_fee_detail;
-use crate::schema::basic::t_property_fee_detail::*;
+use crate::schema::public::t_property_fee_detail;
+use crate::schema::public::t_property_fee_detail::*;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use common::data_result::AppResult;

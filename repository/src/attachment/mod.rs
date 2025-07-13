@@ -1,6 +1,6 @@
 use crate::common_type;
-use crate::schema::basic::t_attachment;
-use crate::schema::basic::t_attachment::*;
+use crate::schema::public::t_attachment;
+use crate::schema::public::t_attachment::*;
 use common::data_result::AppResult;
 use common::db_config::{db_get_connection, Conn};
 use diesel::pg::Pg;
@@ -42,7 +42,7 @@ impl AttachmentPo {
 }
 
 #[derive(Deserialize, Serialize, DbEnum,Debug)]
-#[ExistingTypePath = "crate::schema::basic::sql_types::AttachmentState"]
+#[ExistingTypePath = "crate::schema::public::sql_types::AttachmentState"]
 #[serde(rename_all = "PascalCase")]
 pub enum AttachmentStatus {
     Init,

@@ -1,6 +1,6 @@
 use crate::common_type;
-use crate::schema::basic::t_owner_fee_detail_record::*;
-use crate::schema::basic::t_owner_fee_detail_record;
+use crate::schema::public::t_owner_fee_detail_record::*;
+use crate::schema::public::t_owner_fee_detail_record;
 use crate::tool_table::{current_date_count_with_conn, CountType};
 use bigdecimal::BigDecimal;
 use common::const_value::SETTINGS;

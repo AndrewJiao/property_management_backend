@@ -9,8 +9,8 @@ use common::db_config::db_get_connection;
 use common::{result_success, validate};
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, SaveChangesDsl, SelectableHelper};
 use repository::price_basic::PriceBasicPo;
-use repository::schema::basic::t_price_basic;
-use repository::schema::basic::t_price_basic::*;
+use repository::schema::public::t_price_basic;
+use repository::schema::public::t_price_basic::*;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(scope("/price_basic")

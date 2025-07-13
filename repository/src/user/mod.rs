@@ -1,8 +1,8 @@
 use crate::common_type;
 use crate::component::page::Paginate;
 use crate::owner_info::OwnerBasicInfoPo;
-use crate::schema::basic::t_user;
-use crate::schema::basic::t_user::*;
+use crate::schema::public::t_user;
+use crate::schema::public::t_user::*;
 use crate::user::relate::UserRelateRoomPo;
 use actix_web::{HttpMessage, HttpRequest};
 use chrono::NaiveDateTime;
@@ -27,7 +27,7 @@ pub mod relate;
 pub mod fast_login;
 
 #[derive(Deserialize, Serialize, DbEnum, Debug, Clone, Copy)]
-#[ExistingTypePath = "crate::schema::basic::sql_types::RoleType"]
+#[ExistingTypePath = "crate::schema::public::sql_types::RoleType"]
 #[serde(rename_all = "PascalCase")]
 pub enum RoleType {
     Root,
@@ -165,7 +165,7 @@ impl UserPo {
         page_size: i64,
     )
         -> AppResult<(Vec<(UserPo, Option<Vec<String>>)>, i64)> {
-        use crate::schema::basic::t_user_relate_room;
+        use crate::schema::public::t_user_relate_room;
         let (result, total)  = table
             .left_join(t_user_relate_room::table.on(t_user_relate_room::relate_account_id.eq(t_user::account_id)))
             .filter(diesel::dsl::sql::<Bool>(if p_account.is_none() { "TRUE" } else { "FALSE" }).or(with_account_like(p_account.unwrap_or_default())))

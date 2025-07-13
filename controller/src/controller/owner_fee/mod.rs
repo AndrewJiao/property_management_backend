@@ -13,7 +13,7 @@ use diesel::ExpressionMethods;
 use log::debug;
 use repository::component::page::Paginate;
 use repository::owner_fee::OwnerFeeDetailPo;
-use repository::schema::basic::t_owner_fee_detail::*;
+use repository::schema::public::t_owner_fee_detail::*;
 use repository::user::UserPo;
 use std::clone::Clone;
 use std::collections::HashSet;

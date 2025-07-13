@@ -1,5 +1,5 @@
-use crate::schema::basic::sql_types::CalculateOperation;
-use crate::schema::basic::t_price_basic;
+use crate::schema::public::sql_types::CalculateOperation;
+use crate::schema::public::t_price_basic;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use diesel::backend::Backend;
@@ -46,7 +46,7 @@ impl PriceBasicConfigGet for Vec<PriceBasicPo> {
         }).collect::<HashMap<BasicPriceType, PriceBasicPo>>()
     }
 }
-use crate::schema::basic::t_price_basic::*;
+use crate::schema::public::t_price_basic::*;
 type BoxedQuery<'a> = t_price_basic::BoxedQuery<'a, Pg, crate::SqlType<PriceBasicPo>>;
 impl PriceBasicPo {
     pub fn all() -> BoxedQuery<'static> {

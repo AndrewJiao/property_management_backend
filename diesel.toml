@@ -4,7 +4,7 @@
 [print_schema]
 file = "repository/src/schema.rs"
 custom_type_derives = ["diesel::query_builder::QueryId"]
-schema = "basic"
+schema = "public"
 
 [migrations_directory]
 dir = "repository/migrations"

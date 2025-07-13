@@ -1,6 +1,6 @@
 use crate::component::page::Paginate;
-use crate::schema::basic::t_approve;
-use crate::schema::basic::t_approve::*;
+use crate::schema::public::t_approve;
+use crate::schema::public::t_approve::*;
 use crate::{common_type, filter_data_enable, if_filter};
 use common::data_result::AppResult;
 use common::db_config::{db_get_connection, Conn};
@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 common_type!();
 
 #[derive(Deserialize,Serialize,Debug,DbEnum,Clone,Copy)]
-#[ExistingTypePath = "crate::schema::basic::sql_types::ApproveState"]
+#[ExistingTypePath = "crate::schema::public::sql_types::ApproveState"]
 #[serde(rename_all = "PascalCase")]
 pub enum ApproveState{
     Pending,
@@ -36,7 +36,7 @@ impl ApproveState{
     }
 }
 #[derive(Deserialize,Serialize,Debug,DbEnum,Clone,Copy)]
-#[ExistingTypePath = "crate::schema::basic::sql_types::ApproveType"]
+#[ExistingTypePath = "crate::schema::public::sql_types::ApproveType"]
 #[serde(rename_all = "PascalCase")]
 pub enum ApproveType{
     CreateUser,

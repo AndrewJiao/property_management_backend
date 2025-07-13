@@ -1,7 +1,7 @@
 use crate::owner_info::RoomType;
 use crate::price_basic::{BasicPriceType, PriceBasicPo};
-use crate::schema::basic::t_room_info_detail;
-use crate::schema::basic::t_room_info_detail::*;
+use crate::schema::public::t_room_info_detail;
+use crate::schema::public::t_room_info_detail::*;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use common::data_result::AppResult;
