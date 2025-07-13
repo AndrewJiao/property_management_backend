@@ -7,12 +7,12 @@ web_config:
 
 # Database configuration
 databases:
-  user: "postgres"
-  password: "postgres"
-  host: "localhost"
+  user: "ypjiao"
+  password: "PLACE_HOLDER_FOR_PASSWORD"
+  host: "pgm-bp1rn6jk66taz01bgo.pg.rds.aliyuncs.com"
   port: 5432
-  database: "property_management"
-  database_url: "postgres://postgres:postgres@localhost:5432/property_management?options=-c%20search_path%3Dbasic"
+  database: "db-dev"
+  database_url: ""
 
 # 应用配置
 app_config:
@@ -41,7 +41,7 @@ aliyun_oss_config:
   sts_host: "sts.cn-heyuan.aliyuncs.com"
   region: "oss-cn-heyuan"
   access_key_id: "LTAI5tBGS6Pz2sQX7xrMGFzq"
-  access_key_secret: "B5m0aZAJpDEtQKzP3lTTHATeXdNjNd"
+  access_key_secret: "PLACE_HOLDER_FOR_ACCESS_KEY_SECwRET"
   sts_role_arn: "acs:ram::1957570988142134:role/temp-role-backend"
   bucket: "property-manager-form"
 

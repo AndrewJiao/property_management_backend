@@ -27,8 +27,6 @@ use repository::soft_delete_by_id;
 use repository::user::UserPo;
 #[cfg(feature = "picture_extract")]
 use service::picture_extract::dto::ExtractSender;
-#[cfg(test)]
-use service::picture_extract::dto::ExtractSender;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(scope("/owner_info")

@@ -12,7 +12,7 @@ databases:
   host: "fba7bc71917f6492.natapp.cc"
   port: 65532
   database: "property_management"
-  database_url: "postgres://app_user:andrew123@fba7bc71917f6492.natapp.cc:65532/property_management?options=-c%20search_path%3Dbasic"
+  database_url: ""
 # 应用配置
 app_config:
   json_length: 10000
@@ -40,7 +40,7 @@ aliyun_oss_config:
   sts_host: "sts.cn-heyuan.aliyuncs.com"
   region: "oss-cn-heyuan"
   access_key_id: "LTAI5tBGS6Pz2sQX7xrMGFzq"
-  access_key_secret: "B5m0aZAJpDEtQKzP3lTTHATeXdNjNd"
+  access_key_secret: "PLACE_HOLDER_FOR_ACCESS_KEY_SECwRET"
   sts_role_arn: "acs:ram::1957570988142134:role/temp-role-backend"
   bucket: "property-manager-form"
 

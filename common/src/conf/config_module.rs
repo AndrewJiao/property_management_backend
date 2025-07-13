@@ -1,10 +1,10 @@
 use crate::conf::get_current_config_dir_path;
+use crate::data_result::AppResult;
 use bigdecimal::BigDecimal;
 // use crate::error::BaseError;
 use config::{Config, ConfigError};
 use log::info;
 use serde::Deserialize;
-use crate::data_result::AppResult;
 
 ///
 /// web配置模块
@@ -35,9 +35,8 @@ pub struct AppConfig {
     pub jwt_handler_ignore_path: Vec<String>,
 }
 
-
 #[derive(Debug, Deserialize)]
-pub struct OpenSSl{
+pub struct OpenSSl {
     pub private_key: String,
     pub certificate: String,
 }
@@ -88,7 +87,7 @@ pub struct PictureConfig {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct WeChartConfig{
+pub struct WeChartConfig {
     pub app_id: String,
     pub app_secret: String,
     pub host: String,
@@ -110,15 +109,56 @@ pub struct Settings {
 impl Settings {
     pub fn new() -> Result<Self, ConfigError> {
         let config_path = match std::env::var("env").unwrap_or("dev".to_string()).as_str() {
-            "prod" => {"config_prod"}
-            _ => {"config"}
+            "prod" => "config_prod",
+            _ => "config",
         };
+
         let config_dir = get_current_config_dir_path(config_path);
-        let s = Config::builder()
-            .add_source(config::File::with_name(config_dir.as_str()))
-            .build()?;
-        s.try_deserialize()
+        let mut sb = Config::builder().add_source(config::File::with_name(config_dir.as_str()));
+
+        let sec_config = get_config_map();
+        sb = sec_config.into_iter().fold(
+            sb,
+            |sb,
+             SecConfig {
+                 to_config,
+                 env_value,
+             }| { sb.set_override(to_config, env_value).unwrap() },
+        );
+
+        sb.build()?.try_deserialize()
     }
+}
+
+struct SecConfig {
+    to_config: String,
+    env_value: String,
+}
+
+impl SecConfig {
+    pub fn new(to_config: String, env_value: String) -> Self {
+        Self {
+            to_config,
+            env_value,
+        }
+    }
+}
+
+fn get_config_map() -> Vec<SecConfig> {
+    let mut map = Vec::<SecConfig>::new();
+    map.push(SecConfig::new(
+        "databases.password".to_string(),
+        std::env::var("POSTGRES_SQL_PASSWORD").unwrap_or_default(),
+    ));
+    map.push(SecConfig::new(
+        "aliyun_oss_config.access_key_secret".to_string(),
+        std::env::var("ALIYUN_OSS_ACCESS_KEY_SECRET").unwrap_or_default(),
+    ));
+    map.push(SecConfig::new(
+        "we_chart_config.app_secret".to_string(),
+        std::env::var("WE_CHART_APP_SECRET").unwrap_or_default(),
+    ));
+    map
 }
 
 pub fn init_settings() -> AppResult<Settings> {
@@ -126,5 +166,4 @@ pub fn init_settings() -> AppResult<Settings> {
     let settings = Settings::new();
     info!("{settings:?}");
     Ok(settings?)
-
 }
