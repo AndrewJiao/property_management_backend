@@ -31,6 +31,15 @@ RUN apt-get update && apt-get install -y ca-certificates && update-ca-certificat
 COPY --from=builder /usr/src/app/target/release/ /usr/app/
 
 ENV env=prod
+
+# 对敏感数据设置环境变量
+ARG POSTGRES_SQL_PASSWORD
+ENV POSTGRES_SQL_PASSWORD=${POSTGRES_SQL_PASSWORD}
+ARG ALIYUN_OSS_ACCESS_KEY_SECRET
+ENV ALIYUN_OSS_ACCESS_KEY_SECRET=${ALIYUN_OSS_ACCESS_KEY_SECRET}
+ARG WE_CHART_APP_SECRET
+ENV WE_CHART_APP_SECRET=${WE_CHART_APP_SECRET}
+
 # Expose the port your application is running on
 EXPOSE 9000
 

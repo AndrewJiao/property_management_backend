@@ -40,3 +40,7 @@ jobs:
           file: Dockerfile
           push: true
           tags: ${{vars.PATH_DIR}}:latest
+          build-args: |
+            POSTGRES_SQL_PASSWORD=${{ secrets.POSTGRES_SQL_PASSWORD }}
+            ALIYUN_OSS_ACCESS_KEY_SECRET=${{ secrets.ALIYUN_OSS_ACCESS_KEY_SECRET }}
+            WE_CHART_APP_SECRET=${{ secrets.WE_CHART_APP_SECRET }}
