@@ -7,11 +7,11 @@ web_config:
 
 # Database configuration
 databases:
-  user: "app_user"
-  password: "andrew123"
-  host: "fba7bc71917f6492.natapp.cc"
-  port: 65532
-  database: "property_management"
+  user: "ypjiao"
+  password: "PLACE_HOLDER_FOR_PASSWORD"
+  host: "pgm-bp1rn6jk66taz01bgo.pg.rds.aliyuncs.com"
+  port: 5432
+  database: "db-prod"
   database_url: ""
 # 应用配置
 app_config:
@@ -39,7 +39,7 @@ aliyun_oss_config:
   oss_host: "property-manager-form.oss-cn-heyuan.aliyuncs.com"
   sts_host: "sts.cn-heyuan.aliyuncs.com"
   region: "oss-cn-heyuan"
-  access_key_id: "LTAI5tBGS6Pz2sQX7xrMGFzq"
+  access_key_id: "LTAI5tJXnBrygFEG8vWbWdwn"
   access_key_secret: "PLACE_HOLDER_FOR_ACCESS_KEY_SECwRET"
   sts_role_arn: "acs:ram::1957570988142134:role/temp-role-backend"
   bucket: "property-manager-form"
@@ -55,5 +55,5 @@ picture_config:
 
 we_chart_config:
   app_id: "wx613da588948efef3"
-  app_secret: "2b034c3afef9f01ca33c8bd9d10878e9"
+  app_secret: "WECHART_APP_SECRET_PLACE_HOLDER"
   host: "api.weixin.qq.com"
